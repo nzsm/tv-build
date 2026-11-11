@@ -1,87 +1,176 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-tvbox_ext.py — TVBoxOS 定制增强注入脚本（配合 build-apk.yml 使用）
-用法：
-    python3 tvbox_ext.py <tvboxos源码目录> [默认订阅地址] [APP名称]
+tvbox_ext.py — TVBoxOS 定制增强注入（v2 全面版）
+用法: python3 tvbox_ext.py <源码目录> [默认订阅地址] [APP名称]
 
-做三件事：
-  1. 内置默认订阅地址：首次安装打开即自动加载你的订阅，不用手动粘贴
-  2. 改 APP 显示名称
-  3. 顺手把「首页推荐 / 播放器 / 搜索视图」的默认值调成更适合追剧的设置
+注入 4 项：
+  1. 内置默认订阅地址（装上即自动加载你的订阅）
+  2. APP 显示名称
+  3. 播放页右上角实时网速常显（原版只在弹出底栏时才显示）
+  4. 播放页标题追加解码标识（硬解/软解）
+  5. 安全 DNS 默认开启腾讯（原版默认关闭）
 
-特点：幂等（重复运行不会叠加注入），每步都打印校验结果，失败不静默。
+全部为幂等替换，每步打印校验，失败不静默。
 """
-import re, sys, os
+import os, re, sys, json
 
 SRC = sys.argv[1] if len(sys.argv) > 1 else '.'
-DEF_URL = sys.argv[2] if len(sys.argv) > 2 else 'https://raw.githubusercontent.com/nzsm/tvbox-server/main/apk/tvbox.json'
-APP_NAME = sys.argv[3] if len(sys.argv) > 3 else 'TVBox'
+DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
+APP_NAME = sys.argv[3] if len(sys.argv) > 3 else '影视仓定制版'
 
-OK = 0
-FAIL = 1
+fails = []
 
-def log(msg): print(msg, flush=True)
+def read(p):
+    return open(p, encoding='utf-8').read()
 
-def patch_android_url():
-    """内置默认订阅地址"""
-    p = os.path.join(SRC, 'app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java')
+def write(p, s):
+    open(p, 'w', encoding='utf-8').write(s)
+
+def jpath(*parts):
+    return os.path.join(SRC, *parts)
+
+def brace_delta(s):
+    """花括号净差值（源码字符串里也含花括号，故只比较注入前后差值是否一致）"""
+    return s.count('{') - s.count('}')
+
+def delta_ok(before, after):
+    return brace_delta(before) == brace_delta(after)
+
+# ---------- 1. 内置默认订阅 ----------
+def inject_sub():
+    p = jpath('app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java')
     if not os.path.isfile(p):
-        log('!! 找不到 ApiConfig.java: %s' % p); return FAIL
-    s = open(p, encoding='utf-8').read()
+        print('!! 找不到 ApiConfig.java'); fails.append('ApiConfig'); return
+    s = read(p)
+    if 'HawkConfig.API_URL, "http' in s:
+        print('· 默认订阅已存在，跳过'); return
     old = 'String apiUrl = Hawk.get(HawkConfig.API_URL, "");'
     new = 'String apiUrl = Hawk.get(HawkConfig.API_URL, "%s");' % DEF_URL
-    if DEF_URL in s:
-        log('· 默认订阅地址已存在，跳过注入')
-    elif old in s:
-        s = s.replace(old, new, 1)
-        open(p, 'w', encoding='utf-8').write(s)
-        log('+ 已注入默认订阅地址: %s' % DEF_URL)
-    else:
-        log('!! 未匹配到默认订阅地址的注入点（源码结构可能变了）'); return FAIL
-    # 校验
-    if DEF_URL in open(p, encoding='utf-8').read():
-        log('  校验通过：ApiConfig 内含默认地址'); return OK
-    log('!! 校验失败'); return FAIL
+    if old not in s:
+        print('!! 未匹配默认订阅注入点'); fails.append('ApiConfig'); return
+    before = s
+    s = s.replace(old, new, 1)
+    if not delta_ok(before, s):
+        print('!! 注入后括号结构改变'); fails.append('ApiConfig-brace'); return
+    write(p, s)
+    print('+ 默认订阅已注入: %s' % DEF_URL)
 
-def patch_app_name():
-    """改应用名称"""
-    p = os.path.join(SRC, 'app/src/main/res/values/strings.xml')
+# ---------- 2. APP 名称 ----------
+def inject_name():
+    p = jpath('app/src/main/res/values/strings.xml')
     if not os.path.isfile(p):
-        log('!! 找不到 strings.xml'); return FAIL
-    s = open(p, encoding='utf-8').read()
+        print('!! 找不到 strings.xml'); fails.append('strings'); return
+    s = read(p)
     m = re.search(r'<string name="app_name">([^<]*)</string>', s)
     if not m:
-        log('!! strings.xml 里没有 app_name'); return FAIL
+        print('!! strings.xml 无 app_name'); fails.append('app_name'); return
     if m.group(1) == APP_NAME:
-        log('· 应用名称已是 %s，跳过' % APP_NAME); return OK
+        print('· APP 名称已是目标值，跳过'); return
     s = s[:m.start(1)] + APP_NAME + s[m.end(1):]
-    open(p, 'w', encoding='utf-8').write(s)
-    log('+ 应用名称: %s -> %s' % (m.group(1), APP_NAME))
-    return OK
+    write(p, s)
+    print('+ APP 名称: %s -> %s' % (m.group(1), APP_NAME))
 
-def patch_defaults():
-    """把几个常用默认值调成追剧向（失败不致命）"""
-    hits = 0
-    # 首页推荐：默认「豆瓣热播」，改成数据源推荐更贴合自己的源
-    p = os.path.join(SRC, 'app/src/main/java/com/github/tvbox/osc/util/HawkConfig.java')
-    if os.path.isfile(p):
-        s = open(p, encoding='utf-8').read()
-        log('· 默认项检查完成（不改危险项，保持系统稳定）')
-    hits += 1
-    return OK
+# ---------- 3. 网速常显 ----------
+def inject_netspeed_always():
+    p = jpath('app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java')
+    if not os.path.isfile(p):
+        print('!! 找不到 VodController.java'); fails.append('VodController'); return
+    s = read(p)
+    old_block = '''case 1003: { // 隐藏底部菜单
+                        mBottomRoot.setVisibility(GONE);
+                        mTopRoot1.setVisibility(GONE);
+                        mPlayLoadNetSpeedRightTop.setVisibility(GONE);'''
+    new_block = '''case 1003: { // 隐藏底部菜单
+                        mBottomRoot.setVisibility(GONE);
+                        mTopRoot1.setVisibility(GONE);
+                        /*TVBOX_MOD: 网速常显，隐藏底栏时不再隐藏右上角速度*/
+                        mPlayLoadNetSpeedRightTop.setVisibility(VISIBLE);'''
+    if 'TVBOX_MOD: 网速常显' in s:
+        print('· 网速常显已注入，跳过')
+    elif old_block in s:
+        before = s
+        s = s.replace(old_block, new_block, 1)
+        if not delta_ok(before, s):
+            print('!! 括号结构改变'); fails.append('netspeed-brace'); return
+        write(p, s)
+        print('+ 已注入：播放页右上角网速常显')
+    else:
+        print('!! 未匹配网速显隐代码块'); fails.append('netspeed')
+
+    # 顺带：显示底部菜单时也保证速度控件可见（原逻辑已 VISIBLE，此处做兜底校验）
+    if 'mPlayLoadNetSpeedRightTop.setVisibility(VISIBLE);' not in read(p):
+        print('!! 兜底校验失败'); fails.append('netspeed-verify')
+
+# ---------- 4. 标题解码标识 ----------
+def inject_codec_title():
+    p = jpath('app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java')
+    s = read(p)
+    old = '''public void setTitle(String playTitleInfo) {
+        mPlayTitle.setText(playTitleInfo);
+        mPlayTitle1.setText(playTitleInfo);
+    }'''
+    new = '''public void setTitle(String playTitleInfo) {
+        /*TVBOX_MOD: 标题追加解码标识（硬解/软解）*/
+        try {
+            String _codec = "";
+            if (mPlayerConfig != null && mPlayerConfig.has("ijk")) {
+                _codec = getCodecShortName(mPlayerConfig.optString("ijk", ""));
+            }
+            if (_codec != null && (_codec.indexOf("硬") >= 0 || _codec.indexOf("软") >= 0) && playTitleInfo != null && playTitleInfo.length() > 0) {
+                playTitleInfo = playTitleInfo + " · " + _codec;
+            }
+        } catch (Exception ignored) {
+        }
+        mPlayTitle.setText(playTitleInfo);
+        mPlayTitle1.setText(playTitleInfo);
+    }'''
+    if 'TVBOX_MOD: 标题追加解码标识' in s:
+        print('· 解码标识已注入，跳过'); return
+    if old not in s:
+        print('!! 未匹配 setTitle 方法'); fails.append('setTitle'); return
+    before = s
+    s = s.replace(old, new, 1)
+    if not delta_ok(before, s):
+        print('!! 括号结构改变'); fails.append('codec-brace'); return
+    write(p, s)
+    print('+ 已注入：播放标题显示 硬解/软解')
+
+# ---------- 5. 安全 DNS 默认腾讯 ----------
+def inject_dns_default():
+    p = jpath('app/src/main/java/com/github/tvbox/osc/util/OkGoHelper.java')
+    if not os.path.isfile(p):
+        print('!! 找不到 OkGoHelper.java'); fails.append('OkGoHelper'); return
+    s = read(p)
+    old = 'Integer dohSelector=Hawk.get(HawkConfig.DOH_URL, 0);'
+    new = 'Integer dohSelector=Hawk.get(HawkConfig.DOH_URL, 1);/*TVBOX_MOD: 默认开启腾讯DoH*/'
+    if 'TVBOX_MOD: 默认开启腾讯DoH' in s:
+        print('· DNS 默认已注入，跳过'); return
+    if old not in s:
+        print('!! 未匹配 DNS 默认值'); fails.append('dns'); return
+    before = s
+    s = s.replace(old, new, 1)
+    if not delta_ok(before, s):
+        print('!! 括号结构改变'); fails.append('dns-brace'); return
+    write(p, s)
+    print('+ 已注入：安全 DNS 默认开启（腾讯）')
 
 def main():
-    log('=== 定制增强注入开始 ===')
-    log('源码目录: %s' % os.path.abspath(SRC))
-    log('默认订阅: %s' % DEF_URL)
-    log('应用名称: %s' % APP_NAME)
-    r1 = patch_android_url()
-    r2 = patch_app_name()
-    r3 = patch_defaults()
-    log('=== 结果：地址注入 %s / 名称注入 %s ===' % ('OK' if r1 == OK else 'FAIL', 'OK' if r2 == OK else 'FAIL'))
-    if r1 != OK:
-        log('!! 关键注入失败，终止'); sys.exit(1)
+    print('=== TVBoxOS 定制增强 v2 ===')
+    print('源码:', os.path.abspath(SRC))
+    print('订阅:', DEF_URL or '(未传)')
+    print('名称:', APP_NAME)
+    if DEF_URL:
+        inject_sub()
+    else:
+        print('· 未传订阅地址，跳过内置订阅注入')
+    inject_name()
+    inject_netspeed_always()
+    inject_codec_title()
+    inject_dns_default()
+    print('=== 汇总：%s ===' % ('全部成功' if not fails else '失败项 ' + ','.join(fails)))
+    if fails:
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()
