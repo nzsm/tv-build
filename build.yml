@@ -1,0 +1,46 @@
+name: Build TVBox APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+   build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. 检出源码
+        uses: actions/checkout@v4
+
+      - name: 2. 配置 JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: 3. 配置 Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 4. 编译 Debug 包
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+
+      - name: 5. 编译 Release 包
+        continue-on-error: true
+        run: |
+          ./gradlew assembleRelease --stacktrace
+
+      - name: 6. 收集所有 APK
+        run: |
+          mkdir -p out
+          find . -name "*.apk" -path "*/outputs/*" -exec cp {} out/ \;
+          ls -lh out
+
+      - name: 7. 上传 APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tvbox-apk
+          path: out/*.apk
+          if-no-files-found: error
