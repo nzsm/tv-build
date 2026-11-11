@@ -1,1 +1,201 @@
-j
+# ============================================================
+# 云编译 TVBoxOS 定制 APK —— 增强版
+# 在 nzsm 的 v10 基础上，新增：
+#   ① tvbox_ext.py 注入：内置默认订阅地址（装上就自动加载你的订阅）
+#   ② tvbox_ext.py 注入：APP 显示名称可自定义
+#   ③ 防重复提交、防并发、失败自动打印日志
+# 保留 v10 原有能力：
+#   · tvbox_optimize.py 注入 DNS 回退 + AdGuard 最新广告规则
+#   · keystore 正式重签 + 验签
+#   · 产物回写 apk/ 并生成下载链接.txt
+# 用法：上传到 仓库/.github/workflows/build-apk.yml，Actions 页 Run workflow
+# ============================================================
+name: 云编译 TVBoxOS 定制 APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      default_url:
+        description: '内置默认订阅地址（留空=自动用 你的用户名/tv-src/main/sub/main.json）'
+        required: false
+        default: ''
+      app_name:
+        description: 'APP 显示名称'
+        required: false
+        default: '影视仓定制版'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: 编译 arm64 定制版
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: 1. 检出本仓库
+        uses: actions/checkout@v4
+
+      - name: 2. 拉取 TVBoxOS 最新源码
+        run: |
+          git clone --depth 1 --branch main https://github.com/q215613905/TVBoxOS.git tvboxos-src
+          echo "--- 源码结构 ---"
+          ls tvboxos-src | head -20
+
+      - name: 3. 设置 JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: 4. 安装 Python 3.9（chaquo 交叉编译必需）
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: 5. 安装 Gradle（用 wrapper 版本）
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: 6. 应用版本号 + local.properties + 编译内存
+        working-directory: tvboxos-src
+        run: |
+          TAG=$(date +%Y%m%d-%H%M)
+          echo "TAG=${TAG}" >> $GITHUB_ENV
+          sed -i "/versionName/s#[0-9a-zA-Z_\.\'\"-]\+\$#\'${TAG}\'#" app/build.gradle || true
+          grep -n "versionName" app/build.gradle | head -3 || true
+          if [ -n "$ANDROID_HOME" ]; then
+            echo "sdk.dir=$ANDROID_HOME" > local.properties
+          else
+            echo "sdk.dir=/usr/local/lib/android/sdk" > local.properties
+          fi
+          cat local.properties
+          sed -i 's#buildPython("D:[^"]*")#buildPython("python")#g' pyramid/build.gradle || true
+          grep -n "buildPython" pyramid/build.gradle || echo "（pyramid 无 buildPython 行）"
+          if [ -f gradle.properties ]; then
+            echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" >> gradle.properties
+          else
+            echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" > gradle.properties
+          fi
+          cat gradle.properties
+
+      - name: 7. 注入优化（DNS 回退 + 最新广告规则）
+        run: |
+          echo "=== 注入 DNS 优化 + 最新 AdGuard 广告规则 ==="
+          python3 tvbox_optimize.py tvboxos-src
+          echo "=== 检查关键改动 ==="
+          grep -c "114.114.114.114" tvboxos-src/app/src/main/java/com/github/tvbox/osc/util/OkGoHelper.java || true
+          grep -c "catch (Throwable e)" tvboxos-src/app/src/main/java/com/github/tvbox/osc/util/OkGoHelper.java || true
+          echo
+
+      - name: 8. 注入定制增强（内置订阅地址 + APP 名称）
+        env:
+          IN_URL: ${{ github.event.inputs.default_url }}
+          IN_NAME: ${{ github.event.inputs.app_name }}
+        run: |
+          DEF_URL="${IN_URL}"
+          if [ -z "${DEF_URL}" ]; then
+            DEF_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY_OWNER}/tv-src/main/sub/main.json"
+          fi
+          APP_NAME="${IN_NAME}"
+          if [ -z "${APP_NAME}" ]; then
+            APP_NAME="影视仓定制版"
+          fi
+          echo "内置订阅: ${DEF_URL}"
+          echo "APP 名称: ${APP_NAME}"
+          python3 tvbox_ext.py tvboxos-src "${DEF_URL}" "${APP_NAME}"
+          echo "--- 注入后核对 ---"
+          grep -n 'HawkConfig.API_URL, "http' tvboxos-src/app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java | head -3 || true
+          grep -n 'name="app_name"' tvboxos-src/app/src/main/res/values/strings.xml || true
+
+      - name: 9. 编译 arm64 变体（python64）
+        working-directory: tvboxos-src
+        run: |
+          chmod +x gradlew
+          echo "=== 编译 python64（arm64），低并行防 OOM ==="
+          ./gradlew assemblePython64Release --no-daemon --max-workers=2 --stacktrace 2>&1 | tee /tmp/gradle.log
+          EXIT_CODE=${PIPESTATUS[0]}
+          echo "=== 编译退出码: ${EXIT_CODE} ==="
+          if [ ${EXIT_CODE} -ne 0 ]; then
+            echo "!!! 编译失败，最后 80 行日志："
+            tail -80 /tmp/gradle.log
+            exit 1
+          fi
+
+      - name: 10. 收集 APK（只收 release 产物）
+        run: |
+          set -e
+          mkdir -p apk-out
+          FOUND=0
+          for f in $(find tvboxos-src/app/build/outputs -name "*.apk" 2>/dev/null | grep -i "release"); do
+            cp "$f" "apk-out/$(basename "$f")"
+            FOUND=1
+          done
+          echo "找到 APK 数量: ${FOUND}"
+          ls -la apk-out/
+          if [ ${FOUND} -eq 0 ]; then
+            echo "!!! 没有找到编译产物"; exit 1
+          fi
+
+      - name: 11. 正式签名 + 验签
+        env:
+          KS_PASS: "${{ secrets.KEYSTORE_PASS || 'tvbox2026' }}"
+        run: |
+          set -e
+          KS="keystore/tvbox.keystore"
+          if [ -f "$KS" ]; then
+            echo "发现 keystore，开始正式签名..."
+            BT=$(ls -d "${ANDROID_SDK_ROOT}"/build-tools/*/ 2>/dev/null | tail -1)
+            ZA="${BT}zipalign"
+            APKS="${BT}apksigner"
+            for f in apk-out/*.apk; do
+              [ -f "$f" ] || continue
+              echo "签名中: $f"
+              "$ZA" -f 4 "$f" "$f.align"
+              "$APKS" sign --ks "$KS" --ks-pass pass:${KS_PASS} --key-pass pass:${KS_PASS} --out "$f.signed" "$f.align"
+              mv -f "$f.signed" "$f"
+              rm -f "$f.align"
+              "$APKS" verify "$f" || { echo "!!! 签名验证失败: $f"; exit 1; }
+              echo "签名验证通过: $f"
+            done
+          else
+            echo "仓库无 keystore/tvbox.keystore，使用原始签名（安装前需卸载旧版）"
+          fi
+
+      - name: 12. 上传 Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: TVBoxOS-APK-定制版
+          path: apk-out/*
+          if-no-files-found: error
+
+      - name: 13. git 回写 apk/ 目录
+        run: |
+          set -e
+          TOKEN="${{ github.token }}"
+          BRANCH="${GITHUB_REF_NAME}"
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git fetch origin
+          git reset --hard "origin/${BRANCH}"
+          mkdir -p apk
+          FN=$(ls apk-out/*.apk | head -1 | xargs basename)
+          RAW="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/apk/${FN}"
+          PAGES="https://${GITHUB_REPOSITORY_OWNER}.github.io/tvbox-server/apk/${FN}"
+          printf '最新 APK（手机浏览器打开即下载）：\n%s\n备用链接：\n%s\n' "${RAW}" "${PAGES}" > apk/下载链接.txt
+          rm -f apk/*.apk
+          cp apk-out/*.apk apk/
+          ls -la apk/
+          git add apk/
+          if git diff --cached --quiet; then
+            echo "apk 无变化，跳过提交"
+            exit 0
+          fi
+          git commit -m "云编译定制 APK 更新 ${TAG:-}"
+          git push origin "HEAD:${BRANCH}"
+          echo "--- 完成，apk/ 已更新 ---"
