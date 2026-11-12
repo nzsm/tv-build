@@ -22,7 +22,7 @@ on:
       app_name:
         description: 'APP 显示名称'
         required: false
-        default: '影视仓定制版'
+        default: '影视仓v4'
 
 permissions:
   contents: write
@@ -184,12 +184,13 @@ jobs:
           git fetch origin
           git reset --hard "origin/${BRANCH}"
           mkdir -p apk
-          FN=$(ls apk-out/*.apk | head -1 | xargs basename)
+          BASE=$(ls apk-out/*.apk | head -1 | xargs basename)
+          FN="${BASE%.apk}_${TAG:-manual}.apk"
           RAW="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/apk/${FN}"
           PAGES="https://${GITHUB_REPOSITORY_OWNER}.github.io/tvbox-server/apk/${FN}"
           printf '最新 APK（手机浏览器打开即下载）：\n%s\n备用链接：\n%s\n' "${RAW}" "${PAGES}" > apk/下载链接.txt
           rm -f apk/*.apk
-          cp apk-out/*.apk apk/
+          cp apk-out/*.apk "apk/${FN}"
           ls -la apk/
           git add apk/
           if git diff --cached --quiet; then
