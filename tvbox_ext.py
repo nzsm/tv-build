@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-tvbox_ext.py — TVBoxOS 定制增强注入（v3 全面版）
+tvbox_ext.py — TVBoxOS 定制增强注入（v4）
 用法: python3 tvbox_ext.py <源码目录> [默认订阅地址] [APP名称]
 
-注入 7 项：
+注入 6 项：
   1. 内置默认订阅地址（装上即自动加载你的订阅）
   2. APP 显示名称
   3. 播放页右上角实时网速常显（原版只在弹出底栏时才显示）
-  4. 播放页标题追加解码标识（硬解/软解）
+  4. 播放页标题前置「站点名」+ 后缀「播放器/解码方式」（全部在 PlayFragment 拼，走 Hawk 兜底，不依赖播放器对象）
   5. 安全 DNS 默认开启腾讯（原版默认关闭）
-  6. 播放页标题前置「站点名」，如 [王子·APP] 片名 第01集 · 硬解
-  7. APP 图标替换（仓库根目录放 app_icon.png 即自动生效，不放则跳过）
+  6. APP 图标替换（仓库根目录放 app_icon.png 即自动生效，不放则跳过）
 
-全部为幂等替换，每步打印校验，失败不静默（exit 1 让工作流标红）。
+v4 相比 v3 的变化：
+  · 解码标识不再注入 VodController.setTitle（那个 mPlayerConfig 在部分路径为空，会导致不显示），
+    改为在 PlayFragment 标题拼接处直接读 Hawk 设置 → 只要装进新包就一定显示。
+  · 一次编译内可重复执行，幂等。
+
+失败不静默（exit 1 让工作流标红）。
 """
 import os, re, sys, shutil
 
@@ -112,41 +116,6 @@ def inject_netspeed_always():
         print('!! 兜底校验失败'); fails.append('netspeed-verify')
 
 
-# ---------- 4. 标题解码标识 ----------
-def inject_codec_title():
-    p = jpath('app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java')
-    s = read(p)
-    old = '''public void setTitle(String playTitleInfo) {
-        mPlayTitle.setText(playTitleInfo);
-        mPlayTitle1.setText(playTitleInfo);
-    }'''
-    new = '''public void setTitle(String playTitleInfo) {
-        /*TVBOX_MOD: 标题追加解码标识（硬解/软解）*/
-        try {
-            String _codec = "";
-            if (mPlayerConfig != null && mPlayerConfig.has("ijk")) {
-                _codec = getCodecShortName(mPlayerConfig.optString("ijk", ""));
-            }
-            if (_codec != null && (_codec.indexOf("硬") >= 0 || _codec.indexOf("软") >= 0) && playTitleInfo != null && playTitleInfo.length() > 0) {
-                playTitleInfo = playTitleInfo + " · " + _codec;
-            }
-        } catch (Exception ignored) {
-        }
-        mPlayTitle.setText(playTitleInfo);
-        mPlayTitle1.setText(playTitleInfo);
-    }'''
-    if 'TVBOX_MOD: 标题追加解码标识' in s:
-        print('· 解码标识已注入，跳过'); return
-    if old not in s:
-        print('!! 未匹配 setTitle 方法'); fails.append('setTitle'); return
-    before = s
-    s = s.replace(old, new, 1)
-    if not delta_ok(before, s):
-        print('!! 括号结构改变'); fails.append('codec-brace'); return
-    write(p, s)
-    print('+ 已注入：播放标题显示 硬解/软解')
-
-
 # ---------- 5. 安全 DNS 默认腾讯 ----------
 def inject_dns_default():
     p = jpath('app/src/main/java/com/github/tvbox/osc/util/OkGoHelper.java')
@@ -167,19 +136,20 @@ def inject_dns_default():
     print('+ 已注入：安全 DNS 默认开启（腾讯）')
 
 
-# ---------- 6. 标题前置站点名 ----------
-def inject_site_name():
+# ---------- 4. 标题：源名前缀 + 播放器/解码后缀（PlayFragment，全走设置兜底） ----------
+def inject_title_tags():
     p = jpath('app/src/main/java/com/github/tvbox/osc/ui/fragment/PlayFragment.java')
     if not os.path.isfile(p):
         print('!! 找不到 PlayFragment.java'); fails.append('PlayFragment'); return
     s = read(p)
-    if 'TVBOX_MOD: 标题前置站点名' in s:
-        print('· 站点名前缀已注入，跳过'); return
+    if 'TVBOX_MOD: 标题源名与解码' in s:
+        print('· 标题标识已注入，跳过'); return
 
     anchor = '    public void setPlayTitle(boolean show)'
-    helper = (
+
+    helpers = (
         '    private String getSourcePrefix() {\n'
-        '        /*TVBOX_MOD: 标题前置站点名*/\n'
+        '        /*TVBOX_MOD: 标题源名与解码 - 前缀*/\n'
         '        try {\n'
         '            if (sourceBean == null && mVodInfo != null) {\n'
         '                sourceBean = ApiConfig.get().getSource(mVodInfo.sourceKey);\n'
@@ -194,33 +164,62 @@ def inject_site_name():
         '        }\n'
         '        return "";\n'
         '    }\n\n'
+        '    private String getCodecSuffix() {\n'
+        '        /*TVBOX_MOD: 标题源名与解码 - 后缀（走 Hawk 兜底，保证一定显示）*/\n'
+        '        try {\n'
+        '            int _pl = -1;\n'
+        '            if (mVodPlayerCfg != null && mVodPlayerCfg.has("pl")) {\n'
+        '                _pl = mVodPlayerCfg.optInt("pl", 2);\n'
+        '            }\n'
+        '            if (_pl < 0) {\n'
+        '                _pl = (int) Hawk.get(HawkConfig.PLAY_TYPE, 2);\n'
+        '            }\n'
+        '            if (_pl == 1) {\n'
+        '                String _ijk = "";\n'
+        '                if (mVodPlayerCfg != null && mVodPlayerCfg.has("ijk")) {\n'
+        '                    _ijk = mVodPlayerCfg.optString("ijk", "");\n'
+        '                }\n'
+        '                if (_ijk.length() == 0) {\n'
+        '                    _ijk = Hawk.get(HawkConfig.IJK_CODEC, "硬解码");\n'
+        '                }\n'
+        '                if (_ijk != null && _ijk.indexOf("硬") >= 0) return " · 硬解";\n'
+        '                if (_ijk != null && _ijk.indexOf("软") >= 0) return " · 软解";\n'
+        '                return " · IJK";\n'
+        '            }\n'
+        '            if (_pl == 2) return " · EXO";\n'
+        '            if (_pl == 10) return " · MX";\n'
+        '        } catch (Exception ignored) {\n'
+        '        }\n'
+        '        return "";\n'
+        '    }\n\n'
     )
+
     if anchor not in s:
-        print('!! 未找到 setPlayTitle 锚点'); fails.append('site-name-anchor'); return
+        print('!! 未找到 setPlayTitle 锚点'); fails.append('title-anchor'); return
 
     t1_old = '                playTitleInfo = mVodInfo.name + " " + mVodInfo.seriesMap.get(mVodInfo.playFlag).get(mVodInfo.playIndex).name;'
-    t1_new = '                playTitleInfo = getSourcePrefix() + mVodInfo.name + " " + mVodInfo.seriesMap.get(mVodInfo.playFlag).get(mVodInfo.playIndex).name;'
+    t1_new = '                playTitleInfo = getSourcePrefix() + mVodInfo.name + " " + mVodInfo.seriesMap.get(mVodInfo.playFlag).get(mVodInfo.playIndex).name + getCodecSuffix();'
     t2_old = '        String playTitleInfo = mVodInfo.name + " " + vs.name;'
-    t2_new = '        String playTitleInfo = getSourcePrefix() + mVodInfo.name + " " + vs.name;'
+    t2_new = '        String playTitleInfo = getSourcePrefix() + mVodInfo.name + " " + vs.name + getCodecSuffix();'
 
     hit1 = t1_old in s
     hit2 = t2_old in s
     if not (hit1 and hit2):
         print('!! 标题拼接点匹配不全 hit1=%s hit2=%s' % (hit1, hit2))
-        fails.append('site-name-title')
+        fails.append('title-points')
         return
 
     before = s
-    s = s.replace(anchor, helper + anchor, 1)
+    s = s.replace(anchor, helpers + anchor, 1)
     s = s.replace(t1_old, t1_new, 1)
     s = s.replace(t2_old, t2_new, 1)
     if not delta_ok(before, s):
-        print('!! 括号结构改变'); fails.append('site-name-brace'); return
+        print('!! 括号结构改变'); fails.append('title-brace'); return
     write(p, s)
-    print('+ 已注入：播放页标题前置站点名')
+    print('+ 已注入：标题 [源名] 前缀 + 播放器/解码 后缀')
 
 
-# ---------- 7. 图标替换 ----------
+# ---------- 6. 图标替换 ----------
 def inject_icon():
     src_icon = None
     for cand in ['app_icon.png', os.path.join(os.path.dirname(os.path.abspath(SRC)), 'app_icon.png')]:
@@ -249,7 +248,7 @@ def inject_icon():
 
 
 def main():
-    print('=== TVBoxOS 定制增强 v3 ===')
+    print('=== TVBoxOS 定制增强 v4 ===')
     print('源码:', os.path.abspath(SRC))
     print('订阅:', DEF_URL or '(未传)')
     print('名称:', APP_NAME)
@@ -259,9 +258,8 @@ def main():
         print('· 未传订阅地址，跳过内置订阅注入')
     inject_name()
     inject_netspeed_always()
-    inject_codec_title()
     inject_dns_default()
-    inject_site_name()
+    inject_title_tags()
     inject_icon()
     print('=== 汇总：%s ===' % ('全部成功' if not fails else '失败项 ' + ','.join(fails)))
     if fails:
