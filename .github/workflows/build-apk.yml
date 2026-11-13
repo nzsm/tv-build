@@ -77,6 +77,7 @@ jobs:
           sed -i 's#buildPython("D:[^"]*")#buildPython("python")#g' pyramid/build.gradle || true
           grep -n "buildPython" pyramid/build.gradle || echo "（pyramid 无 buildPython 行）"
           if [ -f gradle.properties ]; then
+            sed -i '/^org.gradle.jvmargs/d' gradle.properties || true
             echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" >> gradle.properties
           else
             echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" > gradle.properties
@@ -116,12 +117,33 @@ jobs:
         working-directory: tvboxos-src
         run: |
           chmod +x gradlew
+          echo "=== 环境自检 ==="
+          java -version 2>&1 | head -2
+          python3 --version
+          echo "ANDROID_HOME=${ANDROID_HOME}"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"
+          ls -d ${ANDROID_HOME}/ndk/* 2>/dev/null || echo "（未发现 NDK 目录）"
           echo "=== 编译 python64（arm64），低并行防 OOM ==="
           ./gradlew assemblePython64Release --no-daemon --max-workers=2 --stacktrace 2>&1 | tee /tmp/gradle.log
           EXIT_CODE=${PIPESTATUS[0]}
           echo "=== 编译退出码: ${EXIT_CODE} ==="
           if [ ${EXIT_CODE} -ne 0 ]; then
-            echo "!!! 编译失败，最后 80 行日志："
+            {
+              echo "## 编译失败（exit ${EXIT_CODE}）"
+              echo ""
+              echo "### 1) gradle What went wrong"
+              echo '```'
+              grep -n -A 30 "What went wrong" /tmp/gradle.log | head -70 || echo "（无此段）"
+              echo '```'
+              echo "### 2) 关键错误行"
+              echo '```'
+              grep -n -i "error:\|FAILURE:\|cannot find symbol\|failed to\|could not\|No such file" /tmp/gradle.log | head -60 || echo "（无）"
+              echo '```'
+              echo "### 3) 日志尾部 60 行"
+              echo '```'
+              tail -n 60 /tmp/gradle.log
+              echo '```'
+            } >> $GITHUB_STEP_SUMMARY
             tail -80 /tmp/gradle.log
             exit 1
           fi
