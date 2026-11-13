@@ -222,3 +222,48 @@ jobs:
           git commit -m "云编译定制 APK 更新 ${TAG:-}"
           git push origin "HEAD:${BRANCH}"
           echo "--- 完成，apk/ 已更新 ---"
+
+      - name: 14. 失败时把编译日志回写仓库（便于远程读取）
+        if: failure()
+        run: |
+          set +e
+          {
+            echo "# CI 失败日志  $(date -u '+%Y-%m-%d %H:%M:%SZ')"
+            echo
+            echo "## 环境"
+            java -version 2>&1 | head -3
+            python3 --version
+            echo "ANDROID_HOME=${ANDROID_HOME}"
+            echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"
+            ls -d ${ANDROID_HOME}/ndk/* 2>/dev/null | head -3
+            echo
+            echo "## 复现自检（源码目录状态）"
+            ls -l tvboxos-src/gradlew 2>/dev/null
+            head -3 tvboxos-src/gradlew 2>/dev/null
+            cat tvboxos-src/gradle/wrapper/gradle-wrapper.properties 2>/dev/null | tail -4
+            cat tvboxos-src/local.properties 2>/dev/null
+            tail -4 tvboxos-src/gradle.properties 2>/dev/null
+            echo
+            echo "## gradle: What went wrong"
+            grep -A 40 "What went wrong" /tmp/gradle.log 2>/dev/null | head -70
+            echo
+            echo "## 关键错误行"
+            grep -n -i "error:\|FAILURE:\|cannot find symbol\|Could not\|Cause:\|Exception" /tmp/gradle.log 2>/dev/null | head -50
+            echo
+            echo "## 日志尾部 350 行"
+            echo '```'
+            tail -n 350 /tmp/gradle.log 2>/dev/null
+            echo '```'
+          } > ci-error.log 2>&1
+          wc -l ci-error.log
+          head -20 ci-error.log
+          TOKEN="${{ github.token }}"
+          BRANCH="${GITHUB_REF_NAME}"
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git fetch origin
+          git reset --hard "origin/${BRANCH}"
+          git add -f ci-error.log
+          git commit -m "CI 失败日志 $(date -u '+%Y%m%d-%H%M%S')" || true
+          git push origin "HEAD:${BRANCH}" || true
