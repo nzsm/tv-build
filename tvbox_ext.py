@@ -22,7 +22,7 @@ v6 相比 v5 的变化：
 
 失败不静默（exit 1 让工作流标红）。
 """
-import os, re, sys, shutil
+import os, re, sys, shutil, glob
 
 SRC = sys.argv[1] if len(sys.argv) > 1 else '.'
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
@@ -397,6 +397,59 @@ CAST_BTN = '        <TextView\n            android:id="@+id/play_cast"\n        
 METHOD_SRC = '\n    private void tkTimeRefresh() {\n        try {\n            java.text.SimpleDateFormat hm = new java.text.SimpleDateFormat("HH:mm:ss");\n            TextView sys = (TextView) findViewById(R.id.tv_sys_time);\n            if (sys != null) sys.setText(hm.format(new java.util.Date()));\n            long dur = 0, cur = 0;\n            if (mPlayer != null) {\n                dur = mPlayer.getDuration();\n                cur = mPlayer.getCurrentPosition();\n            }\n            if (dur > 0) {\n                long left = dur - cur;\n                TextView tvLeft = (TextView) findViewById(R.id.tk_time_left);\n                if (tvLeft != null) tvLeft.setText("影片剩余 " + tkHms(left));\n                TextView tvEnd = (TextView) findViewById(R.id.tv_time_end);\n                if (tvEnd != null) tvEnd.setText("影片结束 " + hm.format(new java.util.Date(System.currentTimeMillis() + left)));\n            }\n        } catch (Throwable ignored) {\n        }\n    }\n\n    private String tkHms(long ms) {\n        long s = ms / 1000;\n        long h = s / 3600;\n        long m = (s % 3600) / 60;\n        long ss = s % 60;\n        if (h > 0) return String.format("%d:%02d:%02d", h, m, ss);\n        return String.format("%02d:%02d", m, ss);\n    }\n    // tk_time_refresh\n'
 
 
+
+TK_LIB_PREFIX = ("dkplayer_", "brvah_", "exo_", "dp_", "sp_", "ms_", "y_", "material_",
+                 "abc_", "mtrl_", "design_", "cardview_", "appcompat_", "tooltip_", "m3_",
+                 "bottomsheet_", "nested_", "swiperefresh_", "coordinatorlayout_")
+
+
+def _tk_autofill(res):
+    """兜底：布局里引用了工程没有的 dimen/color 时自动补一个，避免 aapt link 失败"""
+    known_d, known_c = set(), set()
+    vals = os.path.join(res, "values")
+    for f in glob.glob(os.path.join(vals, "*.xml")):
+        try:
+            t = open(f, encoding="utf-8", errors="ignore").read()
+        except Exception:
+            continue
+        known_d |= set(re.findall(r'<dimen\s+name="([^"]+)"', t))
+        known_c |= set(re.findall(r'<color\s+name="([^"]+)"', t))
+    need_d, need_c = set(), set()
+    files = glob.glob(os.path.join(res, "layout", "*.xml")) + glob.glob(os.path.join(res, "drawable*", "*.xml")) + glob.glob(os.path.join(res, "anim", "*.xml"))
+    for f in files:
+        try:
+            t = open(f, encoding="utf-8", errors="ignore").read()
+        except Exception:
+            continue
+        need_d |= set(re.findall(r'@dimen/([a-zA-Z0-9_]+)', t))
+        need_c |= set(re.findall(r'@color/([a-zA-Z0-9_]+)', t))
+    need_d = set(n for n in need_d - known_d if not n.startswith(TK_LIB_PREFIX))
+    need_c = set(n for n in need_c - known_c if not n.startswith(TK_LIB_PREFIX))
+    if not need_d and not need_c:
+        print("+ 资源兜底：无缺失，跳过")
+        return
+    out = ['<?xml version="1.0" encoding="utf-8"?>', "<resources>",
+           "    <!-- 自动兜底：上游新增引用、本工程缺定义时按名字数值补齐 -->"]
+    for n in sorted(need_d):
+        m = re.search(r"(\d+)", n)
+        v = int(m.group(1)) if m else 0
+        unit = "mm" if n.startswith(("vs_", "ts_")) else ("sp" if n.startswith("sp_") else "dp")
+        out.append('    <dimen name="%s">%d%s</dimen>' % (n, v, unit))
+    for n in sorted(need_c):
+        m = re.match(r"color_([0-9a-fA-F]{6})(?:_([0-9a-fA-F]{2}))?", n)
+        if m:
+            val = "#" + ((m.group(2) or "FF").upper()) + m.group(1).upper()
+        else:
+            val = "#FFFFFFFF"
+        out.append('    <color name="%s">%s</color>' % (n, val))
+    out.append("</resources>")
+    dvals = os.path.join(res, "values")
+    os.makedirs(dvals, exist_ok=True)
+    open(os.path.join(dvals, "tk_autofill.xml"), "w", encoding="utf-8").write("\n".join(out))
+    print("+ 资源兜底：补了 %d 个尺寸 / %d 个颜色（例如 %s）" % (
+        len(need_d), len(need_c), ", ".join(sorted(need_d)[:6]) or "-"))
+
+
 def _tk_existing_names(res):
     names = set()
     vals = os.path.join(res, "values")
@@ -548,6 +601,7 @@ def inject_takagen(src):
         js = js.replace("case 1002: { // 显示底部菜单", "case 1002: { // 显示底部菜单\n                        tkTimeRefresh();", 1)
         print("+ 已注入北京时间/影片剩余/结束（用他的 tv_sys_time / tk_time_left / tv_time_end）")
     open(vc, "w", encoding="utf-8").write(js)
+    _tk_autofill(res)
     print("--- 移植完成：布局=他的，资源=他的，代码只改绑定与类型 ---")
 
 
