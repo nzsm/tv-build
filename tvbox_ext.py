@@ -1,7 +1,6 @@
-# tvbox_ext.py 【阶段2：布局 + 4个自定义图标】
-# 保留：DNS、去广告、播放栏布局（居中、间距、紧贴、扁字）
-# 新增：重播、字幕三点、倍速码表、屏显四角 四个矢量图标
-# 仍然不加入右下角北京时间、剩余/结束时间
+# tvbox_ext.py 【阶段3 最终完整版】
+# 保留：DNS、去广告、播放栏布局、4个自定义图标（重播/字幕三点/倍速码表/屏显四角）
+# 新增：右下角时间控件（北京时间 + 影片剩余 + 结束时间）
 import os
 import re
 
@@ -55,10 +54,11 @@ def inject_base():
     print("[+] 基础注入完成")
 
 def inject_player_layout():
-    print("[+] 注入播放控制栏布局参数：居中、间距、图标文字紧贴、扁文字")
+    print("[+] 注入播放控制栏布局参数：居中、间距、图标文字紧贴、扁文字 + 右下角时间容器")
     layout_file = f"{RES}/layout/player_vod_control_view.xml"
     if os.path.exists(layout_file):
         content = open(layout_file, "r", encoding="utf-8").read()
+        # 修改滚动控制栏
         content = re.sub(r'<HorizontalScrollView[^>]*>',
             r'<HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_horizontal" android:paddingHorizontal="8dp">',
             content)
@@ -67,8 +67,16 @@ def inject_player_layout():
 <ImageView android:layout_width="26dp" android:layout_height="26dp" android:layout_gravity="center_horizontal"/>
 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="8sp" android:includeFontPadding="false" android:textScaleX="1.1" android:layout_gravity="center_horizontal"/>'''
         content = re.sub(item_pattern, item_new, content)
+        # 在布局根节点内增加右下角时间组件（进度条上方）
+        time_block = '''
+<LinearLayout android:id="@+id/time_layout" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:layout_marginEnd="30dp" android:layout_marginBottom="200dp" android:orientation="vertical" android:gravity="end">
+    <TextView android:id="@+id/tv_sys_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="70sp" android:textColor="#FFFFFF" android:textStyle="bold"/>
+    <TextView android:id="@+id/tv_film_end" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="20sp" android:textColor="#FFFFFF"/>
+</LinearLayout>'''
+        # 找到根布局闭合标签前插入
+        content = re.sub(r'(</RelativeLayout>)', time_block + r'\1', content)
         open(layout_file, "w", encoding="utf-8").write(content)
-    print("[+] 播放栏布局注入完成")
+    print("[+] 播放栏布局+时间控件注入完成")
 
 def write_icons():
     if not os.path.exists(DRAWABLE):
@@ -91,13 +99,74 @@ def replace_icon_ref():
         open(layout_file, "w", encoding="utf-8").write(content)
     print("[+] 图标引用替换完成")
 
+def inject_time_java():
+    print("[+] 注入时间刷新Java代码（北京时间、剩余时长、预估结束时间）")
+    java_path = f"{JAVA}/com/xxx/PlayerVodControlView.java"
+    if os.path.exists(java_path):
+        txt = open(java_path, "r", encoding="utf-8").read()
+        # 增加成员变量
+        var_insert = '''
+    private TextView tv_sys_time;
+    private TextView tv_film_end;
+    private Handler timeHandler = new Handler(Looper.getMainLooper());
+    private Runnable timeRunnable = new Runnable() {
+        @Override
+        public void run() {
+            updateTimeInfo();
+            timeHandler.postDelayed(this, 1000);
+        }
+    };'''
+        txt = re.sub(r'(public class PlayerVodControlView)', r'\1' + var_insert, txt)
+        # 增加onAttachedToWindow启动、onDetachedToWindow停止
+        attach_code = '''
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        tv_sys_time = findViewById(R.id.tv_sys_time);
+        tv_film_end = findViewById(R.id.tv_film_end);
+        timeHandler.post(timeRunnable);
+    }
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        timeHandler.removeCallbacks(timeRunnable);
+    }
+    private void updateTimeInfo() {
+        if (tv_sys_time == null || tv_film_end == null) return;
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm:ss");
+        sdf.setTimeZone(java.util.TimeZone.getDefault());
+        String nowTime = sdf.format(new java.util.Date());
+        tv_sys_time.setText(nowTime);
+        long dur = mPlayer.getDuration();
+        long pos = mPlayer.getCurrentPosition();
+        if (dur <= 0) {
+            tv_film_end.setText("");
+            return;
+        }
+        long remain = dur - pos;
+        long rs = remain / 1000;
+        String remainStr;
+        if (rs >= 3600) {
+            remainStr = String.format("%d:%02d:%02d", rs/3600, (rs%3600)/60, rs%60);
+        } else {
+            remainStr = String.format("%02d:%02d", rs/60, rs%60);
+        }
+        long endTs = System.currentTimeMillis() + remain;
+        String endStr = sdf.format(new java.util.Date(endTs));
+        tv_film_end.setText(String.format("影片剩余 %s · 影片结束 %s", remainStr, endStr));
+    }'''
+        txt = re.sub(r'(public void setPlayer\(.*?\))', r'\1' + attach_code, txt)
+        open(java_path, "w", encoding="utf-8").write(txt)
+    print("[+] 时间刷新逻辑注入完成")
+
 def main():
-    print("===== 阶段2 启动：布局 + 4个自定义图标，无时间控件 =====")
+    print("===== 阶段3 最终完整版启动：布局 + 4图标 + 右下角时间 =====")
     inject_base()
     inject_player_layout()
     write_icons()
     replace_icon_ref()
-    print("===== 阶段2脚本执行完毕，等待编译 =====")
+    inject_time_java()
+    print("===== 脚本执行完毕，等待编译 =====")
 
 if __name__ == "__main__":
     main()
