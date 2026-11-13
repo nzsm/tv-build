@@ -302,12 +302,6 @@ TK_XML['tvx_pre'] = (
 TK_XML['tvx_next'] = (
 '<vector android:height="24dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="24dp" xmlns:android="http://schemas.android.com/apk/res/android">\n    <path android:fillColor="@android:color/white" android:pathData="M7.58,16.89l5.77,-4.07c0.56,-0.4 0.56,-1.24 0,-1.63L7.58,7.11C6.91,6.65 6,7.12 6,7.93v8.14c0,0.81 0.91,1.28 1.58,0.82zM16,7v10c0,0.55 0.45,1 1,1s1,-0.45 1,-1V7c0,-0.55 -0.45,-1 -1,-1s-1,0.45 -1,1z"/>\n</vector>'
 )
-TK_XML['tvx_replay'] = (
-'<vector android:height="24dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="24dp" xmlns:android="http://schemas.android.com/apk/res/android">\n    <path android:fillColor="@android:color/white" android:pathData="M12,5V2.21c0,-0.45 -0.54,-0.67 -0.85,-0.35l-3.8,3.79c-0.2,0.2 -0.2,0.51 0,0.71l3.79,3.79c0.32,0.31 0.86,0.09 0.86,-0.36V7c3.73,0 6.68,3.42 5.86,7.29 -0.47,2.27 -2.31,4.1 -4.57,4.57 -3.57,0.75 -6.75,-1.7 -7.23,-5.01 -0.07,-0.48 -0.49,-0.85 -0.98,-0.85 -0.6,0 -1.08,0.53 -1,1.13 0.62,4.39 4.8,7.64 9.53,6.72 3.12,-0.61 5.63,-3.12 6.24,-6.24C20.84,9.48 16.94,5 12,5z"/>\n</vector>'
-)
-TK_XML['tvx_subtitle'] = (
-'<vector android:height="24dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="24dp" xmlns:android="http://schemas.android.com/apk/res/android">\n    <path android:fillColor="@android:color/white" android:pathData="M20,4L4,4c-1.1,0 -2,0.9 -2,2v12c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2L22,6c0,-1.1 -0.9,-2 -2,-2zM4,12h4v2L4,14v-2zM14,18L4,18v-2h10v2zM20,18h-4v-2h4v2zM20,14L10,14v-2h10v2z"/>\n</vector>'
-)
 TK_XML['tvx_audio'] = (
 '<vector android:height="24dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="24dp" xmlns:android="http://schemas.android.com/apk/res/android">\n    <path android:fillColor="@android:color/white" android:pathData="M12,5v8.55c-0.94,-0.54 -2.1,-0.75 -3.33,-0.32 -1.34,0.48 -2.37,1.67 -2.61,3.07 -0.46,2.74 1.86,5.08 4.59,4.65 1.96,-0.31 3.35,-2.11 3.35,-4.1V7h2c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2h-2c-1.1,0 -2,0.9 -2,2z"/>\n</vector>'
 )
@@ -317,12 +311,6 @@ TK_XML['tvx_danmu'] = (
 TK_XML['tvx_scale'] = (
 '<vector android:height="24dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="24dp" xmlns:android="http://schemas.android.com/apk/res/android">\n    <path android:fillColor="@android:color/white" android:pathData="M18,12c-0.55,0 -1,0.45 -1,1v2h-2c-0.55,0 -1,0.45 -1,1s0.45,1 1,1h3c0.55,0 1,-0.45 1,-1v-3c0,-0.55 -0.45,-1 -1,-1zM7,9h2c0.55,0 1,-0.45 1,-1s-0.45,-1 -1,-1L6,7c-0.55,0 -1,0.45 -1,1v3c0,0.55 0.45,1 1,1s1,-0.45 1,-1L7,9zM21,3L3,3c-1.1,0 -2,0.9 -2,2v14c0,1.1 0.9,2 2,2h18c1.1,0 2,-0.9 2,-2L23,5c0,-1.1 -0.9,-2 -2,-2zM20,19.01L4,19.01c-0.55,0 -1,-0.45 -1,-1L3,5.99c0,-0.55 0.45,-1 1,-1h16c0.55,0 1,0.45 1,1v12.02c0,0.55 -0.45,1 -1,1z"/>\n</vector>'
 )
-TK_XML['tvx_speed'] = (
-'<vector android:height="24dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="24dp" xmlns:android="http://schemas.android.com/apk/res/android">\n    <path android:fillColor="@android:color/white" android:pathData="M5.58,16.89l5.77,-4.07c0.56,-0.4 0.56,-1.24 0,-1.63L5.58,7.11C4.91,6.65 4,7.12 4,7.93v8.14c0,0.81 0.91,1.28 1.58,0.82zM13,7.93v8.14c0,0.81 0.91,1.28 1.58,0.82l5.77,-4.07c0.56,-0.4 0.56,-1.24 0,-1.63l-5.77,-4.07c-0.67,-0.47 -1.58,0 -1.58,0.81z"/>\n</vector>'
-)
-TK_XML['tvx_screen'] = (
-'<vector android:height="24dp"\n    android:tint="#FFFFFF"\n    android:viewportHeight="24"\n    android:viewportWidth="24"\n    android:width="24dp"\n    xmlns:android="http://schemas.android.com/apk/res/android">\n    <path\n        android:fillColor="@android:color/white"\n        android:pathData="M21,3L3,3c-1.11,0 -2,0.89 -2,2v12c0,1.1 0.89,2 2,2h5v2h8v-2h5c1.1,0 1.99,-0.9 1.99,-2L23,5c0,-1.11 -0.9,-2 -2,-2zM21,17L3,17L3,5h18v12zM16,11l-7,4L9,7z" />\n</vector>'
-)
 
 def _vec(name, w, paths, stroke=False, sw=1.8):
     VEC[name] = (w, paths, stroke, sw)
@@ -330,25 +318,29 @@ def _vec(name, w, paths, stroke=False, sw=1.8):
 # 静态文字按钮 —— 文字清空后只显示图标
 _vec('tvx_pre',    26, ["M6,6h2v12H6V6z", "M9.5,12l8.5,-6v12l-8.5,-6z"])
 _vec('tvx_next',   26, ["M6,18l8.5,-6L6,6v12z", "M16,6v12h2V6h-2z"])
-_vec('tvx_replay', 26, ["M12,5V1L7,6l5,5V7c3.31,0 6,2.69 6,6s-2.69,6 -6,6c-1.54,0 -2.94,-0.58 -4.01,-1.54l-1.42,1.42C8.27,18.99 10.03,20 12,20c4.42,0 8,-3.58 8,-8s-3.58,-8 -8,-8z"])
+_vec('tvx_replay', 26, ["M12,5.4a6.6,6.6 0 1 0 4.7,1.8", "M10.2,10.4L13.2,12L10.2,13.6Z"], True, 2.0)
 _vec('tvx_refresh',26, ["M17.65,6.35C16.2,4.9 14.21,4 12,4c-4.42,0 -7.99,3.58 -7.99,8s3.57,8 7.99,8c3.73,0 6.84,-2.55 7.73,-6h-2.08c-0.82,2.33 -3.04,4 -5.65,4 -3.31,0 -6,-2.69 -6,-6s2.69,-6 6,-6c1.66,0 3.14,0.69 4.22,1.78L13,11h7V4l-2.35,2.35z"])
 _vec('tvx_reset',  26, ["M12,5c-1.93,0 -3.68,0.79 -4.95,2.05l-2.09,-2.09v5.99h5.99l-2.1,-2.1C9.85,7.53 10.86,7.1 12,7.1 14.65,7.1 16.9,9.35 16.9,12s-2.25,4.9 -4.9,4.9c-1.14,0 -2.15,-0.43 -2.96,-1.11l-1.42,1.42C9.02,18.42 10.42,19 12,19c3.87,0 7,-3.13 7,-7c0,-3.87 -3.13,-7 -7,-7z", "M14,12c0,-1.1 -0.9,-2 -2,-2s-2,0.9 -2,2 0.9,2 2,2 2,-0.9 2,-2z"])
-_vec('tvx_cast',   26, ["M1,18v3h3c0,-1.66 -1.34,-3 -3,-3z", "M1,14v2c2.76,0 5,2.24 5,5h2c0,-3.87 -3.13,-7 -7,-7z", "M1,10v2c4.97,0 9,4.03 9,9h2c0,-6.08 -4.93,-11 -11,-11z", "M21,3L3,3c-1.1,0 -2,0.9 -2,2v3h2L3,5h18v14h-7v2h7c1.1,0 2,-0.9 2,-2L23,5c0,-1.1 -0.9,-2 -2,-2z"])
-_vec('tvx_subtitle',26, ["M20,4L4,4c-1.1,0 -2,0.9 -2,2v12c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2L22,6c0,-1.1 -0.9,-2 -2,-2zM4,12h4v2L4,14v-2zM14,18L4,18v-2h10v2zM20,18h-4v-2h4v2zM20,14L10,14v-2h10v2z"])
+_vec('tvx_cast',   26, ["M3,6.2L21,6.2L21,16.2L3,16.2Z", "M7.4,6.2L4.9,3.4M16.6,6.2L19.1,3.4", "M9.5,16.2V18.4M14.5,16.2V18.4", "M6.5,8.4h3.4M8.2,8.4v4.6", "M12.4,8.4l1.6,4.6M15.6,8.4l-1.6,4.6"], True, 2.0)
+_vec('tvx_subtitle',26, ["M3,7L21,7L21,17L3,17Z", "M7.2,12a0.55,0.55 0 1 0 1.1,0a0.55,0.55 0 1 0 -1.1,0", "M11.45,12a0.55,0.55 0 1 0 1.1,0a0.55,0.55 0 1 0 -1.1,0", "M15.7,12a0.55,0.55 0 1 0 1.1,0a0.55,0.55 0 1 0 -1.1,0"], True, 2.0)
 _vec('tvx_audio',  26, ["M12,3v10.55c-0.59,-0.34 -1.27,-0.55 -2,-0.55 -2.21,0 -4,1.79 -4,4s1.79,4 4,4 4,-1.79 4,-4L14,7h4L18,3h-6z"])
+VEC['tvx_gauge'] = (26, ["M3.6,16.2a8.4,8.4 0 0 1 16.8,0", "M12,16.2L16.6,10.4"], True, 2.0)
+VEC['tvx_head'] = (26, ["M2.6,12h19.2", "M2.6,5.6v12.8"], True, 2.0)
+VEC['tvx_tail'] = (26, ["M2.8,12h19.2", "M21.4,5.6v12.8"], True, 2.0)
 VEC['tvx_video'] = (28, ["M3.4,6.4h10.4c0.7,0 1.1,0.4 1.1,1.1v9c0,0.7 -0.4,1.1 -1.1,1.1h-10.4c-0.7,0 -1.1,-0.4 -1.1,-1.1v-9c0,-0.7 0.4,-1.1 1.1,-1.1z", "M15.3,10.6l4.8,-2.9v8.6l-4.8,-2.9"], True, 1.6)
 _vec('tvx_danmu',  26, ["M20,2L4,2c-1.1,0 -1.99,0.9 -1.99,2L2,22l4,-4h14c1.1,0 2,-0.9 2,-2L22,4c0,-1.1 -0.9,-2 -2,-2z"])
-_vec('tvx_screen', 26, ["M21,2L3,2c-1.1,0 -2,0.9 -2,2v12c0,1.1 0.9,2 2,2h4v2h10v-2h4c1.1,0 2,-0.9 2,-2L23,4c0,-1.1 -0.9,-2 -2,-2zM3,16L21,16L21,4L3,4v12z"])
+_vec('tvx_screen', 26, ["M4,9V4H9", "M15,4H20V9", "M20,15V20H15", "M9,20H4V15"], True, 2.0)
 # 动态文字按钮 —— 文字保留（代码会刷新），左侧配小图标
 VEC['tvx_player'] = (20, ["M3.6,4.6h16.8c0.7,0 1.1,0.4 1.1,1.1v12.6c0,0.7 -0.4,1.1 -1.1,1.1h-16.8c-0.7,0 -1.1,-0.4 -1.1,-1.1v-12.6c0,-0.7 0.4,-1.1 1.1,-1.1z", "M8,4.6v15.4", "M16,4.6v15.4"], True, 1.6)
 VEC['tvx_decoder'] = (22, ["M6.6,6.6h10.8v10.8h-10.8z", "M9.6,9.6h4.8v4.8h-4.8z", "M9,4v2.4", "M12,4v2.4", "M15,4v2.4", "M9,17.6v2.4", "M12,17.6v2.4", "M15,17.6v2.4", "M4,9h2.4", "M4,12h2.4", "M4,15h2.4", "M17.6,9h2.4", "M17.6,12h2.4", "M17.6,15h2.4"], True, 1.4)
 _vec('tvx_scale',  18, ["M19,12h-2v3h-3v2h5L19,12zM3,10h2L5,7h3L8,5L3,5v5zM21,3L3,3c-1.1,0 -2,0.9 -2,2v14c0,1.1 0.9,2 2,2h18c1.1,0 2,-0.9 2,-2L23,5c0,-1.1 -0.9,-2 -2,-2zM21,19L3,19L3,5h18v14z"])
-_vec('tvx_speed',  18, ["M4,18l8.5,-6L4,6v12zM13,18l8.5,-6L13,6v12z"])
 # 横竖屏：竖屏手机 + 横屏手机 + 旋转箭头（线框）
-VEC['tvx_orientation'] = (28, ["M6.5,2.8h4c0.6,0 1,0.4 1,1v10.4c0,0.6 -0.4,1 -1,1h-4c-0.6,0 -1,-0.4 -1,-1V3.8c0,-0.6 0.4,-1 1,-1z", "M7.9,4.9h2.2", "M12.6,9h8c0.6,0 1,0.4 1,1v3.6c0,0.6 -0.4,1 -1,1h-8c-0.6,0 -1,-0.4 -1,-1V10c0,-0.6 0.4,-1 1,-1z", "M13.8,10.8h2.6"], True, 2.2)
+VEC['tvx_orientation'] = (28, ["M6.5,2.8h4c0.6,0 1,0.4 1,1v10.4c0,0.6 -0.4,1 -1,1h-4c-0.6,0 -1,-0.4 -1,-1V3.8c0,-0.6 0.4,-1 1,-1z", "M7.9,4.9h2.2", "M12.6,9h8c0.6,0 1,0.4 1,1v3.6c0,0.6 -0.4,1 -1,1h-8c-0.6,0 -1,-0.4 -1,-1V10c0,-0.6 0.4,-1 1,-1z", "M13.8,10.8h2.6"], True, 2.0)
+
+ICON_DP = 26   # 按钮图标边长（dp）：整排 18 个须落在进度条头尾之间
 
 # ---- 图标视觉尺寸归一化：每个图标内容都缩放到画布的 86%，视觉大小一致 ----
-NORM = {"tvx_audio": [1.1467, -1.76, -1.76], "tvx_cast": [0.9348, 0.783, 0.783], "tvx_danmu": [0.8265, 37.83, 36.355], "tvx_decoder": [1.2836, -3.403, -3.403], "tvx_next": [1.72, -8.64, -8.64], "tvx_orientation": [1.2338, -4.73, 0.896], "tvx_player": [1.0698, -0.837, -0.837], "tvx_pre": [1.703, -8.538, -8.436], "tvx_refresh": [1.2836, -3.403, -3.403], "tvx_replay": [1.0617, -0.741, -0.104], "tvx_reset": [1.4576, -5.492, -5.492], "tvx_scale": [0.9348, 0.783, 0.783], "tvx_screen": [0.9348, 0.783, 0.783], "tvx_speed": [1.305, -4.208, -3.66], "tvx_subtitle": [1.0238, -0.286, -0.286], "tvx_video": [1.1288, -0.666, -1.546]}
+NORM = {"tvx_audio": [1.1733, -2.08, -2.08], "tvx_cast": [1.0476, -0.571, 0.56], "tvx_danmu": [0.8457, 33.64, 32.328], "tvx_decoder": [1.2055, -2.466, -2.466], "tvx_gauge": [1.1139, -1.367, -1.367], "tvx_head": [0.9944, -0.111, 0.068], "tvx_next": [1.76, -9.12, -9.12], "tvx_orientation": [1.1579, -3.701, 1.579], "tvx_player": [1.0233, -0.279, -0.586], "tvx_pre": [1.7426, -9.015, -8.911], "tvx_refresh": [1.3134, -3.761, -3.761], "tvx_replay": [1.375, -4.748, -4.5], "tvx_reset": [1.4915, -5.898, -5.898], "tvx_scale": [0.9565, 0.522, 0.522], "tvx_screen": [1.1733, -2.08, -2.08], "tvx_subtitle": [1.0476, -0.571, -0.571], "tvx_tail": [0.9944, -0.35, 0.068], "tvx_video": [1.0798, -0.115, -0.957]}
 
 
 def _apply_norm(content, name):
@@ -385,6 +377,8 @@ STATIC_MAP = [
     ('play_next', 'tvx_next'),
     ('play_retry', 'tvx_replay'),
     ('play_refresh', 'tvx_refresh'),
+    ('play_time_start', 'tvx_head'),
+    ('play_time_end', 'tvx_tail'),
     ('play_time_reset', 'tvx_reset'),
     ('play_cast', 'tvx_cast'),
     ('zimu_select', 'tvx_subtitle'),
@@ -398,7 +392,7 @@ DYN_MAP = [
     ('play_player', 'tvx_player'),
     ('play_ijk', 'tvx_decoder'),
     ('play_scale', 'tvx_scale'),
-    ('play_speed', 'tvx_speed'),
+    ('play_speed', 'tvx_gauge'),
     ('landscape_portrait', 'tvx_orientation'),
 ]
 
@@ -423,14 +417,42 @@ def inject_ui_icons():
         with open(f, 'w', encoding='utf-8') as fh:
             if name in TK_XML:
                 # 原版内容原样保留，仅把 24dp 画布放大到 26dp（viewport 不动）
-                v = re.sub(r'android:(width|height)="[0-9.]+dp"', r'android:\1="26dp"', TK_XML[name])
+                v = re.sub(r'android:(width|height)="[0-9.]+dp"', lambda m: 'android:%s="%ddp"' % (m.group(1), ICON_DP), TK_XML[name])
                 v = _apply_norm(v, name)
                 fh.write('<?xml version="1.0" encoding="utf-8"?>\n' + v + '\n')
                 tk += 1
             else:
-                fh.write(_apply_norm(_write_vec(name), name))
+                v2 = re.sub(r'android:(width|height)="[0-9.]+dp"', lambda m: 'android:%s="%ddp"' % (m.group(1), ICON_DP), _write_vec(name))
+                fh.write(_apply_norm(v2, name))
         made += 1
     print('+ 已生成 %d 个矢量图标 -> res/drawable/tvx_*.xml（其中 %d 个取自 takagen99 原版）' % (made, tk))
+
+    # 按钮底色：紧贴内容、更透明；保留焦点/选中高亮（电视遥控器必需）
+    btn_bg = '''<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#3DFFFFFF"/>
+            <corners android:radius="4dp"/>
+        </shape>
+    </item>
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#29FFFFFF"/>
+            <corners android:radius="4dp"/>
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#00FFFFFF"/>
+            <corners android:radius="4dp"/>
+        </shape>
+    </item>
+</selector>
+'''
+    with open(os.path.join(dr, 'tvx_btn_bg.xml'), 'w', encoding='utf-8') as fh:
+        fh.write(btn_bg)
+    print('+ 已生成按钮底色 tvx_btn_bg.xml（常态全透明、聚焦 24% 白）')
 
     # 2) 改播放面板布局
     lp = os.path.join(res, 'layout', 'player_vod_control_view.xml')
@@ -451,9 +473,14 @@ def inject_ui_icons():
             continue
         blk = xml[sp[0]:sp[1]]
         # 图标在上、汉字在下：文字保留，字号缩到最小档 ts_10
-        blk2 = re.sub(r'android:textSize="@dimen/ts_[0-9]+"', 'android:textSize="9sp"', blk, count=1)
-        extra = ('android:drawableTop="@drawable/%s"\n                android:drawablePadding="2dp"\n'
-                 '                android:gravity="center"\n                android:textAlignment="center"\n                android:minWidth="76dp"\n                ') % icon
+        blk2 = re.sub(r'android:textSize="@dimen/ts_[0-9]+"', 'android:textSize="8sp"', blk, count=1)
+        # 紧贴内容：去掉固定宽度，内边距压到最小
+        blk2 = re.sub(r'android:padding="[^"]*"', 'android:paddingHorizontal="4dp"\n                android:paddingVertical="3dp"', blk2, count=1)
+        blk2 = re.sub(r'android:layout_margin(End|Right)="@dimen/vs_[0-9]+"', lambda m: 'android:layout_margin%s="12dp"' % m.group(1), blk2)
+        blk2 = blk2.replace('@drawable/button_dialog_main', '@drawable/tvx_btn_bg')
+        extra = ('android:drawableTop="@drawable/%s"\n                android:drawablePadding="0dp"\n'
+                 '                android:gravity="center"\n                android:textAlignment="center"\n'
+                 '                android:textScaleX="1.1"\n                android:includeFontPadding="false"\n                ') % icon
         if 'android:background=' in blk2:
             blk2 = blk2.replace('android:background=', extra + 'android:background=', 1)
         else:
@@ -468,9 +495,13 @@ def inject_ui_icons():
             continue
         blk = xml[sp[0]:sp[1]]
         # 同样是 图标在上、小字在下
-        blk = re.sub(r'android:textSize="@dimen/ts_[0-9]+"', 'android:textSize="9sp"', blk, count=1)
-        extra = ('android:drawableTop="@drawable/%s"\n                android:drawablePadding="2dp"\n'
-                 '                android:gravity="center"\n                android:textAlignment="center"\n                android:minWidth="76dp"\n                ') % icon
+        blk = re.sub(r'android:textSize="@dimen/ts_[0-9]+"', 'android:textSize="8sp"', blk, count=1)
+        blk = re.sub(r'android:padding="[^"]*"', 'android:paddingHorizontal="4dp"\n                android:paddingVertical="3dp"', blk, count=1)
+        blk = re.sub(r'android:layout_margin(End|Right)="@dimen/vs_[0-9]+"', lambda m: 'android:layout_margin%s="12dp"' % m.group(1), blk)
+        blk = blk.replace('@drawable/button_dialog_main', '@drawable/tvx_btn_bg')
+        extra = ('android:drawableTop="@drawable/%s"\n                android:drawablePadding="0dp"\n'
+                 '                android:gravity="center"\n                android:textAlignment="center"\n'
+                 '                android:textScaleX="1.1"\n                android:includeFontPadding="false"\n                ') % icon
         if 'android:background=' in blk:
             blk = blk.replace('android:background=', extra + 'android:background=', 1)
         else:
@@ -479,6 +510,24 @@ def inject_ui_icons():
         changed.append(vid)
 
     # 3) 隐藏多余的「搜弹幕」按钮（控件保留，仅不可见，代码 findView 不受影响）
+    # 重置按钮：默认隐藏 + 移到整排末尾（不夹在片头片尾中间）
+    sp0 = _find_block(xml, 'play_time_reset')
+    if sp0:
+        rs, r_end = sp0[0], sp0[1]
+        blk_r = xml[rs:r_end]
+        xml = xml[:rs] + xml[r_end:]
+        spd = _find_block(xml, 'screen_display') or _find_block(xml, 'play_speed')
+        npos = spd[1] if spd else len(xml)
+        xml = xml[:npos] + '\n                ' + blk_r + xml[npos:]
+        sp0 = _find_block(xml, 'play_time_reset')
+        blk0 = xml[sp0[0]:sp0[1]]
+        if 'android:visibility=' in blk0:
+            blk0 = re.sub(r'android:visibility="[^"]*"', 'android:visibility="gone"', blk0, count=1)
+        else:
+            blk0 = blk0.replace('android:background=', 'android:visibility="gone"\n                android:background=', 1)
+        xml = xml[:sp0[0]] + blk0 + xml[sp0[1]:]
+        changed.append('play_time_reset=gone(未设置片头尾时)')
+
     sp = _find_block(xml, 'danmu_search_ui')
     if sp:
         blk = xml[sp[0]:sp[1]]
@@ -489,12 +538,226 @@ def inject_ui_icons():
         xml = xml[:sp[0]] + blk + xml[sp[1]:]
         changed.append('danmu_search_ui=gone')
 
+    # 3.5) 把进度条整块（当前时间 + seekBar + 总时长）移到按钮行上方
+    i_sb = xml.find('android:id="@+id/seekBar"')
+    start = xml.rfind('<LinearLayout', 0, i_sb) if i_sb > 0 else -1
+    if i_sb < 0 or start < 0:
+        print('  !! 未定位到 seekBar 所在容器，跳过进度条上移')
+    else:
+        # 该容器内无嵌套 LinearLayout，最近的 </LinearLayout> 即其结束
+        end = xml.find('</LinearLayout>', i_sb)
+        if end < 0:
+            print('  !! seekBar 容器结束标签未找到')
+        else:
+            end += len('</LinearLayout>')
+            block = xml[start:end]
+            xml2 = xml[:start] + xml[end:]
+            i_h = xml2.find('<HorizontalScrollView')
+            if i_h < 0:
+                print('  !! 未找到按钮行容器，跳过进度条上移')
+            else:
+                xml2 = xml2[:i_h] + block + '\n\n        ' + xml2[i_h:]
+                xml = xml2
+                changed.append('进度条上移至按钮行之上')
+
+    # 3.6) 进度条换成 takagen99 风格：白 40% 轨道 + 红色进度 + 红色圆点滑块
+    seek_xml = """<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background">
+        <shape android:shape="rectangle">
+            <solid android:color="#66FFFFFF" />
+        </shape>
+    </item>
+    <item android:id="@android:id/secondaryProgress">
+        <clip>
+            <shape android:shape="rectangle">
+                <solid android:color="#803D3D3D" />
+            </shape>
+        </clip>
+    </item>
+    <item android:id="@android:id/progress">
+        <clip>
+            <shape android:shape="rectangle">
+                <solid android:color="#F80000" />
+            </shape>
+        </clip>
+    </item>
+</layer-list>
+"""
+    thumb_xml = """<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="oval">
+            <solid android:color="#F80000"/>
+            <size android:width="20dp" android:height="20dp"/>
+        </shape>
+    </item>
+    <item android:state_focused="true">
+        <shape android:shape="oval">
+            <solid android:color="#F80000"/>
+            <size android:width="20dp" android:height="20dp"/>
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#CCF80000"/>
+            <size android:width="20dp" android:height="20dp"/>
+        </shape>
+    </item>
+</selector>
+"""
+    with open(os.path.join(dr, 'shape_player_control_vod_seek.xml'), 'w', encoding='utf-8') as fh2:
+        fh2.write(seek_xml)
+    with open(os.path.join(dr, 'shape_player_control_vod_seek_thumb.xml'), 'w', encoding='utf-8') as fh2:
+        fh2.write(thumb_xml)
+    # 圆点变大到 20dp，滑块偏移同步调整
+    xml = xml.replace('android:thumbOffset="8dp"', 'android:thumbOffset="10dp"')
+    changed.append('进度条样式=takagen99(红)')
+
+    # 3.7) 暂停时保留底部控制栏：进度条与时间不再消失
+    vc = jpath('app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java')
+    if os.path.isfile(vc):
+        js = open(vc, encoding='utf-8').read()
+        a1003 = 'case 1003: { // 隐藏底部菜单'
+        if a1003 in js and 'TVBOX_MOD: 暂停保留进度条' not in js:
+            js = js.replace(a1003, a1003 + '\n                            // TVBOX_MOD: 暂停保留进度条 —— 暂停时不收控制栏，时间和进度条一直可见\n                            if (videoPlayState == VideoView.STATE_PAUSED) { break; }', 1)
+            open(vc, 'w', encoding='utf-8').write(js)
+        # 重置按钮：仅当片头/片尾被设置过才出现
+        anchor2 = 'mPlayerTimeSkipBtn.setText(end == 0 ? "片尾" : stringForTime(end * 1000));'
+        if anchor2 in js and 'TVBOX_MOD: 重置按钮条件显示' not in js:
+            js = js.replace(anchor2, anchor2 + '\n            // TVBOX_MOD: 重置按钮条件显示 —— 只有设过片头片尾才出来\n            mPlayerTimeResetBtn.setVisibility((start > 0 || end > 0) ? VISIBLE : GONE);', 1)
+            open(vc, 'w', encoding='utf-8').write(js)
+            print('+ 已注入：重置按钮仅在设置过片头/片尾时显示')
+            changed.append('重置按钮条件显示')
+        if 'TVBOX_MOD: 暂停保留进度条' in js:
+            print('+ 暂停时保留底部控制栏（进度条与时间常显）')
+            changed.append('暂停保留进度条')
+
+        # 影片结束时间（北京时间下方小字）
+        if 'TVBOX_MOD: 影片结束时间' not in js:
+            js = js.replace('TextView mPlayPauseTime;', 'TextView mPlayPauseTime;\n    TextView mFilmEndTime;', 1)
+            js = js.replace('mPlayPauseTime = findViewById(R.id.tv_sys_time);',
+                            'mPlayPauseTime = findViewById(R.id.tv_sys_time);\n        mFilmEndTime = findViewById(R.id.tv_film_end);', 1)
+            js = js.replace('new SimpleDateFormat("HH:mm");', 'new SimpleDateFormat("HH:mm:ss");', 1)
+            js = js.replace('mPlayPauseTime.setText(timeFormat.format(date));',
+'''mPlayPauseTime.setText(timeFormat.format(date));
+            // TVBOX_MOD: 影片结束时间 = 当前北京时间 + 本集剩余时长
+            try {
+                if (mFilmEndTime != null) {
+                    long durMs = mControlWrapper.getDuration();
+                    long posMs = mControlWrapper.getCurrentPosition();
+                    if (durMs > 0 && posMs >= 0) {
+                        long remainMs = Math.max(0L, durMs - posMs);
+                        long rs = remainMs / 1000;
+                        String remainStr = (rs >= 3600)
+                                ? String.format("%d:%02d:%02d", rs / 3600, (rs / 60) % 60, rs % 60)
+                                : String.format("%02d:%02d", rs / 60, rs % 60);
+                        String endStr = new SimpleDateFormat("HH:mm:ss").format(new Date(date.getTime() + remainMs));
+                        mFilmEndTime.setVisibility(VISIBLE);
+                        mFilmEndTime.setText("影片剩余 " + remainStr + " · 影片结束 " + endStr);
+                    } else {
+                        mFilmEndTime.setVisibility(INVISIBLE);
+                    }
+                }
+            } catch (Exception ignored) {}''', 1)
+            open(vc, 'w', encoding='utf-8').write(js)
+            print('+ 已注入：北京时间改为时分秒 + 下方显示影片结束时间')
+            changed.append('影片结束时间')
+    else:
+        print('!! 未找到 VodController.java，跳过暂停逻辑')
+
     # 4) 加注释锚点（便于重复执行判断）
     xml = xml.replace('<?xml version="1.0" encoding="utf-8"?>',
                       '<?xml version="1.0" encoding="utf-8"?>\n<!-- TVBOX_MOD: UI 图标（按钮文字已替换为矢量图标，控件 id 未改动） -->', 1)
+    # ---- 按钮行整体水平居中（相对进度条正中）----
+    if 'android:gravity="center_horizontal"' not in xml:
+        hs = re.search(r'<HorizontalScrollView\b', xml)
+        if hs:
+            xml = xml[:hs.end()] + '\n            android:gravity="center_horizontal"' + xml[hs.end():]
+            print('+ 按钮行已设为水平居中')
+            changed.append('按钮行居中')
+
+    # ---- 北京时间块：移到右下角（进度条上方），大字 + 影片剩余/结束 ----
+    if 'tv_film_end' not in xml:
+        sb0 = _find_block(xml, 'tv_sys_time')
+        if sb0 and '</FrameLayout>' in xml:
+            ts_blk = xml[sb0[0]:sb0[1]]
+            xml = xml[:sb0[0]] + xml[sb0[1]:]
+            ts_clean = ('<TextView\n'
+                        '        android:id="@+id/tv_sys_time"\n'
+                        '        android:layout_width="wrap_content"\n'
+                        '        android:layout_height="wrap_content"\n'
+                        '        android:tag="vod_control_pause_time"\n'
+                        '        android:text="@string/_00_00_00"\n'
+                        '        android:textColor="@android:color/white"\n'
+                        '        android:textSize="70sp"\n'
+                        '        android:textStyle="bold" />')
+            corner = ('\n    <LinearLayout\n'
+                      '        android:layout_width="wrap_content"\n'
+                      '        android:layout_height="wrap_content"\n'
+                      '        android:layout_gravity="bottom|end"\n'
+                      '        android:layout_marginEnd="@dimen/vs_30"\n'
+                      '        android:layout_marginBottom="200dp"\n'
+                      '        android:gravity="end"\n'
+                      '        android:orientation="vertical">\n\n'
+                      + ts_clean + '\n\n'
+                      '        <TextView\n'
+                      '            android:id="@+id/tv_film_end"\n'
+                      '            android:layout_width="wrap_content"\n'
+                      '            android:layout_height="wrap_content"\n'
+                      '            android:layout_marginTop="6dp"\n'
+                      '            android:gravity="end"\n'
+                      '            android:text="影片剩余 --:-- · 影片结束 --:--:--"\n'
+                      '            android:textColor="@android:color/white"\n'
+                      '            android:textSize="20sp" />\n\n'
+                      '    </LinearLayout>\n')
+            i_root = xml.rfind('</FrameLayout>')
+            xml = xml[:i_root] + corner + xml[i_root:]
+            print('+ 北京时间块已移到右下角（大字 + 影片剩余/结束）')
+            changed.append('北京时间=右下角大字+剩余/结束')
+
     open(lp, 'w', encoding='utf-8').write(xml)
+
+    # ---- 弹幕设置弹窗：补「关闭」按钮（原版没有，只能按返回键）----
+    dd = os.path.join(res, 'layout', 'dialog_danmu_setting.xml')
+    if os.path.exists(dd):
+        x2 = open(dd, 'r', encoding='utf-8').read()
+        if 'danmu_close' not in x2:
+            btn = ('<TextView\n'
+                   '            android:id="@+id/danmu_close"\n'
+                   '            android:layout_width="@dimen/vs_160"\n'
+                   '            android:layout_height="@dimen/vs_50"\n'
+                   '            android:layout_gravity="center_horizontal"\n'
+                   '            android:layout_marginTop="@dimen/vs_16"\n'
+                   '            android:background="@drawable/button_danmu_setting"\n'
+                   '            android:focusable="true"\n'
+                   '            android:gravity="center"\n'
+                   '            android:text="关闭"\n'
+                   '            android:textColor="@color/dialog_text_primary"\n'
+                   '            android:textSize="@dimen/ts_20" />\n\n        ')
+            i2 = x2.rfind('</LinearLayout>')
+            x2 = x2[:i2] + btn + x2[i2:]
+            open(dd, 'w', encoding='utf-8').write(x2)
+            print('+ 已给弹幕设置弹窗补「关闭」按钮')
+            changed.append('弹幕设置弹窗=有关闭按钮')
+        dlg = jpath('app/src/main/java/com/github/tvbox/osc/ui/dialog/DanmuSettingDialog.java')
+        if os.path.exists(dlg):
+            j2 = open(dlg, 'r', encoding='utf-8').read()
+            if 'danmu_close' not in j2:
+                j2 = j2.replace('        initAlpha();', '        initAlpha();\n        initClose();', 1)
+                j2 = j2.replace('    private void initDanmuSearch() {',
+                                '''    private void initClose() {
+        TextView close = findViewById(R.id.danmu_close);
+        if (close != null) close.setOnClickListener(v -> dismiss());
+    }
+
+    private void initDanmuSearch() {''', 1)
+                open(dlg, 'w', encoding='utf-8').write(j2)
+                print('+ 已给弹幕设置弹窗的「关闭」按钮绑定 dismiss()')
+            else:
+                print('· 弹幕弹窗关闭按钮已存在，跳过')
     print('+ 播放面板按钮已图标化: %s' % ', '.join(changed))
-    print('  说明：控件 id 与 Java 监听完全未改动；全部按钮为「图标在上 + 最小汉字在下」(9sp)，播放器/解码/比例/倍速/横竖屏 的文字由代码动态刷新，不影响显示')
+    print('  说明：控件 id 与 Java 监听完全未改动；按钮为「图标在上 + 8sp 汉字在下」，底色 tvx_btn_bg 紧贴内容且更透明，进度条已上移到按钮行之上')
 
 
 def main():
