@@ -415,7 +415,7 @@ def _tk_autofill(res):
         known_d |= set(re.findall(r'<dimen\s+name="([^"]+)"', t))
         known_c |= set(re.findall(r'<color\s+name="([^"]+)"', t))
     need_d, need_c = set(), set()
-    files = glob.glob(os.path.join(res, "layout", "*.xml")) + glob.glob(os.path.join(res, "drawable*", "*.xml")) + glob.glob(os.path.join(res, "anim", "*.xml"))
+    files = glob.glob(os.path.join(res, "layout", "*.xml")) + glob.glob(os.path.join(res, "drawable*", "*.xml")) + glob.glob(os.path.join(res, "anim", "*.xml")) + glob.glob(os.path.join(res, "values*", "*.xml"))
     for f in files:
         try:
             t = open(f, encoding="utf-8", errors="ignore").read()
@@ -596,9 +596,20 @@ def inject_takagen(src):
     print("+ 倍速/比例/播放器文字改到他 layout 里的小徽标")
 
     if "tk_time_refresh" not in js:
-        if "private void initView() {" in js:
-            js = js.replace("private void initView() {", METHOD_SRC + "\n    private void initView() {", 1)
-        js = js.replace("case 1002: { // 显示底部菜单", "case 1002: { // 显示底部菜单\n                        tkTimeRefresh();", 1)
+        # 插在类体内（不依赖 initView 的签名/修饰符，上游改过就失效）
+        m_cls = re.search(r'(class VodController extends BaseController\s*\{)', js)
+        if m_cls:
+            pos = m_cls.end()
+            js = js[:pos] + METHOD_SRC + js[pos:]
+            print("+ 时间刷新方法已插入 VodController 类体")
+        else:
+            print("  !! 未找到 VodController 类声明，时间刷新未插入")
+        call_anchor = "case 1002: { // 显示底部菜单"
+        if call_anchor in js:
+            js = js.replace(call_anchor, call_anchor + "\n                        tkTimeRefresh();", 1)
+            print("+ 已挂到「显示底部菜单」分支")
+        else:
+            print("  !! 未找到 case 1002 菜单分支，时间刷新不会触发")
         print("+ 已注入北京时间/影片剩余/结束（用他的 tv_sys_time / tk_time_left / tv_time_end）")
     open(vc, "w", encoding="utf-8").write(js)
     _tk_autofill(res)
