@@ -378,7 +378,7 @@ TK_BUNDLE = "eNrsvVmP60p3KPZXOsfIE3s358n44uviIIoUKZGiZnzAgUSRFMVJEkVS0kWAGyBI7CA
 
 
 TK_DEAD_IDS = [
-    "tv_speed_top", "tv_play_speed_top", "tv_MPBS_top", "tv_spin_top", "tv_system_time",
+    "tv_speed_top", "tv_play_speed_top", "tv_spin_top", "tv_system_time",
     "top_container_hide", "tv_top_line1_hide", "tv_title_top_hide", "tv_speed_top_hide",
     "tv_play_speed_top_hide", "tv_MPBS_top_hide", "tv_spin_top_hide",
     "play_time_step", "lv_portrait",
@@ -426,9 +426,9 @@ TK_PLACEHOLDERS = [
     ("TextView", "play_time_start_end_text"),
     ("TextView", "tv_info_name1"),
     ("TextView", "net_play_speed"),
-    ("TextView", "tv_screen_display"),
-    ("TextView", "tv_back"),
-    ("LinearLayout", "play_speed_3_container"),
+    ("LinearLayout", "tv_screen_display"),
+    ("ImageView", "tv_back"),
+    ("FrameLayout", "play_speed_3_container"),
     ("com.google.android.exoplayer2.ui.SubtitleView", "exo_subtitle_view"),
     ("com.github.tvbox.osc.subtitle.widget.SimpleSubtitleView", "lyric_view"),
     ("com.owen.tvrecyclerview.widget.TvRecyclerView", "mGridParseView"),
@@ -436,7 +436,7 @@ TK_PLACEHOLDERS = [
 
 CAST_BTN = '        <TextView\n            android:id="@+id/play_cast"\n            android:layout_width="@dimen/vs_60"\n            android:layout_height="@dimen/vs_60"\n            android:layout_marginStart="@dimen/vs_6"\n            android:layout_marginLeft="@dimen/vs_6"\n            android:layout_marginEnd="@dimen/vs_6"\n            android:layout_marginRight="@dimen/vs_6"\n            android:background="@drawable/button_dialog_vod"\n            android:drawableTop="@drawable/tvx_cast"\n            android:focusable="true"\n            android:gravity="center"\n            android:text=""\n            android:textColor="@android:color/white"\n            android:textSize="0sp" />\n'
 
-METHOD_SRC = '\n    private void tkTimeRefresh() {\n        try {\n            java.text.SimpleDateFormat hm = new java.text.SimpleDateFormat("HH:mm:ss");\n            TextView sys = (TextView) findViewById(R.id.tv_sys_time);\n            if (sys != null) sys.setText(hm.format(new java.util.Date()));\n            long dur = 0, cur = 0;\n            if (mControlWrapper != null) {\n                dur = safeTimeMs(mControlWrapper.getDuration());\n                cur = safeTimeMs(mControlWrapper.getCurrentPosition());\n            }\n            if (dur > 0) {\n                long left = dur - cur;\n                TextView tvLeft = (TextView) findViewById(R.id.tk_time_left);\n                if (tvLeft != null) tvLeft.setText("影片剩余 " + tkHms(left));\n                TextView tvEnd = (TextView) findViewById(R.id.tv_time_end);\n                if (tvEnd != null) tvEnd.setText("影片结束 " + hm.format(new java.util.Date(System.currentTimeMillis() + left)));\n            }\n                    android.view.View tkPause = findViewById(R.id.play_pause);\n            if (tkPause != null) {\n                tkPause.setOnClickListener(new android.view.View.OnClickListener() {\n                    @Override\n                    public void onClick(android.view.View v) {\n                        if (mControlWrapper == null) return;\n                        boolean playing = mControlWrapper.isPlaying();\n                        if (playing) mControlWrapper.pause(); else mControlWrapper.start();\n                        android.widget.ImageView tkIcon = (android.widget.ImageView) findViewById(R.id.play_pauseImg);\n                        if (tkIcon != null) tkIcon.setImageResource(playing ? R.drawable.v_play : R.drawable.v_pause);\n                    }\n                });\n                android.widget.ImageView tkCur = (android.widget.ImageView) findViewById(R.id.play_pauseImg);\n                if (tkCur != null && mControlWrapper != null) {\n                    tkCur.setImageResource(mControlWrapper.isPlaying() ? R.drawable.v_pause : R.drawable.v_play);\n                }\n            }\n} catch (Throwable ignored) {\n        }\n    }\n\n    private String tkHms(long ms) {\n        long s = ms / 1000;\n        long h = s / 3600;\n        long m = (s % 3600) / 60;\n        long ss = s % 60;\n        if (h > 0) return String.format("%d:%02d:%02d", h, m, ss);\n        return String.format("%02d:%02d", m, ss);\n    }\n    // tk_time_refresh\n'
+METHOD_SRC = '\n    private void tkTimeRefresh() {\n        try {\n            java.text.SimpleDateFormat hm = new java.text.SimpleDateFormat("HH:mm:ss");\n            TextView sys = (TextView) findViewById(R.id.tv_sys_time);\n            if (sys != null) sys.setText(hm.format(new java.util.Date()));\n            long dur = 0, cur = 0;\n            if (mControlWrapper != null) {\n                dur = safeTimeMs(mControlWrapper.getDuration());\n                cur = safeTimeMs(mControlWrapper.getCurrentPosition());\n            }\n            if (dur > 0) {\n                long left = dur - cur;\n                TextView tvLeft = (TextView) findViewById(R.id.tk_time_left);\n                if (tvLeft != null) tvLeft.setText("影片剩余 " + tkHms(left));\n                TextView tvEnd = (TextView) findViewById(R.id.tv_time_end);\n                if (tvEnd != null) tvEnd.setText("影片结束 " + hm.format(new java.util.Date(System.currentTimeMillis() + left)));\n            }\n                    // —— 他右上角那套：码率(Mbps) + 03:47/45:41 + 细进度条 + 圆圈暂停键 ——\n            android.view.View tkTR = findViewById(R.id.tv_top_r_container);\n            if (tkTR != null) tkTR.setVisibility(android.view.View.VISIBLE);\n            android.view.View tkPC = findViewById(R.id.tv_pause_container);\n            if (tkPC != null) tkPC.setVisibility(android.view.View.VISIBLE);\n            long tkD2 = 0, tkC2 = 0;\n            if (mControlWrapper != null) {\n                tkD2 = safeTimeMs(mControlWrapper.getDuration());\n                tkC2 = safeTimeMs(mControlWrapper.getCurrentPosition());\n            }\n            String tkPair = tkHms(tkC2) + " / " + tkHms(tkD2);\n            TextView tkSeekT = (TextView) findViewById(R.id.tv_seek_time);\n            if (tkSeekT != null) tkSeekT.setText(tkPair);\n            TextView tkPP = (TextView) findViewById(R.id.tv_pause_progress_text);\n            if (tkPP != null) tkPP.setText(tkPair);\n            android.widget.ProgressBar tkPB = (android.widget.ProgressBar) findViewById(R.id.video_pausebar);\n            if (tkPB != null && tkD2 > 0) tkPB.setProgress((int) (tkC2 * 100 / tkD2));\n            boolean tkPlaying = (mControlWrapper != null && mControlWrapper.isPlaying());\n            android.widget.ImageView tkPI = (android.widget.ImageView) findViewById(R.id.tv_pause_icon);\n            if (tkPI != null) {\n                tkPI.setImageResource(tkPlaying ? R.drawable.v_pause : R.drawable.v_play);\n                tkPI.setOnClickListener(new android.view.View.OnClickListener() {\n                    @Override\n                    public void onClick(android.view.View v) {\n                        if (mControlWrapper == null) return;\n                        if (mControlWrapper.isPlaying()) mControlWrapper.pause(); else mControlWrapper.start();\n                        tkTimeRefresh();\n                    }\n                });\n            }\n            android.view.View tkPause = findViewById(R.id.play_pause);\n            if (tkPause != null) {\n                tkPause.setOnClickListener(new android.view.View.OnClickListener() {\n                    @Override\n                    public void onClick(android.view.View v) {\n                        if (mControlWrapper == null) return;\n                        boolean playing = mControlWrapper.isPlaying();\n                        if (playing) mControlWrapper.pause(); else mControlWrapper.start();\n                        android.widget.ImageView tkIcon = (android.widget.ImageView) findViewById(R.id.play_pauseImg);\n                        if (tkIcon != null) tkIcon.setImageResource(playing ? R.drawable.v_play : R.drawable.v_pause);\n                    }\n                });\n                android.widget.ImageView tkCur = (android.widget.ImageView) findViewById(R.id.play_pauseImg);\n                if (tkCur != null && mControlWrapper != null) {\n                    tkCur.setImageResource(mControlWrapper.isPlaying() ? R.drawable.v_pause : R.drawable.v_play);\n                }\n            }\n} catch (Throwable ignored) {\n        }\n    }\n\n    private String tkHms(long ms) {\n        long s = ms / 1000;\n        long h = s / 3600;\n        long m = (s % 3600) / 60;\n        long ss = s % 60;\n        if (h > 0) return String.format("%d:%02d:%02d", h, m, ss);\n        return String.format("%02d:%02d", m, ss);\n    }\n    // tk_time_refresh\n'
 
 
 
@@ -571,6 +571,16 @@ def inject_takagen(src):
     lay2 = (lay[:i + ends] + CAST_BTN + lay[i + ends:]) if ends else lay
     print("+ 已在按钮条末尾加入「投屏」按钮（id=play_cast）")
 
+    pf = os.path.join(src, "app/src/main/java/com/github/tvbox/osc/ui/fragment/PlayFragment.java")
+    if os.path.exists(pf):
+        t = open(pf, encoding="utf-8", errors="ignore").read()
+        n0 = t
+        t = t.replace('mController.mLandscapePortraitBtn.setText("竖屏");', ';')
+        t = t.replace('mController.mLandscapePortraitBtn.setText("横屏");', ';')
+        if t != n0:
+            open(pf, "w", encoding="utf-8").write(t)
+            print("+ PlayFragment 横竖屏文字调用已改掉（他 layout 用图标表达）")
+
     # 删掉他布局里「界面有、代码根本不驱动」的块
     removed = []
     for vid in TK_DEAD_IDS:
@@ -630,6 +640,9 @@ def inject_takagen(src):
 
     types = [("TextView mPreBtn;", "LinearLayout mPreBtn;"),
              ("TextView mPlayerScaleBtn;", "LinearLayout mPlayerScaleBtn;"),
+             ("TextView mNextBtn;", "LinearLayout mNextBtn;"),
+             ("TextView mPlayerRetry;", "LinearLayout mPlayerRetry;"),
+             ("public TextView mLandscapePortraitBtn;", "public LinearLayout mLandscapePortraitBtn;"),
              ("public TextView mPlayerSpeedBtn;", "public LinearLayout mPlayerSpeedBtn;"),
              ("TextView mPlayerBtn;", "LinearLayout mPlayerBtn;"),
              ("TextView mZimuBtn;", "LinearLayout mZimuBtn;"),
@@ -643,6 +656,12 @@ def inject_takagen(src):
     js = js.replace("mPlayerScaleBtn.setText(", "((TextView) findViewById(R.id.play_scale_txt)).setText(")
     js = js.replace("mPlayerSpeedBtn.setText(", "((TextView) findViewById(R.id.play_speed_txt)).setText(")
     js = js.replace("mPlayerBtn.setText(", "((TextView) findViewById(R.id.play_player_txt)).setText(")
+
+    # 横竖屏按钮在他 layout 里只有图标没有文字控件：去掉文字切换调用，避免类型不匹配
+    js = js.replace('if (showButton) mLandscapePortraitBtn.setText(isPortrait ? "横屏" : "竖屏");',
+                    'if (showButton) { }')
+    js = js.replace('mLandscapePortraitBtn.setText("竖屏");', ';')
+    js = js.replace('mLandscapePortraitBtn.setText("横屏");', ';')
     js = re.sub(r"\n\s*mScreenDisplay\.setTextColor\([^;]*\);", "", js)
     print("+ 倍速/比例/播放器文字改到他 layout 里的小徽标")
 
