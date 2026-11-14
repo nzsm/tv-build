@@ -436,7 +436,6 @@ TK_PLACEHOLDERS = [
 
 CAST_BTN = '        <TextView\n            android:id="@+id/play_cast"\n            android:layout_width="@dimen/vs_60"\n            android:layout_height="@dimen/vs_60"\n            android:layout_marginStart="@dimen/vs_6"\n            android:layout_marginLeft="@dimen/vs_6"\n            android:layout_marginEnd="@dimen/vs_6"\n            android:layout_marginRight="@dimen/vs_6"\n            android:background="@drawable/button_dialog_vod"\n            android:drawableTop="@drawable/tvx_cast"\n            android:focusable="true"\n            android:gravity="center"\n            android:text=""\n            android:textColor="@android:color/white"\n            android:textSize="0sp" />\n'
 
-METHOD_SRC = '\n    private void tkTimeRefresh() {\n        try {\n            java.text.SimpleDateFormat hm = new java.text.SimpleDateFormat("HH:mm:ss");\n            TextView sys = (TextView) findViewById(R.id.tv_sys_time);\n            if (sys != null) sys.setText(hm.format(new java.util.Date()));\n            long dur = 0, cur = 0;\n            if (mControlWrapper != null) {\n                dur = safeTimeMs(mControlWrapper.getDuration());\n                cur = safeTimeMs(mControlWrapper.getCurrentPosition());\n            }\n            if (dur > 0) {\n                long left = dur - cur;\n                TextView tvLeft = (TextView) findViewById(R.id.tk_time_left);\n                if (tvLeft != null) tvLeft.setText("影片剩余 " + tkHms(left));\n                TextView tvEnd = (TextView) findViewById(R.id.tv_time_end);\n                if (tvEnd != null) tvEnd.setText("影片结束 " + hm.format(new java.util.Date(System.currentTimeMillis() + left)));\n            }\n                    // —— 他右上角那套：码率(Mbps) + 03:47/45:41 + 细进度条 + 圆圈暂停键 ——\n            android.view.View tkTR = findViewById(R.id.tv_top_r_container);\n            if (tkTR != null) tkTR.setVisibility(android.view.View.VISIBLE);\n            android.view.View tkPC = findViewById(R.id.tv_pause_container);\n            if (tkPC != null) tkPC.setVisibility(android.view.View.VISIBLE);\n            long tkD2 = 0, tkC2 = 0;\n            if (mControlWrapper != null) {\n                tkD2 = safeTimeMs(mControlWrapper.getDuration());\n                tkC2 = safeTimeMs(mControlWrapper.getCurrentPosition());\n            }\n            String tkPair = tkHms(tkC2) + " / " + tkHms(tkD2);\n            TextView tkSeekT = (TextView) findViewById(R.id.tv_seek_time);\n            if (tkSeekT != null) tkSeekT.setText(tkPair);\n            TextView tkPP = (TextView) findViewById(R.id.tv_pause_progress_text);\n            if (tkPP != null) tkPP.setText(tkPair);\n            android.widget.ProgressBar tkPB = (android.widget.ProgressBar) findViewById(R.id.video_pausebar);\n            if (tkPB != null && tkD2 > 0) tkPB.setProgress((int) (tkC2 * 100 / tkD2));\n            boolean tkPlaying = (mControlWrapper != null && mControlWrapper.isPlaying());\n            android.widget.ImageView tkPI = (android.widget.ImageView) findViewById(R.id.tv_pause_icon);\n            if (tkPI != null) {\n                tkPI.setImageResource(tkPlaying ? R.drawable.v_pause : R.drawable.v_play);\n                tkPI.setOnClickListener(new android.view.View.OnClickListener() {\n                    @Override\n                    public void onClick(android.view.View v) {\n                        if (mControlWrapper == null) return;\n                        if (mControlWrapper.isPlaying()) mControlWrapper.pause(); else mControlWrapper.start();\n                        tkTimeRefresh();\n                    }\n                });\n            }\n            android.view.View tkPause = findViewById(R.id.play_pause);\n            if (tkPause != null) {\n                tkPause.setOnClickListener(new android.view.View.OnClickListener() {\n                    @Override\n                    public void onClick(android.view.View v) {\n                        if (mControlWrapper == null) return;\n                        boolean playing = mControlWrapper.isPlaying();\n                        if (playing) mControlWrapper.pause(); else mControlWrapper.start();\n                        android.widget.ImageView tkIcon = (android.widget.ImageView) findViewById(R.id.play_pauseImg);\n                        if (tkIcon != null) tkIcon.setImageResource(playing ? R.drawable.v_play : R.drawable.v_pause);\n                    }\n                });\n                android.widget.ImageView tkCur = (android.widget.ImageView) findViewById(R.id.play_pauseImg);\n                if (tkCur != null && mControlWrapper != null) {\n                    tkCur.setImageResource(mControlWrapper.isPlaying() ? R.drawable.v_pause : R.drawable.v_play);\n                }\n            }\n} catch (Throwable ignored) {\n        }\n    }\n\n    private String tkHms(long ms) {\n        long s = ms / 1000;\n        long h = s / 3600;\n        long m = (s % 3600) / 60;\n        long ss = s % 60;\n        if (h > 0) return String.format("%d:%02d:%02d", h, m, ss);\n        return String.format("%02d:%02d", m, ss);\n    }\n    // tk_time_refresh\n'
 
 
 
@@ -665,29 +664,89 @@ def inject_takagen(src):
     js = re.sub(r"\n\s*mScreenDisplay\.setTextColor\([^;]*\);", "", js)
     print("+ 倍速/比例/播放器文字改到他 layout 里的小徽标")
 
-    if "tk_time_refresh" not in js:
-        # 插在类体内（不依赖 initView 的签名/修饰符，上游改过就失效）
-        m_cls = re.search(r'(class VodController extends BaseController\s*\{)', js)
-        if m_cls:
-            pos = m_cls.end()
-            js = js[:pos] + METHOD_SRC + js[pos:]
-            print("+ 时间刷新方法已插入 VodController 类体")
-        else:
-            print("  !! 未找到 VodController 类声明，时间刷新未插入")
-        call_anchor = "case 1002: { // 显示底部菜单"
-        if call_anchor in js:
-            js = js.replace(call_anchor, call_anchor + "\n                        tkTimeRefresh();", 1)
-            print("+ 已挂到「显示底部菜单」分支")
-        else:
-            print("  !! 未找到 case 1002 菜单分支，时间刷新不会触发")
-        print("+ 已注入北京时间/影片剩余/结束（用他的 tv_sys_time / tk_time_left / tv_time_end）")
+    # 片头/片尾：他的 layout 里就是显示时间（00:00），不要汉字
+    js = js.replace('mPlayerTimeStartBtn.setText(start == 0 ? "片头" : stringForTime(start * 1000));',
+                    'mPlayerTimeStartBtn.setText(stringForTime(start * 1000));')
+    js = js.replace('mPlayerTimeSkipBtn.setText(end == 0 ? "片尾" : stringForTime(end * 1000));',
+                    'mPlayerTimeSkipBtn.setText(stringForTime(end * 1000));')
+    # 右上码率：数字与单位分开（他的 tv_MPBS_top 专门放单位），避免出现 "7Kb/sMbps"
+    tk_speed_java = ('{ String _tkRaw = speedBps; '
+                     'String _tkNum = _tkRaw.replaceAll("[^0-9.]+", ""); '
+                     'String _tkUnit = _tkRaw.replaceAll("[0-9.]+", ""); '
+                     'mPlayLoadNetSpeed.setText(_tkNum); '
+                     'TextView _tkMbTop = (TextView) findViewById(R.id.tv_MPBS_top); '
+                     'if (_tkMbTop != null && _tkUnit.length() > 0) _tkMbTop.setText(_tkUnit); }')
+    js = js.replace('mPlayLoadNetSpeed.setText(speed);', tk_speed_java)
+    print("+ 片头/片尾改为显示时间，码率数字与单位已分离")
+
     open(vc, "w", encoding="utf-8").write(js)
     _tk_autofill(res)
     print("--- 移植完成：布局=他的，资源=他的，代码只改绑定与类型 ---")
 
 
+def tk_patch_crash():
+    """崩溃取证：异常堆栈写文件 + Toast 显示一行定位（只为定位这次闪退，定位后可撤）"""
+    ap = os.path.join(SRC, "app/src/main/java/com/github/tvbox/osc/base/App.java")
+    if not os.path.exists(ap):
+        print("  !! 未找到 App.java，崩溃取证未注入")
+        return
+    t = open(ap, encoding="utf-8", errors="ignore").read()
+    if "TKBOX_CRASH" in t:
+        print("· 崩溃取证已存在，跳过")
+        return
+    anchor = "super.onCreate();"
+    if anchor not in t:
+        print("  !! 未找到 onCreate 锚点，崩溃取证未注入")
+        return
+    handler = r'''
+
+        try {
+            final Thread.UncaughtExceptionHandler tkDefHandler = Thread.getDefaultUncaughtExceptionHandler();
+            Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+                @Override
+                public void uncaughtException(Thread t, Throwable e) {
+                    String tkFull = "";
+                    try {
+                        java.io.StringWriter tkSw = new java.io.StringWriter();
+                        e.printStackTrace(new java.io.PrintWriter(tkSw));
+                        tkFull = tkSw.toString();
+                        android.util.Log.e("TKBOX_CRASH", tkFull);
+                        try {
+                            java.io.File tkDir = getExternalFilesDir(null);
+                            if (tkDir != null) {
+                                java.io.FileOutputStream tkFo = new java.io.FileOutputStream(new java.io.File(tkDir, "crash.txt"));
+                                tkFo.write(tkFull.getBytes("UTF-8"));
+                                tkFo.flush();
+                                tkFo.close();
+                            }
+                        } catch (Throwable ignored2) { }
+                        String tkShow = e.getClass().getName() + " | " + e.getMessage();
+                        int tkI = tkFull.indexOf("at com.github.tvbox");
+                        if (tkI > 0) {
+                            String tkTail = tkFull.substring(tkI, Math.min(tkFull.length(), tkI + 160)).replace("\n", "  ");
+                            tkShow = tkShow + " || " + tkTail;
+                        }
+                        final String tkFinal = tkShow;
+                        new android.os.Handler(android.os.Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                android.widget.Toast.makeText(App.this, tkFinal, android.widget.Toast.LENGTH_LONG).show();
+                            }
+                        });
+                        Thread.sleep(4000);
+                    } catch (Throwable ignored) { }
+                    if (tkDefHandler != null) tkDefHandler.uncaughtException(t, e);
+                }
+            });
+        } catch (Throwable ignored) { }
+'''
+    t = t.replace(anchor, anchor + handler, 1)
+    open(ap, "w", encoding="utf-8").write(t)
+    print("+ 崩溃取证已注入（崩溃时弹英文 Toast + 写 crash.txt）")
+
+
 def main():
-    print("=== TVBoxOS 定制增强 v31（takagen99 整份移植） ===")
+    print("=== TVBoxOS 定制增强 v37（takagen99 整份移植 / 内置订阅保留） ===")
     print("源码:", os.path.abspath(SRC))
     print("订阅:", DEF_URL or "(未传)")
     print("名称:", APP_NAME)
@@ -699,6 +758,7 @@ def main():
     inject_dns_default()
     inject_icon()
     inject_takagen(SRC)
+    tk_patch_crash()
     print("=== 汇总：全部成功 ===")
 
 
