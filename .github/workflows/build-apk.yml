@@ -108,7 +108,14 @@ jobs:
           fi
           echo "内置订阅: ${DEF_URL}"
           echo "APP 名称: ${APP_NAME}"
-          python3 tvbox_ext.py tvboxos-src "${DEF_URL}" "${APP_NAME}"
+          set +e
+          python3 tvbox_ext.py tvboxos-src "${DEF_URL}" "${APP_NAME}" 2>&1 | tee /tmp/ext.log
+          EXT_EXIT=${PIPESTATUS[0]}
+          echo "=== 增强脚本退出码: ${EXT_EXIT} ==="
+          if [ ${EXT_EXIT} -ne 0 ]; then
+            echo "增强脚本执行失败，终止以便回写日志"
+            exit ${EXT_EXIT}
+          fi
           echo "--- 注入后核对 ---"
           grep -n 'HawkConfig.API_URL, "http' tvboxos-src/app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java | head -3 || true
           grep -n 'name="app_name"' tvboxos-src/app/src/main/res/values/strings.xml || true
@@ -243,6 +250,11 @@ jobs:
             cat tvboxos-src/gradle/wrapper/gradle-wrapper.properties 2>/dev/null | tail -4
             cat tvboxos-src/local.properties 2>/dev/null
             tail -4 tvboxos-src/gradle.properties 2>/dev/null
+            echo
+            echo "## 增强脚本输出（最后 120 行）"
+            echo '```'
+            tail -n 120 /tmp/ext.log 2>/dev/null
+            echo '```'
             echo
             echo "## gradle: What went wrong"
             grep -A 40 "What went wrong" /tmp/gradle.log 2>/dev/null | head -70
