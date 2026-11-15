@@ -1,27 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# ===== TVBoxOS 定制增强 V30 完整版（含图标/布局/时间/弹幕关闭）=====
 """
-tvbox_ext.py — TVBoxOS 定制增强注入（v7）
-用法: python3 tvbox_ext.py <源码目录> [默认订阅地址] [APP名称]
+tvbox_ext.py — takagen99 布局+图标 纯净移植版
 
-注入 6 项：
-  1. 内置默认订阅地址（装上即自动加载你的订阅）
-  2. APP 显示名称
-  5. 安全 DNS 默认开启腾讯（原版默认关闭）
-  6. APP 图标替换（仓库根目录放 app_icon.png 即自动生效，不放则跳过）
+用法（与原脚本一致，workflow 无需改动）:
+    python3 tvbox_ext.py <源码目录> [订阅地址] [APP名称]
+    后两个参数只为兼容命令行保留，本版本不使用。
 
-v6 相比 v5 的变化：
-  · 取消「标题源名前缀 + 解码标识」：标题恢复原版「片名 + 第几集」。
-    理由：底部控制栏本身已显示播放器与解码方式（如「IJK播放器 硬解」），标题重复显示多余。
-  · v5 已取消「网速常显」：右上角速度只在调出控制栏时显示，收起即隐藏。
-  · 保留：内置默认订阅、APP 名称、安全DNS默认腾讯、APP 图标。
-  · 解码标识不再注入 VodController.setTitle（那个 mPlayerConfig 在部分路径为空，会导致不显示），
-    改为在 PlayFragment 标题拼接处直接读 Hawk 设置 → 只要装进新包就一定显示。
-  · 一次编译内可重复执行，幂等。
+运行时只做两件事：
+  1. 铺入 takagen99 整套播放控制布局 player_vod_control_view.xml 与 36 个图标资源
+  2. 把布局里所有按钮 id 批量替换为底座原生 id，并把对应字段类型对齐
+     （否则底座 findViewById 返回 null 或强转抛异常，播放页会直接崩）
+
+不做的（本版本一律不注入）:
+  · 内置订阅
+  · APP 显示名称
+  · DNS / 去广告
+  · APP 图标
+  · 播放器类型（IJK/EXO 保持底座原样）
+  · 崩溃捕获
+
+文件里仍保留着订阅/名称/DNS/图标这几个函数的定义，但 main() 不调用它们，
+所以不会对源码产生任何改动。
 
 失败不静默（exit 1 让工作流标红）。
 """
+
 import os, re, sys, shutil, glob
 
 SRC = sys.argv[1] if len(sys.argv) > 1 else '.'
@@ -577,19 +581,6 @@ def inject_takagen(src):
         t = t.replace('mController.mLandscapePortraitBtn.setText("竖屏");', ';')
         t = t.replace('mController.mLandscapePortraitBtn.setText("横屏");', ';')
 
-        # 强制走 IJK 播放器 + 软解码
-        # 底座默认 PLAY_TYPE=2 即 EXO，在部分电视上画面卡第一帧后 native 崩溃闪退；
-        # 而 VodController 里只有 playerType==1 才会显示「硬解/软解」汉字按钮，
-        # 所以强制 pl=1 同时解决「闪退」和「按钮没字」两个问题。
-        anchor = 'if (!mVodPlayerCfg.has("pl")) {'
-        inject = ('mVodPlayerCfg.put("pl", 1);\n'
-                  '            mVodPlayerCfg.put("ijk", "软解码");\n'
-                  '            ' + anchor)
-        if anchor in t:
-            t = t.replace(anchor, inject, 1)
-            print("+ 已强制播放器为 IJK 软解码（规避 EXO 崩溃，同时恢复硬解/软解汉字）")
-        else:
-            print("  !! 未找到 mVodPlayerCfg 初始化锚点，软解码未生效")
 
         if t != n0:
             open(pf, "w", encoding="utf-8").write(t)
@@ -792,20 +783,14 @@ def tk_patch_crash():
 
 
 def main():
-    print("=== TVBoxOS 定制增强 v37（takagen99 整份移植 / 内置订阅保留） ===")
+    print("=== takagen99 布局+图标 纯净移植 ===")
     print("源码:", os.path.abspath(SRC))
-    print("订阅:", DEF_URL or "(未传)")
-    print("名称:", APP_NAME)
-    if DEF_URL:
-        inject_sub()
-    else:
-        print("· 未传订阅地址，跳过内置订阅注入")
-    inject_name()
-    inject_dns_default()
-    inject_icon()
     inject_takagen(SRC)
-    tk_patch_crash()
-    print("=== 汇总：全部成功 ===")
+    print("-" * 60)
+    if fails:
+        print("!! 失败项: %s" % ", ".join(fails))
+        sys.exit(1)
+    print("=== 完成：布局与图标已移植，其余一律未动 ===")
 
 
 if __name__ == "__main__":
