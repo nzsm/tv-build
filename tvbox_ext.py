@@ -576,6 +576,21 @@ def inject_takagen(src):
         n0 = t
         t = t.replace('mController.mLandscapePortraitBtn.setText("竖屏");', ';')
         t = t.replace('mController.mLandscapePortraitBtn.setText("横屏");', ';')
+
+        # 强制走 IJK 播放器 + 软解码
+        # 底座默认 PLAY_TYPE=2 即 EXO，在部分电视上画面卡第一帧后 native 崩溃闪退；
+        # 而 VodController 里只有 playerType==1 才会显示「硬解/软解」汉字按钮，
+        # 所以强制 pl=1 同时解决「闪退」和「按钮没字」两个问题。
+        anchor = 'if (!mVodPlayerCfg.has("pl")) {'
+        inject = ('mVodPlayerCfg.put("pl", 1);\n'
+                  '            mVodPlayerCfg.put("ijk", "软解码");\n'
+                  '            ' + anchor)
+        if anchor in t:
+            t = t.replace(anchor, inject, 1)
+            print("+ 已强制播放器为 IJK 软解码（规避 EXO 崩溃，同时恢复硬解/软解汉字）")
+        else:
+            print("  !! 未找到 mVodPlayerCfg 初始化锚点，软解码未生效")
+
         if t != n0:
             open(pf, "w", encoding="utf-8").write(t)
             print("+ PlayFragment 横竖屏文字调用已改掉（他 layout 用图标表达）")
@@ -715,6 +730,16 @@ def tk_patch_crash():
     if "TKBOX_CRASH" in t:
         print("· 崩溃取证已存在，跳过")
         return
+    # 强制默认播放器为 IJK(1)：底座的 EXO 在部分电视上画面卡第一帧后直接崩
+    pat_pl = re.compile(r'if \(!Hawk\.contains\(HawkConfig\.PLAY_TYPE\)\) \{\s*'
+                        r'Hawk\.put\(HawkConfig\.PLAY_TYPE, 2\);\s*\}'
+                        r'(?:\s*else if \(Hawk\.get\(HawkConfig\.PLAY_TYPE, 2\) == 0\) \{\s*'
+                        r'Hawk\.put\(HawkConfig\.PLAY_TYPE, 2\);\s*\})?')
+    t2, npl = pat_pl.subn('Hawk.put(HawkConfig.PLAY_TYPE, 1);', t)
+    if npl:
+        t = t2
+        print("+ App 默认播放器已强制为 IJK(1)")
+
     anchor = "super.onCreate();"
     if anchor not in t:
         print("  !! 未找到 onCreate 锚点，崩溃取证未注入")
