@@ -611,6 +611,27 @@ def inject_takagen(src):
     else:
         print("  !! 未找到「影片剩余」文本框")
 
+    # 顶层与底部两个容器：他原版没写 visibility，默认 visible，导致一进播放页就亮菜单栏
+    # 底座 hideControl()/显示时用的就是这两个 id，初始置 gone 才能做到"点屏幕才出菜单"
+    for vid in ("bottom_container", "top_container"):
+        pat = re.compile(r'<[\w\.]+[^>]*?android:id="@\+id/%s"[^>]*?>' % vid, re.S)
+        mm = pat.search(lay2)
+        if mm:
+            frag = mm.group(0)
+            if "android:visibility" not in frag:
+                # 容器节点以 ">" 结尾，自闭合节点以 "/>" 结尾，两种都要保持原结构
+                body = frag.rstrip()
+                if body.endswith("/>"):
+                    new_frag = body[:-2].rstrip() + '\n        android:visibility="gone" />'
+                else:
+                    new_frag = body[:-1].rstrip() + '\n        android:visibility="gone" >'
+                lay2 = lay2[:mm.start()] + new_frag + lay2[mm.end():]
+                print("+ %s 初始设为 gone（进播放页不再自动弹菜单）" % vid)
+            else:
+                print("· %s 已自带 visibility，跳过" % vid)
+        else:
+            print("  !! 未找到 %s" % vid)
+
     open(lp, "w", encoding="utf-8").write(lay2)
     print("+ 播放控制面板已整份替换为 takagen99 的 layout")
 
