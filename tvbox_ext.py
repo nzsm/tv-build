@@ -565,6 +565,182 @@ def narrow_seek(s):
     return s
 
 
+MPV_JAVA = '''package com.github.tvbox.osc.player.thirdparty;
+
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.util.Log;
+
+import com.github.tvbox.osc.base.App;
+
+public class MpvPlayer {
+    public static final String TAG = "ThirdParty.mpv";
+
+    private static final String PACKAGE_NAME = "is.xyz.mpv";
+    private static final String PLAYBACK_ACTIVITY = "is.xyz.mpv.MainActivity";
+
+    private static class MpvPackageInfo {
+        final String packageName;
+        final String activityName;
+
+        MpvPackageInfo(String packageName, String activityName) {
+            this.packageName = packageName;
+            this.activityName = activityName;
+        }
+    }
+
+    private static final MpvPackageInfo[] PACKAGES = {
+            new MpvPackageInfo(PACKAGE_NAME, PLAYBACK_ACTIVITY),
+    };
+
+    public static MpvPackageInfo getPackageInfo() {
+        for (MpvPackageInfo pkg : PACKAGES) {
+            try {
+                ApplicationInfo info = App.getInstance().getPackageManager().getApplicationInfo(pkg.packageName, 0);
+                if (info.enabled)
+                    return pkg;
+                else
+                    Log.v(TAG, "mpv package `" + pkg.packageName + "` is disabled.");
+            } catch (PackageManager.NameNotFoundException ex) {
+                Log.v(TAG, "mpv package `" + pkg.packageName + "` does not exist.");
+            }
+        }
+        return null;
+    }
+
+    public static boolean run(Activity activity, String url, String title, String subtitle, long progress) {
+        MpvPackageInfo packageInfo = getPackageInfo();
+        if (packageInfo == null)
+            return false;
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setPackage(packageInfo.packageName);
+        intent.setDataAndTypeAndNormalize(Uri.parse(url), "video/*");
+        intent.putExtra("title", title);
+
+        if (subtitle != null && !subtitle.isEmpty()) {
+            intent.putExtra("subs", subtitle);
+        }
+
+        if (progress > 0) {
+            intent.putExtra("position", progress);
+        }
+
+        try {
+            activity.startActivity(intent);
+            return true;
+        } catch (ActivityNotFoundException ex) {
+            Log.e(TAG, "Can't run mpv", ex);
+            return false;
+        }
+    }
+}
+'''
+
+def add_mpv_player():
+    # 播放器菜单里加一项 mpv（装了 mpv-android 才出现）
+    d = jpath('app/src/main/java/com/github/tvbox/osc/player/thirdparty')
+    if not os.path.isdir(d):
+        print('  !! 找不到 thirdparty 目录')
+        fails.append('MpvPlayer')
+        return
+    write(os.path.join(d, 'MpvPlayer.java'), MPV_JAVA)
+    ph = jpath('app/src/main/java/com/github/tvbox/osc/util/PlayerHelper.java')
+    if not os.path.isfile(ph):
+        print('  !! 找不到 PlayerHelper.java')
+        fails.append('PlayerHelper')
+        return
+    t = read(ph)
+    if 'MpvPlayer' in t:
+        print('  · mpv 已存在，跳过')
+        return
+    if 'import com.github.tvbox.osc.player.thirdparty.MXPlayer;' in t:
+        t = t.replace('import com.github.tvbox.osc.player.thirdparty.MXPlayer;',
+                      'import com.github.tvbox.osc.player.thirdparty.MpvPlayer;' + chr(10)
+                      + 'import com.github.tvbox.osc.player.thirdparty.MXPlayer;', 1)
+    m = re.search(r'playersInfo\.put\(14, "[^"]*"\);', t)
+    if m:
+        t = t[:m.end()] + chr(10) + '            playersInfo.put(15, "mpv");' + t[m.end():]
+    m = re.search(r'playersExist\.put\(14, [^\n]*\);', t)
+    if m:
+        t = t[:m.end()] + chr(10) + '            playersExist.put(15, MpvPlayer.getPackageInfo() != null);' + t[m.end():]
+    m = re.search(r'(case 14: \{[\s\S]*?break;[\s\S]*?\})', t)
+    if m:
+        add = (chr(10) + '            case 15: {' + chr(10)
+               + '                callResult = MpvPlayer.run(activity, url, title, subtitle, progress);' + chr(10)
+               + '                break;' + chr(10) + '            }')
+        t = t[:m.end(1)] + add + t[m.end(1):]
+    write(ph, t)
+    print('  + 播放器菜单已加 mpv 选项')
+
+
+def unstick_bar(s):
+    # 去掉横向滚动，底部栏固定不能左右滑
+    m = re.search(r'<HorizontalScrollView[^>]*>', s)
+    if m:
+        margin = re.search(r'android:layout_marginTop="([^"]*)"', m.group(0))
+        s = s[:m.start()] + s[m.end():]
+        s = s.replace('</HorizontalScrollView>', '', 1)
+        if margin:
+            j = s.find('@+id/play_btn_group"')
+            a = s.rfind('<', 0, j)
+            b = s.find('>', a)
+            if 'layout_marginTop' not in s[a:b]:
+                ins = b - 1 if s[b - 1] == '/' else b
+                s = s[:ins] + chr(10) + '                android:layout_marginTop="%s" ' % margin.group(1) + s[ins:]
+        print('  + 已去掉横向滚动段落子，底部栏固定')
+    return s
+
+
+def center_pair(s):
+    # 图标与汉字左右居中对齐 + 左右间隙收到半个图标宽
+    s = s.replace('android:paddingLeft="14dp"', 'android:paddingLeft="6dp"')
+    s = s.replace('android:paddingRight="14dp"', 'android:paddingRight="6dp"')
+    s = re.sub(r'\s*android:layout_marginEnd="@dimen/vs_5"', '', s)
+    s = re.sub(r'\s*android:layout_marginRight="@dimen/vs_5"', '', s)
+    # 按钮内文字水平居中（图标与汉字同一条中线）
+    j = s.find('@+id/play_btn_group"')
+    if j < 0:
+        print('  · 找不到按钮组，跳过居中')
+        return s
+    st = s.rfind('<', 0, j)
+    a, b = _block_span(s, st)
+    seg = s[a:b]
+    cnt = [0]
+    def fix(m):
+        tag = m.group(0)
+        if 'android:gravity=' in tag:
+            return tag
+        cnt[0] += 1
+        if tag.rstrip().endswith('/>'):
+            return tag.rstrip()[:-2].rstrip() + chr(10) + '                android:gravity="center_horizontal" />'
+        return tag[:-1] + chr(10) + '                android:gravity="center_horizontal">'
+    seg = re.sub(r'<TextView[^>]*>', fix, seg)
+    s = s[:a] + seg + s[b:]
+    print('  + 按钮内文字已水平居中（%d 个），左右间隙已收到 6dp' % cnt[0])
+    return s
+
+
+def stamp_replay_icon():
+    # 最后统一重播图标：圆环与三角都占满画幅，与其他图标视觉等大
+    p = os.path.join(SRC, 'app/src/main/res/drawable/v_replay_play.xml')
+    s = ('<vector xmlns:android="http://schemas.android.com/apk/res/android"' + chr(10)
+         + '    android:width="26dp" android:height="26dp"' + chr(10)
+         + '    android:viewportWidth="24" android:viewportHeight="24"' + chr(10)
+         + '    android:tint="#FFFFFF">' + chr(10)
+         + '    <path android:strokeColor="@android:color/white" android:strokeWidth="3"'
+         + ' android:fillColor="@android:color/transparent"'
+         + ' android:pathData="M12,1 A11,11 0 1 1 11.99,1"/>' + chr(10)
+         + '    <path android:fillColor="@android:color/white" android:pathData="M8.4,8.4 L15.6,12.0 L8.4,15.6 Z"/>' + chr(10)
+         + '</vector>')
+    write(p, s)
+    print('  + 重播图标已统一尺寸（圆环与三角占满画幅）')
+
+
 def main():
     print('=== 图标版（图标 %s、字缩小、整排居中）===' % ICON_SIZE)
     print('源码:', os.path.abspath(SRC))
@@ -634,6 +810,10 @@ def main():
     s = unflatten_text(s)
     s = match_ref_gaps(s)
     s = narrow_seek(s)
+    s = unstick_bar(s)
+    s = center_pair(s)
+    add_mpv_player()
+    stamp_replay_icon()
     open(p, 'w', encoding='utf-8').write(s)
     print('  + 图标已加到 %d 处（%d 个按钮）' % (hit, hit))
     if miss:
