@@ -24,27 +24,24 @@ SRC = sys.argv[1] if len(sys.argv) > 1 else '.'
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = sys.argv[3] if len(sys.argv) > 3 else ''
 
-ICON_SIZE = '14dp'
+ICON_SIZE = '20dp'
 TK_BUNDLE = "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"
 
 BTN_ICON = {
     'play_pre':            'v_prev',
     'play_next':           'v_next',
-    'play_retry':          'v_replay',
+    'play_retry':          'v_replay_play',
     'play_refresh':        'v_replay',
     'play_scale':          'v_aspect',
     'play_speed':          'v_ffwd',
     'play_player':         'v_type',
-    'play_time_start':     'vod_skip',
-    'play_time_end':       'vod_skip',
-    'play_time_reset':     'v_replay',
+    'play_time_reset':     'vod_skip',
     'zimu_select':         'v_subtitle',
     'audio_track_select':  'v_audio',
-    'video_track_select':  'v_audio',
     'danmu_setting':       'v_danmu',
-    'danmu_search_ui':     'v_danmu',
-    'landscape_portrait':  'v_aspect',
+    'landscape_portrait':  'htov',
     'screen_display':      'ic_clock',
+    'play_cast':           'v_cast',
 }
 IMG_SRC = {'tv_back': 'v_back', 'tv_lock': 'tk_unlock'}
 
@@ -53,6 +50,10 @@ fails = []
 
 def jpath(*p):
     return os.path.join(SRC, *p)
+
+
+def write(p, t):
+    open(p, 'w', encoding='utf-8').write(t)
 
 
 def read(p):
@@ -66,8 +67,252 @@ def shrink(xml):
     return xml
 
 
+
+
+def _block_span(text, idx):
+    """从 idx 处的开标签开始，返回 (start, end) 覆盖整个标签块"""
+    open_end = text.find('>', idx) + 1
+    tag = re.match(r'<(\w+)', text[idx:]).group(1)
+    depth, pos = 1, open_end
+    while depth > 0:
+        m = re.search(r'<(/?)(%s)\b' % tag, text[pos:])
+        if not m:
+            return (idx, open_end)
+        if m.group(1) == '/':
+            depth -= 1
+            if depth == 0:
+                return (idx, pos + m.end() + 1)
+        else:
+            depth += 1
+        pos += m.end()
+    return (idx, open_end)
+
+
+def tweak_bar(s, sp='10sp'):
+    """字缩小 + 整排居中"""
+    j = s.find('@+id/play_btn_group"')
+    if j < 0:
+        print('  !! 找不到 play_btn_group')
+        return s
+    st = s.rfind('<', 0, j)
+    a, b = _block_span(s, st)
+
+    # 1) 组内文字统一缩小
+    seg = s[a:b]
+    n1 = seg.count('android:textSize="@dimen/ts_19"')
+    seg = seg.replace('android:textSize="@dimen/ts_19"', 'android:textSize="%s"' % sp)
+    # 去掉字体自带上下留白，图标与文字贴紧
+    seg = seg.replace('android:textColor="@android:color/white"', 'android:textColor="@android:color/white"' + chr(10) + '                android:includeFontPadding="false"')
+    s = s[:a] + seg + s[b:]
+    print('  + 组内字号缩小：%d 处 → %s' % (n1, sp))
+
+    # 2) 外层 HorizontalScrollView 开启 fillViewport（否则无法居中）
+    hs = s.rfind('<HorizontalScrollView', 0, s.find('@+id/play_btn_group"'))
+    if hs > 0:
+        hs_end = s.find('>', hs)
+        blk = s[hs:hs_end]
+        if 'fillViewport="false"' in blk:
+            s = s[:hs] + blk.replace('fillViewport="false"', 'fillViewport="true"') + s[hs_end:]
+            print('  + HorizontalScrollView 已开启 fillViewport')
+
+    # 3) 按钮组加水平居中
+    j = s.find('@+id/play_btn_group"')
+    st = s.rfind('<', 0, j)
+    e = s.find('>', j)
+    blk = s[st:e]
+    if 'layout_gravity' not in blk:
+        s = s[:e] + '\n                android:layout_gravity="center_horizontal"' + s[e:]
+        print('  + 按钮组已加水平居中')
+    return s
+
+
+
+def hide_dead_buttons(s):
+    # 压成 0dp 隐藏：搜弹幕、视轨（点了没实际作用或重复的按钮）
+    for vid, why in (('danmu_search_ui', '搜弹幕'), ('video_track_select', '视轨')):
+        j = s.find('@+id/%s"' % vid)
+        if j < 0:
+            print('  · 布局里没有 %s，跳过' % vid)
+            continue
+        st = s.rfind('<', 0, j)
+        e = s.find('>', j)
+        blk = s[st:e].rstrip()
+        closed = blk.endswith('/')
+        if closed:
+            blk = blk[:-1].rstrip()
+        for k in ('android:layout_width', 'android:layout_height'):
+            if k in blk:
+                blk = re.sub(r'%s="[^"]*"' % k, '%s="0dp"' % k, blk, count=1)
+            else:
+                blk = blk + (chr(10) + '        %s="0dp"' % k)
+        if 'android:visibility' in blk:
+            blk = re.sub(r'android:visibility="[^"]*"', 'android:visibility="gone"', blk, count=1)
+        else:
+            blk = blk + (chr(10) + '        android:visibility="gone"')
+        s = s[:st] + blk + (' />' if closed else '>') + s[e + 1:]
+        print('  + 「%s」已压成 0dp 隐藏' % why)
+    return s
+
+def merge_danmu_buttons():
+    # 把「搜弹幕」合并进「弹幕」按钮：长按弹幕 = 搜弹幕；独立按钮彻底隐藏
+    # 做法：按两个锚点整段替换，不解析括号，不会破坏代码结构
+    p = jpath('app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java')
+    if not os.path.isfile(p):
+        print('  !! 找不到 VodController.java')
+        fails.append('VodController')
+        return
+    s = read(p)
+    A = '        setOnTvLongClickListener(mDanmuSettingBtn, new OnLongClickListener() {'
+    B = '        mLandscapePortraitBtn.setOnClickListener('
+    i = s.find(A)
+    j = s.find(B, i) if i >= 0 else -1
+    if i < 0 or j < i:
+        print('  · Java 补丁锚点未命中，跳过（不影响其它改动）')
+        return
+    nb = chr(10).join([
+        A,
+        '            @Override',
+        '            public boolean onLongClick(View view) {',
+        '                FastClickCheckUtil.check(view);',
+        '                listener.searchDanmuUi(false);',
+        '                hideBottom();',
+        '                return true;',
+        '            }',
+        '        });',
+        '        mDanmuSearchUiBtn.setVisibility(View.GONE);',
+        '',
+    ])
+    s = s[:i] + nb + s[j:]
+    write(p, s)
+    print('  + 长按「弹幕」= 搜弹幕；独立「搜弹幕」按钮已清除')
+
+
+def unify_danmu_search():
+    # 把「搜弹幕」统一到 APP 自带的搜索框（不再依赖影视源实现）
+    p = jpath('app/src/main/java/com/github/tvbox/osc/ui/fragment/PlayFragment.java')
+    if not os.path.isfile(p):
+        print('  !! 找不到 PlayFragment.java')
+        fails.append('PlayFragment')
+        return
+    s = read(p)
+    A = '            public void searchDanmuUi(boolean longClick) {'
+    B = '            public void playNext(boolean rmProgress) {'
+    i = s.find(A)
+    j = s.find(B, i) if i >= 0 else -1
+    if i < 0 or j < i:
+        print('  · 弹幕搜索统一锚点未命中，跳过')
+        return
+    nb = chr(10).join([
+        A,
+        '                SearchDanmuDialog d = new SearchDanmuDialog(requireContext());',
+        '                d.setDanmuLoader(new SearchDanmuDialog.DanmuLoader() {',
+        '                    @Override',
+        '                    public void loadDanmu(String danmu) {',
+        '                        if (!isAdded()) return;',
+        '                        checkDanmu(danmu);',
+        '                    }',
+        '                });',
+        '                VodInfo.VodSeries series = mVodInfo == null ? null : getCurrentSeries(mVodInfo.playFlag, mVodInfo.playIndex);',
+        '                d.setEpisode(series == null ? "" : series.name);',
+        '                d.setSearchWord(mVodInfo == null ? "" : mVodInfo.name);',
+        '                d.show();',
+        '            }',
+        '',
+        '',
+    ])
+    s = s[:i] + nb + s[j:]
+    write(p, s)
+    print('  + 长按「弹幕」现在打开 APP 自带的搜索框（与设置里的「搜索」同一个）')
+
+def make_replay_icon():
+    # 重播图标 = 圆环箭头 + 中间播放三角（与播放键同款三角）
+    p = os.path.join(SRC, 'app/src/main/res/drawable/v_replay_play.xml')
+    if os.path.exists(p):
+        return
+    s = ('<vector xmlns:android="http://schemas.android.com/apk/res/android"' + chr(10)
+         + '    android:width="24dp" android:height="24dp"' + chr(10)
+         + '    android:viewportWidth="24" android:viewportHeight="24"' + chr(10)
+         + '    android:tint="#FFFFFF">' + chr(10)
+         + '    <path android:fillColor="@android:color/white" android:pathData="M12,5V2.21c0,-0.45 -0.54,-0.67 -0.85,-0.35l-3.8,3.79c-0.2,0.2 -0.2,0.51 0,0.71l3.79,3.79c0.32,0.31 0.86,0.09 0.86,-0.36V7c3.73,0 6.68,3.42 5.86,7.29 -0.47,2.27 -2.31,4.1 -4.57,4.57 -3.57,0.75 -6.75,-1.7 -7.23,-5.01 -0.07,-0.48 -0.49,-0.85 -0.98,-0.85 -0.6,0 -1.08,0.53 -1,1.13 0.62,4.39 4.8,7.64 9.53,6.72 3.12,-0.61 5.63,-3.12 6.24,-6.24C20.84,9.48 16.94,5 12,5z"/>' + chr(10)
+         + '    <path android:fillColor="@android:color/white" android:pathData="M12.2,11.0 L16.0,13.1 L12.2,15.2 Z"/>' + chr(10)
+         + '</vector>')
+    write(p, s)
+    print('  + 重播图标已生成：圆环箭头 + 播放三角')
+
+HTVO_B64 = ('iVBORw0KGgoAAAANSUhEUgAAADYAAAA2CAYAAACMRWrdAAAEKUlEQVR42u2ay4scVRTGf6e6uqOOURFN'
+           'wEBwgqAwsxgUH4uAEEQXQhSjrhXizn/AjTshuHDjTvABMiM+FooPyEJcJG4loGIcY3yEuPAREB9gd3V9LnIuuVNMv6pqprqbPpuu6rp17/nO695z6sCcklWdQJIBZmb5hO+0auBfZtbfUQlJSuocN8m6Lqh6NCbJzEySbgH2mNkPklrDJCgpMbNc0l7gGHAXcG2Z5YFfgJNmdirmpzYNSVqT9L2kQ37fGjH+XknfqT56U9LVgzRXBdhtvsB5ScvbgQuLSlqWdMnH/1cRUC6p59dvFc3cKjh7AuTA7cAZIAXOAw8UzTJcS3odeAroAh3gW+Ci86EJAl4C3AnsjeY6bGafj3KHGFRrxPP9Lr1smOYkdST95GNzSe9L6lSwmFVJf/i6uaQT/n+KS5kRzt6XtA94GLjDpUMk5Rv9ugVkwDLwqaQjZvZjJMEll3CwkvfMrOvgsglxJWb2laQzwBH/b388IB0jgj0JvAzsG2PBFOg7uM8kPQp8OWBs2008n2QPdN5GbhvJIPNzUA8Cbzuo7rjSdHC3AgeGMK0q4XmUMNLBQlEbeMnvMzfBs8DfhbFXAat+nbup5cBRM/tEUmpmGbtM6RATXAFWXPop8ALwfFFSvn+di/wuAx4LoPz9XadkyPnx5kKQeM0Bt3xParmPdCJNBVAfSWo3oamhPjaAOg4k+Eb47fs8vQhUama9Jk/3kwAb5OwhXB+bBk2NDPdjHkSZNk1VBha0Z2abwKYHnYwpobTqBGUSzZkAFgLJtJUGEuaU0hHBIYv2KM0LsHbheTrrwIJmLgBv+L0BlwrPZwtYiG5m9g3w9DYRkFpqC02Youc6STFXKpNmNCWEgad7IJeUSrq+wvxd4N/GgUUpyyHgOeD+KPWfRPKZz71hZs82CiwCdQ/wMXBThXn7XgNZanSDDumIpOuAdx1Ut8K8oTp1TdPBo2VmmaQngINRre5D4APfpCcJHLkL7VxtpeeKweNuB9AGzprZ0ZoOyY1HxT1RkLjgjIXUvwxNquldOVKlLu2sSkrSlMaSEqWAmaC5TVsWwBbAFsAWwBbAFsDmFljdXTTF8kqV49Yo3oaW1DzxTKXSJ6thL/a8sycpIcDE06yxgf3mzOTAmqQVM/u6prTlH+BP4Aa/f1zSO2ZWJqHNJa0Ca1z5PvfrFqX44qHB5DBwKko0/wK+KJF+hNLASTN7UVLHWx9eAZ5hNxtYohaidW9E6XljSBVaDzmdf949KOn3HWg5Wi/6XbLVapQAx4ENN9OquVQrSjjNzH7mciPMJlcaYUoHH+dxAzjuvGuLKcb+EHIwN8uHgAMlAIaax2kzezUy9VAJWwIeAe7jcluflQhKF93UTxd5H+jsOxnmG2/E9Aavqqa4bTvRTLXOThv9D5TG18fULUUUAAAAAElFTkSuQmCC')
+
+
+def make_extra_icons():
+    # 1) 横竖屏：takagen 原图 htov（54px@3x = 18dp）
+    d = os.path.join(SRC, 'app/src/main/res/drawable-xxhdpi')
+    if not os.path.isdir(d):
+        os.makedirs(d)
+    p = os.path.join(d, 'htov.png')
+    if not os.path.exists(p):
+        import base64
+        write_bytes(p, base64.b64decode(HTVO_B64))
+        print('  + 横竖屏图标已铺：htov.png（takagen 原图）')
+    # 2) 投屏：自绘 cast 图标
+    p2 = os.path.join(SRC, 'app/src/main/res/drawable/v_cast.xml')
+    if not os.path.exists(p2):
+        s = ('<vector xmlns:android="http://schemas.android.com/apk/res/android"' + chr(10)
+             + '    android:width="24dp" android:height="24dp"' + chr(10)
+             + '    android:viewportWidth="24" android:viewportHeight="24"' + chr(10)
+             + '    android:tint="#FFFFFF">' + chr(10)
+             + '    <path android:fillColor="@android:color/white" android:pathData="M1,18v3h3c0,-1.66 -1.34,-3 -3,-3zM1,14v2c2.76,0 5,2.24 5,5h2c0,-3.87 -3.13,-7 -7,-7zM1,10v2c4.97,0 9,4.03 9,9h2c0,-6.08 -4.93,-11 -11,-11zM21,3L3,3c-1.1,0 -2,0.9 -2,2v3h2L3,5h18v14h-7v2h7c1.1,0 2,-0.9 2,-2L23,5c0,-1.1 -0.9,-2 -2,-2z"/>' + chr(10)
+             + '</vector>')
+        write(p2, s)
+        print('  + 投屏图标已生成：v_cast.xml')
+
+
+def write_bytes(p, data):
+    open(p, 'wb').write(data)
+
+def label_time_buttons(s):
+    # 片头/片尾：上面时间、下面汉字（两行显示）
+    for vid, label in (('play_time_start', '片头'), ('play_time_end', '片尾')):
+        i = s.find('@+id/%s"' % vid)
+        if i < 0:
+            print('  · 没有 %s，跳过' % vid)
+            continue
+        st = s.rfind('<', 0, i)
+        en = s.find('>', i)
+        blk = s[st:en+1]
+        blk = blk.replace('android:singleLine="true"', 'android:singleLine="false"')
+        blk = re.sub(r'android:text="[^"]*"', 'android:text="%s"' % label, blk, count=1)
+        blk = re.sub(r'android:textSize="[^"]*"', 'android:textSize="16sp"', blk, count=1)
+        if 'android:gravity=' not in blk:
+            blk = blk.replace('<TextView', '<TextView' + chr(10) + '                android:gravity="center"')
+        s = s[:st] + blk + s[en:]
+        print('  + %s 改为两行：时间 + 「%s」' % (vid, label))
+    return s
+
+
+def patch_time_text():
+    p = jpath('app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java')
+    if not os.path.isfile(p):
+        print('  !! 找不到 VodController.java')
+        fails.append('VodController')
+        return
+    s = read(p)
+    pairs = [
+        ('mPlayerTimeStartBtn.setText(start == 0 ? "片头" : stringForTime(start * 1000));',
+         'mPlayerTimeStartBtn.setText((start == 0 ? "00:00" : stringForTime(start * 1000)) + "\\n片头");'),
+        ('mPlayerTimeSkipBtn.setText(end == 0 ? "片尾" : stringForTime(end * 1000));',
+         'mPlayerTimeSkipBtn.setText((end == 0 ? "00:00" : stringForTime(end * 1000)) + "\\n片尾");'),
+    ]
+    n = 0
+    for a, b in pairs:
+        if a in s:
+            s = s.replace(a, b, 1)
+            n += 1
+    if n:
+        write(p, s)
+        print('  + 片头/片尾文字已改：时间在上、汉字在下')
+
 def main():
-    print('=== 统一小图标版（图标 %s）===' % ICON_SIZE)
+    print('=== 图标版（图标 %s、字缩小、整排居中）===' % ICON_SIZE)
     print('源码:', os.path.abspath(SRC))
     files = json.loads(zlib.decompress(base64.b64decode(TK_BUNDLE)).decode('utf-8'))
 
@@ -119,6 +364,12 @@ def main():
             else:
                 miss.append(vid)
 
+    s = tweak_bar(s)
+    make_replay_icon()
+    make_extra_icons()
+    patch_time_text()
+    s = label_time_buttons(s)
+    s = hide_dead_buttons(s)
     open(p, 'w', encoding='utf-8').write(s)
     print('  + 图标已加到 %d 处（%d 个按钮）' % (hit, hit))
     if miss:
@@ -128,7 +379,7 @@ def main():
     if fails:
         print('!! 失败项: ' + ', '.join(fails))
         sys.exit(1)
-    print('=== 完成：Java 零改动，布局只加图标属性 ===')
+    print('=== 完成 ===')
 
 
 if __name__ == '__main__':
