@@ -24,10 +24,11 @@ SRC = sys.argv[1] if len(sys.argv) > 1 else '.'
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = sys.argv[3] if len(sys.argv) > 3 else ''
 
-ICON_SIZE = '20dp'
+ICON_SIZE = '26dp'
 TK_BUNDLE = "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"
 
 BTN_ICON = {
+    'play_ijk': 'tk_space',
     'play_pre':            'v_prev',
     'play_next':           'v_next',
     'play_retry':          'v_replay_play',
@@ -35,7 +36,7 @@ BTN_ICON = {
     'play_scale':          'v_aspect',
     'play_speed':          'v_ffwd',
     'play_player':         'v_type',
-    'play_time_reset':     'vod_skip',
+    'play_time_reset':     'play_skip',
     'zimu_select':         'v_subtitle',
     'audio_track_select':  'v_audio',
     'danmu_setting':       'v_danmu',
@@ -102,7 +103,24 @@ def tweak_bar(s, sp='10sp'):
     n1 = seg.count('android:textSize="@dimen/ts_19"')
     seg = seg.replace('android:textSize="@dimen/ts_19"', 'android:textSize="%s"' % sp)
     # 去掉字体自带上下留白，图标与文字贴紧
+    # 左右间距加宽（10dp → 14dp）
+    seg = seg.replace('android:padding="@dimen/vs_10"',
+                      'android:paddingLeft="14dp"' + chr(10)
+                      + '            android:paddingRight="14dp"' + chr(10)
+                      + '            android:paddingTop="10dp"' + chr(10)
+                      + '            android:paddingBottom="10dp"')
     seg = seg.replace('android:textColor="@android:color/white"', 'android:textColor="@android:color/white"' + chr(10) + '                android:includeFontPadding="false"')
+    # 去掉灰色底板
+    seg = seg.replace('android:background="@drawable/button_dialog_main"', 'android:background="@null"')
+    # 左右间隙加宽（10dp → 14dp），上下保持 10dp
+    seg = seg.replace('android:padding="@dimen/vs_10"',
+                      'android:paddingTop="@dimen/vs_10"' + chr(10) + '                android:paddingBottom="@dimen/vs_10"' + chr(10) + '                android:paddingLeft="14dp"' + chr(10) + '                android:paddingRight="14dp"')
+    # 汉字横向拉宽一点，视觉更扁
+    seg = seg.replace('android:textColor="@android:color/white"',
+                      'android:textColor="@android:color/white"' + chr(10)
+                      + '                android:textScaleX="1.15"' + chr(10)
+                      + '                android:textStyle="normal"' + chr(10)
+                      + '                android:fontFamily="sans-serif-light"')
     s = s[:a] + seg + s[b:]
     print('  + 组内字号缩小：%d 处 → %s' % (n1, sp))
 
@@ -115,14 +133,20 @@ def tweak_bar(s, sp='10sp'):
             s = s[:hs] + blk.replace('fillViewport="false"', 'fillViewport="true"') + s[hs_end:]
             print('  + HorizontalScrollView 已开启 fillViewport')
 
-    # 3) 按钮组加水平居中
+    # 3) 按钮组撑满父宽 + 内部居中（ScrollView 里 layout_gravity 不生效）
     j = s.find('@+id/play_btn_group"')
     st = s.rfind('<', 0, j)
     e = s.find('>', j)
     blk = s[st:e]
+    blk = blk.replace('android:layout_width="wrap_content"',
+                      'android:layout_width="match_parent"')
+    if 'android:gravity=' not in blk:
+        blk = blk.replace('<LinearLayout',
+                          '<LinearLayout' + chr(10) + '                android:gravity="center"')
     if 'layout_gravity' not in blk:
-        s = s[:e] + '\n                android:layout_gravity="center_horizontal"' + s[e:]
-        print('  + 按钮组已加水平居中')
+        blk = blk + chr(10) + '                android:layout_gravity="center_horizontal"'
+    s = s[:st] + blk + s[e:]
+    print('  + 按钮组已撑满父宽并内部居中')
     return s
 
 
@@ -239,8 +263,8 @@ def make_replay_icon():
     write(p, s)
     print('  + 重播图标已生成：圆环箭头 + 播放三角')
 
-HTVO_B64 = ('iVBORw0KGgoAAAANSUhEUgAAADYAAAA2CAYAAACMRWrdAAAEKUlEQVR42u2ay4scVRTGf6e6uqOOURFN'
-           'wEBwgqAwsxgUH4uAEEQXQhSjrhXizn/AjTshuHDjTvABMiM+FooPyEJcJG4loGIcY3yEuPAREB9gd3V9LnIuuVNMv6pqprqbPpuu6rp17/nO695z6sCcklWdQJIBZmb5hO+0auBfZtbfUQlJSuocN8m6Lqh6NCbJzEySbgH2mNkPklrDJCgpMbNc0l7gGHAXcG2Z5YFfgJNmdirmpzYNSVqT9L2kQ37fGjH+XknfqT56U9LVgzRXBdhtvsB5ScvbgQuLSlqWdMnH/1cRUC6p59dvFc3cKjh7AuTA7cAZIAXOAw8UzTJcS3odeAroAh3gW+Ci86EJAl4C3AnsjeY6bGafj3KHGFRrxPP9Lr1smOYkdST95GNzSe9L6lSwmFVJf/i6uaQT/n+KS5kRzt6XtA94GLjDpUMk5Rv9ugVkwDLwqaQjZvZjJMEll3CwkvfMrOvgsglxJWb2laQzwBH/b388IB0jgj0JvAzsG2PBFOg7uM8kPQp8OWBs2008n2QPdN5GbhvJIPNzUA8Cbzuo7rjSdHC3AgeGMK0q4XmUMNLBQlEbeMnvMzfBs8DfhbFXAat+nbup5cBRM/tEUmpmGbtM6RATXAFWXPop8ALwfFFSvn+di/wuAx4LoPz9XadkyPnx5kKQeM0Bt3xParmPdCJNBVAfSWo3oamhPjaAOg4k+Eb47fs8vQhUama9Jk/3kwAb5OwhXB+bBk2NDPdjHkSZNk1VBha0Z2abwKYHnYwpobTqBGUSzZkAFgLJtJUGEuaU0hHBIYv2KM0LsHbheTrrwIJmLgBv+L0BlwrPZwtYiG5m9g3w9DYRkFpqC02Youc6STFXKpNmNCWEgad7IJeUSrq+wvxd4N/GgUUpyyHgOeD+KPWfRPKZz71hZs82CiwCdQ/wMXBThXn7XgNZanSDDumIpOuAdx1Ut8K8oTp1TdPBo2VmmaQngINRre5D4APfpCcJHLkL7VxtpeeKweNuB9AGzprZ0ZoOyY1HxT1RkLjgjIXUvwxNquldOVKlLu2sSkrSlMaSEqWAmaC5TVsWwBbAFsAWwBbAFsDmFljdXTTF8kqV49Yo3oaW1DzxTKXSJ6thL/a8sycpIcDE06yxgf3mzOTAmqQVM/u6prTlH+BP4Aa/f1zSO2ZWJqHNJa0Ca1z5PvfrFqX44qHB5DBwKko0/wK+KJF+hNLASTN7UVLHWx9eAZ5hNxtYohaidW9E6XljSBVaDzmdf949KOn3HWg5Wi/6XbLVapQAx4ENN9OquVQrSjjNzH7mciPMJlcaYUoHH+dxAzjuvGuLKcb+EHIwN8uHgAMlAIaax2kzezUy9VAJWwIeAe7jcluflQhKF93UTxd5H+jsOxnmG2/E9Aavqqa4bTvRTLXOThv9D5TG18fULUUUAAAAAElFTkSuQmCC')
+HTVO_B64 = ('iVBORw0KGgoAAAANSUhEUgAAADYAAAA2CAYAAACMRWrdAAAEuklEQVR42u1aTUhjVxQ+994XfXk6WpXk'
+           'JWszg5ofuipxIaWx6mKwuOhQaNUwzlAps3BRXBS6sYKbVFdCuzISdDEMpepGEAN2Y6A7f4LUH9DaaohhIHm0Jnn3vttFfTZjO07+pskM74O7SLg57335zjn33HsugAEDBgwYMPBqYIwBAGBsbOzdtra2GgAAQsi/5iGEAADAbrfjhYWFLxKJxL6qqpeU0gxjTL1tUEozqqpeJhKJ/fn5+cdWqxW/dmKCIAAAwNzc3MjBwcG6xWLBN8khhAAhBLIs42g0usJLxNbW1jObzXYrOaEQEgghIIQA5/z6O/1zMpl87nA4utfX15/29fV9EovFNEIIMMYAYwyMMZiamvJ3dHT0M8aylNL00dHRT5xzLc9nY4fD8QEhpMbj8XwcCAQ+Hxoa+r5kZXRXehmmp6c/YoypnHO+s7Pzo/6P6sqJoginp6c/M8bUVCp11tnZeScfu7lzOjs77yiKEmOMqclk8reSFUMIAeccCCHg9/vv+Xy+7sbGRgtCCGGMiaZpzOl0fogxFlRV/dPlcg2sra096+npeRCPxzUAAEmSkNlsfgdjLBwfH0cikYgCAC+o/zLocyKRiHJ8fBxxuVwD9fX1cslKYYyhoaEBhcPhb/OJgWw2+wfnnEej0RVJkgAAoLm5GSUSiX1dUT3pFJqodnd3lzjnnDGmlqSYHh+BQOAzn8/3JaU0LQiCqGkavRkDCCGsaRolhNQAAMzOzn6VyWTgv5TRNK1gYsX85lbfbmlpQalU6owxpiqKEhseHm51Op21LpdL9Hg8otPprF1cXHySq9bDhw/v5sZYU1PTC4oV+05lUUyPLZvNViNJUgvGWNjc3JwLhUJHN+een5//yjnXTCaTNDIyci8YDB6YTCaglFZkfRUKUA8DAGSz2TQh5NpFBUEASimIomhGCGG/3+8IhUJHJpMJVFXNK+tVlFgOQcQYu/Z5fRBCyPj4+Hu5pCoJoVQDuqtNTEw8jcViGsa44qQAAMpWc+mkypa5qoUYQqhqSJWVWD4VxBtJrOq2U4Wme1Sp/F3OrKjHzOHhYcbtdksIIaQoCtUX7mrmKOSTFFRVhWg0mqnmmCqqpOKcgyiKUFdXhwotRhVF4ZUoq4RXZTqr1YonJyc/7e7uHmloaLBfVfF5+2BXV5d7b28vU8w25bURs9vtOBwOr7S3t98v9gEmkwlVnSvOzMw8aW9vv08pTetnFFdK5h1gl5eXrOqI9ff3f61pGk2n08ne3t67kUhE0eOu0D3d/12V3Or4ZrO5uZgzijdmgb46tHk7K49qKnCNWtEgZhAziBnEDGKFEiv3Al1sU6KsxDjnvNQFOnen87e54poSvBw1XW4jwuv11t98wUII1dbWwsnJSURv/BViT5/j9Xrr9cZfKpU6K7q6X15e/mZwcPA7SZJaNjY2fi+ktapjYGDgweHhoZrJZGB1dXV2dHR0oRh7CCHc2tr6viAIIsZYWFpamihaMVmW8fb29g+lNMLdbreox4fFYsF6G6jU5rosy6UFvSzLeH5+/vHFxcUv+V5fyB1Op7MW4J/bBTabDQeDwUeF2NOvQ8Tj8b1gMPioZFIGDBgwYOBtwV+WdcgT60j7TwAAAABJRU5ErkJggg==')
 
 
 def make_extra_icons():
@@ -281,9 +305,28 @@ def label_time_buttons(s):
         blk = s[st:en+1]
         blk = blk.replace('android:singleLine="true"', 'android:singleLine="false"')
         blk = re.sub(r'android:text="[^"]*"', 'android:text="%s"' % label, blk, count=1)
-        blk = re.sub(r'android:textSize="[^"]*"', 'android:textSize="16sp"', blk, count=1)
+        blk = re.sub(r'android:textSize="[^"]*"', 'android:textSize="13sp"', blk, count=1)
+        nl = chr(10) + '                '
+        # 上下留白不对称：整体下移 2dp，配合行距 2dp，让时间中心落在图标中心、汉字中心落在文字中心
+        blk = re.sub(r'android:padding(?:Top|Bottom|Left|Right)?="[^"]*"', '', blk)
+        blk = blk.replace('<TextView',
+                          '<TextView' + nl + 'android:paddingTop="14dp"' + nl
+                          + 'android:paddingBottom="0dp"' + nl
+                          + 'android:paddingLeft="14dp"' + nl
+                          + 'android:paddingRight="14dp"')
+        if 'lineSpacingExtra' not in blk:
+            blk = blk.replace('android:singleLine="false"',
+                              'android:singleLine="false"' + nl + 'android:lineSpacingExtra="6dp"')
+        if 'minHeight' not in blk:
+            blk = blk.replace('android:layout_height="wrap_content"',
+                              'android:layout_height="wrap_content"' + nl + 'android:minHeight="58dp"')
+        if 'fontFamily' not in blk:
+            blk = blk.replace('android:textScaleX', 'android:fontFamily="sans-serif-light"' + chr(10) + '                android:textScaleX')
+        # 垂直居中，让时间与图标齐、汉字与汉字齐
+        if 'android:layout_gravity' not in blk:
+            blk = blk.replace('<TextView', '<TextView' + chr(10) + '                android:layout_gravity="center_vertical"')
         if 'android:gravity=' not in blk:
-            blk = blk.replace('<TextView', '<TextView' + chr(10) + '                android:gravity="center"')
+            blk = blk.replace('<TextView', '<TextView' + chr(10) + '                android:gravity="top|center_horizontal"')
         s = s[:st] + blk + s[en:]
         print('  + %s 改为两行：时间 + 「%s」' % (vid, label))
     return s
@@ -310,6 +353,88 @@ def patch_time_text():
     if n:
         write(p, s)
         print('  + 片头/片尾文字已改：时间在上、汉字在下')
+
+
+SPACE_B64 = 'iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAYAAAA6/NlyAAAAJElEQVR42u3BMQEAAADCoPVP7WkJoAAAAAAAAAAAAAAAAAAAbjh8AAFmzvMFAAAAAElFTkSuQmCC'
+
+ICON_FIX = {
+    'v_prev': (1.494, -0.037, 0.000),   # scale, tx, ty
+    'v_next': (1.500, 0.000, 0.000),   # scale, tx, ty
+    'v_replay': (0.930, -0.047, 0.581),   # scale, tx, ty
+    'v_aspect': (0.818, 0.000, 0.000),   # scale, tx, ty
+    'v_ffwd': (1.071, -0.428, 0.000),   # scale, tx, ty
+    'v_type': (0.818, 0.000, 0.000),   # scale, tx, ty
+    'v_cast': (0.818, 0.000, 0.000),   # scale, tx, ty
+    'v_subtitle': (0.900, 0.000, 0.000),   # scale, tx, ty
+    'v_audio': (1.000, 0.000, 0.000),   # scale, tx, ty
+    'v_danmu': (0.750, 0.000, 0.351),   # scale, tx, ty
+    'ic_clock': (0.857, -0.214, 0.428),   # scale, tx, ty
+    'v_back': (0.957, 0.383, 0.000),   # scale, tx, ty
+    'tk_unlock': (0.857, 0.000, 0.428),   # scale, tx, ty
+    'play_skip': (0.763, 0.000, 0.000),   # scale, tx, ty
+    'v_replay_play': (0.930, -0.047, 0.581),   # scale, tx, ty
+}
+
+
+def normalize_icons():
+    # 把每个图标的实际图形统一成 18/24 的视觉尺寸，解决大小不一
+    for name, (sc, tx, ty) in ICON_FIX.items():
+        p = jpath('app/src/main/res/drawable/%s.xml' % name)
+        if not os.path.isfile(p):
+            continue
+        t = read(p)
+        if '<group' in t:
+            continue
+        vw = re.search(r'android:viewportWidth="([^"]+)"', t)
+        vh = re.search(r'android:viewportHeight="([^"]+)"', t)
+        W = float(vw.group(1)) if vw else 24.0
+        H = float(vh.group(1)) if vh else 24.0
+        k = max(W, H) / 24.0
+        px = round(W / 2.0, 3)
+        py = round(H / 2.0, 3)
+        sc = sc * 1.222   # 目标 22/24：图标内容 ≈ 23.8dp，不小于两个汉字宽
+        g = ('<group android:pivotX="%s" android:pivotY="%s"' % (px, py) + chr(10)
+             + '        android:scaleX="%s" android:scaleY="%s"' % (round(sc, 3), round(sc, 3)) + chr(10)
+             + '        android:translateX="%s" android:translateY="%s">' % (round(tx * k * 1.222, 3), round((ty - 1.0) * k * 1.222, 3)))
+        t = t.replace('<path', g + chr(10) + '        <path', 1)
+        idx = t.rfind('</vector>')
+        t = t[:idx] + '</group>' + chr(10) + t[idx:]
+        write(p, t)
+    print('  + 图标视觉尺寸已统一（%d 个）' % len(ICON_FIX))
+
+def shorten_player_names():
+    # 播放器按钮文字太长（IJK播放器），统一去掉「播放器」三字
+    p = jpath('app/src/main/java/com/github/tvbox/osc/util/PlayerHelper.java')
+    if not os.path.isfile(p):
+        fails.append('PlayerHelper.java')
+        return
+    t = read(p)
+    for a, b in (('"IJK播放器"', '"IJK"'), ('"EXO播放器"', '"EXO"'),
+                 ('"MX播放器"', '"MX"'), ('"Reex播放器"', '"Reex"'),
+                 ('"Kodi播放器"', '"Kodi"'), ('"VLC播放器"', '"VLC"')):
+        t = t.replace(a, b)
+    t = t.replace('return "EXO播放器";', 'return "EXO";')
+    write(p, t)
+    print('  + 播放器按钮文字已缩短（IJK / EXO / MX / Reex / Kodi / VLC）')
+
+def rename_labels(s):
+    # 上一集→上级、下一集→下级、横竖屏→旋屏
+    for a, b in (('android:text="上一集"', 'android:text="上集"'),
+                 ('android:text="下一集"', 'android:text="下集"'),
+                 ('android:text="横竖屏"', 'android:text="旋屏"')):
+        n = s.count(a)
+        s = s.replace(a, b)
+        print('  + 按钮文字 %s -> %s（%d 处）' % (a.split('"')[1], b.split('"')[1], n))
+    return s
+
+def add_space_icon():
+    # 「硬解」没有图标，用一个透明占位图占住图标位置，使文字与其他按钮齐平
+    p = jpath('app/src/main/res/drawable-xxhdpi/tk_space.png')
+    d = os.path.dirname(p)
+    if not os.path.isdir(d):
+        os.makedirs(d)
+    open(p, 'wb').write(base64.b64decode(SPACE_B64))
+    print('  + 已生成透明占位图 tk_space.png')
 
 def main():
     print('=== 图标版（图标 %s、字缩小、整排居中）===' % ICON_SIZE)
@@ -368,8 +493,12 @@ def main():
     make_replay_icon()
     make_extra_icons()
     patch_time_text()
+    shorten_player_names()
+    add_space_icon()
+    normalize_icons()
     s = label_time_buttons(s)
     s = hide_dead_buttons(s)
+    s = rename_labels(s)
     open(p, 'w', encoding='utf-8').write(s)
     print('  + 图标已加到 %d 处（%d 个按钮）' % (hit, hit))
     if miss:
