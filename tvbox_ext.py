@@ -118,7 +118,7 @@ def tweak_bar(s, sp='10sp'):
     # 汉字横向拉宽一点，视觉更扁
     seg = seg.replace('android:textColor="@android:color/white"',
                       'android:textColor="@android:color/white"' + chr(10)
-                      + '                android:textScaleX="1.15"' + chr(10)
+                      + '                ' + chr(10)
                       + '                android:textStyle="normal"' + chr(10)
                       + '                android:fontFamily="sans-serif-light"')
     s = s[:a] + seg + s[b:]
@@ -249,7 +249,7 @@ def unify_danmu_search():
     print('  + 长按「弹幕」现在打开 APP 自带的搜索框（与设置里的「搜索」同一个）')
 
 def make_replay_icon():
-    # 重播图标 = 圆环箭头 + 中间播放三角（与播放键同款三角）
+    # 重播图标 = 完整圆环（描边画）+ 中间播放三角
     p = os.path.join(SRC, 'app/src/main/res/drawable/v_replay_play.xml')
     if os.path.exists(p):
         return
@@ -257,11 +257,14 @@ def make_replay_icon():
          + '    android:width="24dp" android:height="24dp"' + chr(10)
          + '    android:viewportWidth="24" android:viewportHeight="24"' + chr(10)
          + '    android:tint="#FFFFFF">' + chr(10)
-         + '    <path android:fillColor="@android:color/white" android:pathData="M12,5V2.21c0,-0.45 -0.54,-0.67 -0.85,-0.35l-3.8,3.79c-0.2,0.2 -0.2,0.51 0,0.71l3.79,3.79c0.32,0.31 0.86,0.09 0.86,-0.36V7c3.73,0 6.68,3.42 5.86,7.29 -0.47,2.27 -2.31,4.1 -4.57,4.57 -3.57,0.75 -6.75,-1.7 -7.23,-5.01 -0.07,-0.48 -0.49,-0.85 -0.98,-0.85 -0.6,0 -1.08,0.53 -1,1.13 0.62,4.39 4.8,7.64 9.53,6.72 3.12,-0.61 5.63,-3.12 6.24,-6.24C20.84,9.48 16.94,5 12,5z"/>' + chr(10)
-         + '    <path android:fillColor="@android:color/white" android:pathData="M12.2,11.0 L16.0,13.1 L12.2,15.2 Z"/>' + chr(10)
+         + '    <path android:strokeColor="@android:color/white" android:strokeWidth="2.2"'
+         + ' android:fillColor="@android:color/transparent"'
+         + ' android:pathData="M12,5 A7,7 0 1 1 11.99,5"/>' + chr(10)
+         + '    <path android:fillColor="@android:color/white" android:pathData="M9.85,8.4 L16.25,12.0 L9.85,15.6 Z"/>' + chr(10)
          + '</vector>')
     write(p, s)
-    print('  + 重播图标已生成：圆环箭头 + 播放三角')
+    print('  + 重播图标已生成：完整圆环 + 居中播放三角')
+
 
 HTVO_B64 = ('iVBORw0KGgoAAAANSUhEUgAAADYAAAA2CAYAAACMRWrdAAAEuklEQVR42u1aTUhjVxQ+994XfXk6WpXk'
            'JWszg5ofuipxIaWx6mKwuOhQaNUwzlAps3BRXBS6sYKbVFdCuzISdDEMpepGEAN2Y6A7f4LUH9DaaohhIHm0Jnn3vttFfTZjO07+pskM74O7SLg57335zjn33HsugAEDBgwYMPBqYIwBAGBsbOzdtra2GgAAQsi/5iGEAADAbrfjhYWFLxKJxL6qqpeU0gxjTL1tUEozqqpeJhKJ/fn5+cdWqxW/dmKCIAAAwNzc3MjBwcG6xWLBN8khhAAhBLIs42g0usJLxNbW1jObzXYrOaEQEgghIIQA5/z6O/1zMpl87nA4utfX15/29fV9EovFNEIIMMYAYwyMMZiamvJ3dHT0M8aylNL00dHRT5xzLc9nY4fD8QEhpMbj8XwcCAQ+Hxoa+r5kZXRXehmmp6c/YoypnHO+s7Pzo/6P6sqJoginp6c/M8bUVCp11tnZeScfu7lzOjs77yiKEmOMqclk8reSFUMIAeccCCHg9/vv+Xy+7sbGRgtCCGGMiaZpzOl0fogxFlRV/dPlcg2sra096+npeRCPxzUAAEmSkNlsfgdjLBwfH0cikYgCAC+o/zLocyKRiHJ8fBxxuVwD9fX1cslKYYyhoaEBhcPhb/OJgWw2+wfnnEej0RVJkgAAoLm5GSUSiX1dUT3pFJqodnd3lzjnnDGmlqSYHh+BQOAzn8/3JaU0LQiCqGkavRkDCCGsaRolhNQAAMzOzn6VyWTgv5TRNK1gYsX85lbfbmlpQalU6owxpiqKEhseHm51Op21LpdL9Hg8otPprF1cXHySq9bDhw/v5sZYU1PTC4oV+05lUUyPLZvNViNJUgvGWNjc3JwLhUJHN+een5//yjnXTCaTNDIyci8YDB6YTCaglFZkfRUKUA8DAGSz2TQh5NpFBUEASimIomhGCGG/3+8IhUJHJpMJVFXNK+tVlFgOQcQYu/Z5fRBCyPj4+Hu5pCoJoVQDuqtNTEw8jcViGsa44qQAAMpWc+mkypa5qoUYQqhqSJWVWD4VxBtJrOq2U4Wme1Sp/F3OrKjHzOHhYcbtdksIIaQoCtUX7mrmKOSTFFRVhWg0mqnmmCqqpOKcgyiKUFdXhwotRhVF4ZUoq4RXZTqr1YonJyc/7e7uHmloaLBfVfF5+2BXV5d7b28vU8w25bURs9vtOBwOr7S3t98v9gEmkwlVnSvOzMw8aW9vv08pTetnFFdK5h1gl5eXrOqI9ff3f61pGk2n08ne3t67kUhE0eOu0D3d/12V3Or4ZrO5uZgzijdmgb46tHk7K49qKnCNWtEgZhAziBnEDGKFEiv3Al1sU6KsxDjnvNQFOnen87e54poSvBw1XW4jwuv11t98wUII1dbWwsnJSURv/BViT5/j9Xrr9cZfKpU6K7q6X15e/mZwcPA7SZJaNjY2fi+ktapjYGDgweHhoZrJZGB1dXV2dHR0oRh7CCHc2tr6viAIIsZYWFpamihaMVmW8fb29g+lNMLdbreox4fFYsF6G6jU5rosy6UFvSzLeH5+/vHFxcUv+V5fyB1Op7MW4J/bBTabDQeDwUeF2NOvQ8Tj8b1gMPioZFIGDBgwYOBtwV+WdcgT60j7TwAAAABJRU5ErkJggg==')
@@ -310,13 +313,13 @@ def label_time_buttons(s):
         # 上下留白不对称：整体下移 2dp，配合行距 2dp，让时间中心落在图标中心、汉字中心落在文字中心
         blk = re.sub(r'android:padding(?:Top|Bottom|Left|Right)?="[^"]*"', '', blk)
         blk = blk.replace('<TextView',
-                          '<TextView' + nl + 'android:paddingTop="14dp"' + nl
+                          '<TextView' + nl + 'android:paddingTop="13dp"' + nl
                           + 'android:paddingBottom="0dp"' + nl
                           + 'android:paddingLeft="14dp"' + nl
                           + 'android:paddingRight="14dp"')
         if 'lineSpacingExtra' not in blk:
             blk = blk.replace('android:singleLine="false"',
-                              'android:singleLine="false"' + nl + 'android:lineSpacingExtra="6dp"')
+                              'android:singleLine="false"' + nl + 'android:lineSpacingExtra="7dp"')
         if 'minHeight' not in blk:
             blk = blk.replace('android:layout_height="wrap_content"',
                               'android:layout_height="wrap_content"' + nl + 'android:minHeight="58dp"')
@@ -395,7 +398,7 @@ def normalize_icons():
         sc = sc * 1.222   # 目标 22/24：图标内容 ≈ 23.8dp，不小于两个汉字宽
         g = ('<group android:pivotX="%s" android:pivotY="%s"' % (px, py) + chr(10)
              + '        android:scaleX="%s" android:scaleY="%s"' % (round(sc, 3), round(sc, 3)) + chr(10)
-             + '        android:translateX="%s" android:translateY="%s">' % (round(tx * k * 1.222, 3), round((ty - 1.0) * k * 1.222, 3)))
+             + '        android:translateX="%s" android:translateY="%s">' % (round(tx * k * 1.222, 3), round((ty - 1.5) * k * 1.222, 3)))
         t = t.replace('<path', g + chr(10) + '        <path', 1)
         idx = t.rfind('</vector>')
         t = t[:idx] + '</group>' + chr(10) + t[idx:]
@@ -435,6 +438,132 @@ def add_space_icon():
         os.makedirs(d)
     open(p, 'wb').write(base64.b64decode(SPACE_B64))
     print('  + 已生成透明占位图 tk_space.png')
+
+
+def swap_progress_up(s):
+    # 把进度条那一行（含 seekBar）挪到按钮组上方
+    i = s.find('@+id/bottom_container')
+    if i < 0:
+        print('  · 没有 bottom_container，跳过')
+        return s
+    st = s.rfind('<', 0, i)
+    blocks = []
+    depth = 0
+    cur = None
+    for m in re.finditer(r'<(/?)(\w+)([^>]*?)(/?)>', s[st:]):
+        close, tag, attrs, selfc = m.group(1), m.group(2), m.group(3), m.group(4)
+        if close:
+            depth -= 1
+            if depth == 1 and cur is not None:
+                blocks.append((cur, m.end() + st))
+                cur = None
+            if depth == 0:
+                break
+        else:
+            if depth == 1:
+                cur = m.start() + st
+            if not selfc:
+                depth += 1
+    if len(blocks) < 2:
+        print('  · 容器子元素不足，跳过')
+        return s
+    idx = None
+    for k, (a, b) in enumerate(blocks):
+        if 'seekBar' in s[a:b]:
+            idx = k
+            break
+    if idx is None:
+        print('  · 没找到进度条行，跳过')
+        return s
+    if idx == 0:
+        print('  · 进度条已在最上方')
+        return s
+    a, b = blocks[idx]
+    bar = s[a:b]
+    body = s[:a] + s[b:]
+    # 去掉块间多余空行
+    body = re.sub(r'(\n\s*){3,}', chr(10) + chr(10), body)
+    pos = body.find('@+id/play_btn_group')
+    head = body.rfind('<', 0, pos)
+    # 插到按钮组所在的 HorizontalScrollView 之前
+    hs = body.rfind('<HorizontalScrollView', 0, head)
+    body = body[:hs] + bar + chr(10) + chr(10) + body[hs:]
+    # 按钮组在下方了：原来的下边距改成上边距
+    body = body.replace('android:layout_marginBottom="@dimen/vs_10"\n            android:fillViewport',
+                        'android:layout_marginTop="@dimen/vs_10"\n            android:fillViewport')
+    print('  + 进度条已移到按钮组上方')
+    return body
+
+
+def tighten_seek(s):
+    # 时间与进度条拉近：缩小 seekbar 两端为滑块预留的偏移
+    s = s.replace('android:thumbOffset="8dp"', 'android:thumbOffset="1dp"')
+    s = s.replace('android:thumbOffset="@dimen/vs_8"', 'android:thumbOffset="3dp"')
+    print('  + 进度条与左右时间已拉近')
+    return s
+
+
+def align_seek_row(s):
+    # 进度条一行：左右时间与进度条垂直居中对齐
+    i = s.find('@+id/seekBar')
+    if i < 0:
+        print('  · 没找到 seekBar，跳过')
+        return s
+    st = s.rfind('<LinearLayout', 0, i)
+    en = s.find('>', st)
+    blk = s[st:en]
+    if 'android:gravity' not in blk:
+        blk = blk.replace('<LinearLayout', '<LinearLayout' + chr(10) + '                android:gravity="center_vertical"', 1)
+        s = s[:st] + blk + s[en:]
+    for vid in ('curr_time', 'seekBar', 'total_time'):
+        j = s.find('@+id/%s"' % vid)
+        if j < 0:
+            continue
+        a = s.rfind('<', 0, j)
+        b = s.find('>', j)
+        t = s[a:b]
+        if 'layout_gravity' not in t:
+            ins = b - 1 if s[b - 1] == '/' else b
+            s = s[:ins] + chr(10) + '                android:layout_gravity="center_vertical" ' + s[ins:]
+    print('  + 进度条行已垂直居中（时间与进度条同轴）')
+    return s
+
+
+def unflatten_text(s):
+    # 汉字恢复四方四正：去掉 textScaleX 横向拉伸
+    n = s.count('android:textScaleX="1.15"')
+    s = s.replace('android:textScaleX="1.15"', '')
+    n2 = s.count('android:textScaleX="1.15"')
+    print('  + 汉字已取消横向拉伸（%d 处）' % n)
+    return s
+
+
+def match_ref_gaps(s):
+    # 按 takagen 实机观感：进度条更细、时间更贴进度条
+    s = s.replace('android:maxHeight="@dimen/vs_6"', 'android:maxHeight="4dp"')
+    s = s.replace('android:minHeight="@dimen/vs_6"', 'android:minHeight="4dp"')
+    s = s.replace('android:thumbOffset="8dp"', 'android:thumbOffset="1dp"')
+    print('  + 进度条已调细、时间已贴近进度条')
+    return s
+
+
+def narrow_seek(s):
+    # 进度条整行左右内缩，别顶到屏幕边（时间与条的相对距离不变）
+    j = s.find('@+id/seekBar"')
+    if j < 0:
+        print('  · 没找到 seekBar，跳过')
+        return s
+    a = s.rfind('<LinearLayout', 0, j)
+    b = s.find('>', a)
+    blk = s[a:b]
+    if 'android:paddingLeft' not in blk and 'android:paddingStart' not in blk:
+        ins = b - 1 if s[b - 1] == '/' else b
+        add = (chr(10) + '                android:paddingLeft="24dp"'
+               + chr(10) + '                android:paddingRight="24dp" ')
+        s = s[:ins] + add + s[ins:]
+        print('  + 进度条整行左右各内缩 24dp')
+    return s
+
 
 def main():
     print('=== 图标版（图标 %s、字缩小、整排居中）===' % ICON_SIZE)
@@ -499,6 +628,12 @@ def main():
     s = label_time_buttons(s)
     s = hide_dead_buttons(s)
     s = rename_labels(s)
+    s = swap_progress_up(s)
+    s = align_seek_row(s)
+    s = tighten_seek(s)
+    s = unflatten_text(s)
+    s = match_ref_gaps(s)
+    s = narrow_seek(s)
     open(p, 'w', encoding='utf-8').write(s)
     print('  + 图标已加到 %d 处（%d 个按钮）' % (hit, hit))
     if miss:
