@@ -100,8 +100,28 @@ def inject_icons():
     os.makedirs(dst_dir, exist_ok=True)
     n_bundle = n_user = 0
 
-    # 需要用到哪些图标
-    need = set(BTN_ICON.values()) | set(IMG_SRC.values())
+    # 需要用到哪些图标 + 递归带上它们内部引用的 drawable
+    avail = {}
+    for k in files:
+        if k.startswith('drawable/'):
+            avail[os.path.splitext(k.split('/')[-1])[0]] = k
+    need = set()
+    stack = list(set(BTN_ICON.values()) | set(IMG_SRC.values()))
+    while stack:
+        n = stack.pop()
+        if n in need or n not in avail:
+            continue
+        need.add(n)
+        content = files[avail[n]].get('c') or ''
+        if isinstance(content, str):
+            try:
+                content = content.encode('latin-1')
+            except UnicodeEncodeError:
+                content = content.encode('utf-8')
+            content = content.decode('utf-8', 'ignore')
+        for ref in re.findall(r'@drawable/([a-zA-Z0-9_]+)', content):
+            if ref in avail and ref not in need:
+                stack.append(ref)
 
     for path, meta in files.items():
         if not path.startswith('drawable/'):
@@ -166,12 +186,25 @@ def inject_values():
         if os.path.isfile(p):
             exists |= set(re.findall(r'name="([^"]+)"', read(p)))
 
-    kept, skipped = [], 0
+    kept, skipped, in_style = [], 0, False
     for line in text.split('\n'):
-        m = re.search(r'<(\w+)\s+name="([^"]+)"', line)
-        if m and m.group(2) in exists:
+        if '<style ' in line:
+            in_style = True
             skipped += 1
             continue
+        if in_style:
+            if '</style>' in line:
+                in_style = False
+            skipped += 1
+            continue
+        m = re.search(r'<(\w+)\s+name="([^"]+)"', line)
+        if m:
+            if m.group(1) not in ('color', 'dimen'):
+                skipped += 1
+                continue
+            if m.group(2) in exists:
+                skipped += 1
+                continue
         kept.append(line)
 
     write_text(os.path.join(res_dir, 'tk_port.xml'), '\n'.join(kept))
