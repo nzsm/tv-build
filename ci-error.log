@@ -1,4 +1,4 @@
-# CI 失败日志  2026-11-13 07:56:26Z
+# CI 失败日志  2026-11-16 03:04:19Z
 
 ## 环境
 openjdk version "17.0.21" 2026-10-20
@@ -12,7 +12,7 @@ ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
 /usr/local/lib/android/sdk/ndk/30.0.16248370
 
 ## 复现自检（源码目录状态）
--rwxr-xr-x 1 runner runner 5296 Nov 13 07:55 tvboxos-src/gradlew
+-rwxr-xr-x 1 runner runner 5296 Nov 16 03:03 tvboxos-src/gradlew
 #!/usr/bin/env sh
 
 ##############################################################################
@@ -26,12 +26,26 @@ IsDebug=true
 #build on off
 org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g
 
+## 增强脚本输出（最后 120 行）
+```
+=== 只换图标版（布局结构/代码/内核全部不动）===
+源码: /home/runner/work/tv-build/tv-build/tvboxos-src
+自定义图标目录: /home/runner/work/tv-build/tv-build/icon (不存在就用内置)
++ 图标已铺入 drawable：内置 12 个，仓库 icon/ 覆盖 0 个
++ 颜色/尺寸已补入 values/tk_port.xml（跳过工程已有 2 项）
++ 按钮图标已加上：17 处
+------------------------------------------------------------
+=== 完成 ===
+```
+
 ## gradle: What went wrong
 * What went wrong:
 Execution failed for task ':app:processPython64ReleaseResources'.
 > A failure occurred while executing com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction
    > Android resource linking failed
-     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/layout/dialog_danmu_setting.xml:289: AAPT: error: resource dimen/vs_16 (aka com.github.tvbox.osc.jun:dimen/vs_16) not found.
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3153: AAPT: error: resource drawable/play_progress_horizontal (aka com.github.tvbox.osc.jun:drawable/play_progress_horizontal) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3164: AAPT: error: resource drawable/play_progress_vertical (aka com.github.tvbox.osc.jun:drawable/play_progress_vertical) not found.
          
 
 * Try:
@@ -66,26 +80,33 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:pro
 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:327)
 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:314)
 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:307)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:293)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:417)
 
 ## 关键错误行
-263:FAILURE: Build failed with an exception.
-269:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/layout/dialog_danmu_setting.xml:289: AAPT: error: resource dimen/vs_16 (aka com.github.tvbox.osc.jun:dimen/vs_16) not found.
-276:* Exception is:
-277:org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:processPython64ReleaseResources'.
-287:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-309:Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction
-407:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-429:Caused by: com.android.builder.internal.aapt.v2.Aapt2Exception: Android resource linking failed
-430:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/layout/dialog_danmu_setting.xml:289: AAPT: error: resource dimen/vs_16 (aka com.github.tvbox.osc.jun:dimen/vs_16) not found.
-432:	at com.android.builder.internal.aapt.v2.Aapt2Exception$Companion.create(Aapt2Exception.kt:45)
-433:	at com.android.builder.internal.aapt.v2.Aapt2Exception$Companion.create$default(Aapt2Exception.kt:33)
-434:	at com.android.build.gradle.internal.res.Aapt2ErrorUtils.rewriteException(Aapt2ErrorUtils.kt:260)
-435:	at com.android.build.gradle.internal.res.Aapt2ErrorUtils.rewriteLinkException(Aapt2ErrorUtils.kt:133)
+253:FAILURE: Build failed with an exception.
+259:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3153: AAPT: error: resource drawable/play_progress_horizontal (aka com.github.tvbox.osc.jun:drawable/play_progress_horizontal) not found.
+261:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3164: AAPT: error: resource drawable/play_progress_vertical (aka com.github.tvbox.osc.jun:drawable/play_progress_vertical) not found.
+268:* Exception is:
+269:org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:processPython64ReleaseResources'.
+279:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+301:Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction
+399:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+421:Caused by: com.android.builder.internal.aapt.v2.Aapt2Exception: Android resource linking failed
+422:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3153: AAPT: error: resource drawable/play_progress_horizontal (aka com.github.tvbox.osc.jun:drawable/play_progress_horizontal) not found.
+424:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3164: AAPT: error: resource drawable/play_progress_vertical (aka com.github.tvbox.osc.jun:drawable/play_progress_vertical) not found.
+426:	at com.android.builder.internal.aapt.v2.Aapt2Exception$Companion.create(Aapt2Exception.kt:45)
+427:	at com.android.builder.internal.aapt.v2.Aapt2Exception$Companion.create$default(Aapt2Exception.kt:33)
+428:	at com.android.build.gradle.internal.res.Aapt2ErrorUtils.rewriteException(Aapt2ErrorUtils.kt:260)
+429:	at com.android.build.gradle.internal.res.Aapt2ErrorUtils.rewriteLinkException(Aapt2ErrorUtils.kt:133)
 
 ## 日志尾部 350 行
 ```
+> Task :pyramid:generatePython64ReleaseBuildConfig
+> Task :pyramid:extractPythonBuildPackages
+
+> Task :pyramid:generatePython64ReleasePythonRequirements
+Chaquopy: Installing for arm64-v8a
+Looking in indexes: https://pypi.org/simple, https://chaquo.com/pypi-7.0
+Collecting lxml
   Using version 4.6.3 (newest version is 6.1.3, but Chaquopy prefers native wheels)
   Downloading https://chaquo.com/pypi-7.0/lxml/lxml-4.6.3-0-cp38-cp38-android_21_arm64_v8a.whl (1.4MB)
 Collecting ujson
@@ -110,14 +131,14 @@ Collecting chaquopy-libxslt>=1.1.32 (from lxml)
   Downloading https://chaquo.com/pypi-7.0/chaquopy-libxslt/chaquopy_libxslt-1.1.32-2-py3-none-android_21_arm64_v8a.whl (178kB)
 Collecting cssselect<=1.4.99,>=1.2.0 (from pyquery==2.0.2)
   Downloading https://files.pythonhosted.org/packages/06/a9/2da08717a6862c48f1d61ef957a7bba171e7eefa6c0aa0ceb96a140c2a6b/cssselect-1.2.0-py2.py3-none-any.whl
+Collecting idna<4,>=2.5 (from requests)
+  Downloading https://files.pythonhosted.org/packages/d2/23/408243171aa9aaba178d3e2559159c24c1171a641aa83b67bdd3394ead8e/idna-3.15-py3-none-any.whl (72kB)
 Collecting certifi>=2017.4.17 (from requests)
   Downloading https://files.pythonhosted.org/packages/32/d1/a3652fe2c19134d0d15922177821d863cbd7e842d53a21bbe7e8e3a1b5ac/certifi-2026.10.23-py3-none-any.whl (135kB)
 Collecting charset_normalizer<4,>=2 (from requests)
   Downloading https://files.pythonhosted.org/packages/fc/ad/d07d7862a62ffa6d79d68074d14823243dd235a77c45262acbf6adeb28bf/charset_normalizer-3.5.2-py3-none-any.whl (68kB)
 Collecting urllib3<3,>=1.21.1 (from requests)
   Downloading https://files.pythonhosted.org/packages/ce/d9/5f4c13cecde62396b0d3fe530a50ccea91e7dfc1ccf0e09c228841bb5ba8/urllib3-2.2.3-py3-none-any.whl (126kB)
-Collecting idna<4,>=2.5 (from requests)
-  Downloading https://files.pythonhosted.org/packages/d2/23/408243171aa9aaba178d3e2559159c24c1171a641aa83b67bdd3394ead8e/idna-3.15-py3-none-any.whl (72kB)
 Collecting soupsieve>=1.6.1 (from beautifulsoup4)
   Downloading https://files.pythonhosted.org/packages/e7/9c/0e6afc12c269578be5c0c1c9f4b49a8d32770a080260c333ac04cc1c832d/soupsieve-2.7-py3-none-any.whl
 Collecting typing-extensions>=4.0.0 (from beautifulsoup4)
@@ -125,10 +146,10 @@ Collecting typing-extensions>=4.0.0 (from beautifulsoup4)
 Building wheels for collected packages: jsonpath
   Building wheel for jsonpath (setup.py): started
   Building wheel for jsonpath (setup.py): finished with status 'done'
-  Created wheel for jsonpath: filename=jsonpath-0.82.2-cp39-none-any.whl size=5619 sha256=e52cbd45c44e1f231b2f196dbb563f93c173a295df95c497ee450dbdfdc544fc
+  Created wheel for jsonpath: filename=jsonpath-0.82.2-cp39-none-any.whl size=5619 sha256=21151a1ff40459fc191b6a4f578c1b4fdeb7727157c164580bd03cfcfc690bf3
   Stored in directory: /home/runner/.cache/chaquopy/pip/wheels/1a/7d/6e/393bb72381be6c5fef79020aabdcf87de53b1ed57e5ec8b9d5
 Successfully built jsonpath
-Installing collected packages: chaquopy-libxml2, chaquopy-libxslt, lxml, ujson, cssselect, pyquery, certifi, charset-normalizer, urllib3, idna, requests, jsonpath, cachetools, pycryptodome, soupsieve, typing-extensions, beautifulsoup4
+Installing collected packages: chaquopy-libxml2, chaquopy-libxslt, lxml, ujson, cssselect, pyquery, idna, certifi, charset-normalizer, urllib3, requests, jsonpath, cachetools, pycryptodome, soupsieve, typing-extensions, beautifulsoup4
 Successfully installed beautifulsoup4-4.15.0 cachetools-5.5.2 certifi-2026.10.23 chaquopy-libxml2-2.9.8 chaquopy-libxslt-1.1.32 charset-normalizer-3.5.2 cssselect-1.2.0 idna-3.15 jsonpath-0.82.2 lxml-4.6.3 pycryptodome-3.9.4 pyquery-2.0.2 requests-2.32.4 soupsieve-2.7 typing-extensions-4.13.2 ujson-1.35 urllib3-2.2.3
 Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompatible. See https://chaquo.com/chaquopy/doc/current/android.html#android-bytecode.
 
@@ -140,9 +161,9 @@ Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompa
 > Task :pyramid:generatePython64ReleaseResources
 > Task :pyramid:packagePython64ReleaseResources
 > Task :pyramid:parsePython64ReleaseLocalResources
-> Task :pyramid:processPython64ReleaseManifest
 > Task :pyramid:javaPreCompilePython64Release
 > Task :app:compilePython64ReleaseAidl NO-SOURCE
+> Task :pyramid:processPython64ReleaseManifest
 > Task :player:packageReleaseRenderscript NO-SOURCE
 > Task :pyramid:packagePython64ReleaseRenderscript NO-SOURCE
 > Task :pyramid:generatePython64ReleaseRFile
@@ -153,8 +174,8 @@ Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompa
 > Task :app:compilePython64ReleaseRenderscript NO-SOURCE
 > Task :app:generatePython64ReleaseBuildConfig
 > Task :app:javaPreCompilePython64Release
-> Task :pyramid:writePython64ReleaseAarMetadata
 > Task :player:writeReleaseAarMetadata
+> Task :pyramid:writePython64ReleaseAarMetadata
 > Task :quickjs:writeReleaseAarMetadata
 > Task :app:generatePython64ReleaseResValues
 > Task :app:generatePython64ReleaseResources
@@ -164,6 +185,7 @@ Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompa
 > Task :player:extractDeepLinksRelease
 > Task :pyramid:extractDeepLinksPython64Release
 > Task :quickjs:extractDeepLinksRelease
+> Task :app:mergePython64ReleaseResources
 
 > Task :app:processPython64ReleaseMainManifest
 [org.chromium.net:cronet-embedded:101.4951.41] /home/runner/.gradle/caches/transforms-3/afb769089853f9fe157a8408a42d871b/transformed/jetified-cronet-embedded-101.4951.41/AndroidManifest.xml Warning:
@@ -171,6 +193,7 @@ Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompa
 [:quickjs] /home/runner/work/tv-build/tv-build/tvboxos-src/quickjs/build/intermediates/merged_manifest/release/AndroidManifest.xml Warning:
 	Namespace 'com.whl.quickjs.android' used in: :quickjs, wang.harlon.quickjs:wrapper-android:2.1.0.
 
+> Task :app:mapPython64ReleaseSourceSetPaths
 > Task :app:processPython64ReleaseManifest
 > Task :app:processPython64ReleaseManifestForPackage
 > Task :player:compileReleaseLibraryResources
@@ -201,22 +224,9 @@ Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompa
 > Task :pyramid:generatePython64ReleaseAssets UP-TO-DATE
 > Task :pyramid:generatePython64ReleasePythonAppAssets
 > Task :pyramid:generatePython64ReleasePythonLicenseAssets
-> Task :pyramid:generatePython64ReleasePythonMiscAssets
-> Task :app:mergePython64ReleaseResources
-> Task :pyramid:generatePython64ReleasePythonRequirementsAssets
-> Task :app:mapPython64ReleaseSourceSetPaths
-> Task :pyramid:generatePython64ReleasePythonBuildAssets
-> Task :pyramid:packagePython64ReleaseAssets
-> Task :quickjs:mergeReleaseShaders
-> Task :quickjs:compileReleaseShaders NO-SOURCE
-> Task :quickjs:generateReleaseAssets UP-TO-DATE
-> Task :quickjs:packageReleaseAssets
-> Task :app:mergePython64ReleaseAssets
-> Task :app:compressPython64ReleaseAssets
-> Task :app:collectPython64ReleaseDependencies
 > Task :app:processPython64ReleaseResources FAILED
-> Task :app:sdkPython64ReleaseDependencyData
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_5-1794556544868.json
+> Task :pyramid:generatePython64ReleasePythonMiscAssets
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_5-1794798225889.json
 
 FAILURE: Build failed with an exception.
 
@@ -224,7 +234,9 @@ FAILURE: Build failed with an exception.
 Execution failed for task ':app:processPython64ReleaseResources'.
 > A failure occurred while executing com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction
    > Android resource linking failed
-     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/layout/dialog_danmu_setting.xml:289: AAPT: error: resource dimen/vs_16 (aka com.github.tvbox.osc.jun:dimen/vs_16) not found.
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3153: AAPT: error: resource drawable/play_progress_horizontal (aka com.github.tvbox.osc.jun:drawable/play_progress_horizontal) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3164: AAPT: error: resource drawable/play_progress_vertical (aka com.github.tvbox.osc.jun:drawable/play_progress_vertical) not found.
          
 
 * Try:
@@ -385,7 +397,9 @@ Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionExcept
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.ManagedExecutorImpl$1.run(ManagedExecutorImpl.java:48)
 Caused by: com.android.builder.internal.aapt.v2.Aapt2Exception: Android resource linking failed
-ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/layout/dialog_danmu_setting.xml:289: AAPT: error: resource dimen/vs_16 (aka com.github.tvbox.osc.jun:dimen/vs_16) not found.
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3153: AAPT: error: resource drawable/play_progress_horizontal (aka com.github.tvbox.osc.jun:drawable/play_progress_horizontal) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3164: AAPT: error: resource drawable/play_progress_vertical (aka com.github.tvbox.osc.jun:drawable/play_progress_vertical) not found.
     
 	at com.android.builder.internal.aapt.v2.Aapt2Exception$Companion.create(Aapt2Exception.kt:45)
 	at com.android.builder.internal.aapt.v2.Aapt2Exception$Companion.create$default(Aapt2Exception.kt:33)
@@ -434,6 +448,6 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 See https://docs.gradle.org/7.5/userguide/command_line_interface.html#sec:command_line_warnings
 
-BUILD FAILED in 44s
-95 actionable tasks: 95 executed
+BUILD FAILED in 37s
+86 actionable tasks: 86 executed
 ```
