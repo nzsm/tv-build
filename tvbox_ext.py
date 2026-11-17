@@ -700,6 +700,8 @@ def center_pair(s):
     # 图标与汉字左右居中对齐 + 左右间隙收到半个图标宽
     s = s.replace('android:paddingLeft="14dp"', 'android:paddingLeft="6dp"')
     s = s.replace('android:paddingRight="14dp"', 'android:paddingRight="6dp"')
+    # 汉字尺寸用 dp 而不是 sp：sp 会随电视「系统字号」放大（实测被放大 2 倍）
+    s = re.sub(r'android:textSize="10sp"', 'android:textSize="10dp"', s)
     s = re.sub(r'\s*android:layout_marginEnd="@dimen/vs_5"', '', s)
     s = re.sub(r'\s*android:layout_marginRight="@dimen/vs_5"', '', s)
     # 按钮内文字水平居中（图标与汉字同一条中线）
@@ -721,7 +723,7 @@ def center_pair(s):
         return tag[:-1] + chr(10) + '                android:gravity="center_horizontal">'
     seg = re.sub(r'<TextView[^>]*>', fix, seg)
     s = s[:a] + seg + s[b:]
-    print('  + 按钮内文字已水平居中（%d 个），左右间隙已收到 6dp' % cnt[0])
+    print('  + 按钮内文字已水平居中（%d 个），字宽改 dp 不再随系统放大' % cnt[0])
     return s
 
 
@@ -732,13 +734,13 @@ def stamp_replay_icon():
          + '    android:width="26dp" android:height="26dp"' + chr(10)
          + '    android:viewportWidth="24" android:viewportHeight="24"' + chr(10)
          + '    android:tint="#FFFFFF">' + chr(10)
-         + '    <path android:strokeColor="@android:color/white" android:strokeWidth="3"'
+         + '    <path android:strokeColor="@android:color/white" android:strokeWidth="2.6"'
          + ' android:fillColor="@android:color/transparent"'
-         + ' android:pathData="M12,1 A11,11 0 1 1 11.99,1"/>' + chr(10)
-         + '    <path android:fillColor="@android:color/white" android:pathData="M8.4,8.4 L15.6,12.0 L8.4,15.6 Z"/>' + chr(10)
+         + ' android:pathData="M12,2.2 A9.8,9.8 0 1 1 11.99,2.2"/>' + chr(10)
+         + '    <path android:fillColor="@android:color/white" android:pathData="M9.0,8.6 L16.2,12.0 L9.0,15.4 Z"/>' + chr(10)
          + '</vector>')
     write(p, s)
-    print('  + 重播图标已统一尺寸（圆环与三角占满画幅）')
+    print('  + 重播图标已统一（外径19.6 与上集下集等高）')
 
 
 def patch_java():
@@ -757,8 +759,74 @@ def patch_java():
     if b in s:
         s = s.replace(b, 'mVideoTrackBtn.setVisibility(GONE);')
         hits += 1
+    # 旋屏按钮：电视上按设备类型被隐藏，这里强制常显，并把文字固定成「旋屏」
+    c = 'if (showButton) mLandscapePortraitBtn.setText(isPortrait ? "横屏" : "竖屏");'
+    if c in s:
+        s = s.replace(c, 'if (showButton) mLandscapePortraitBtn.setText("旋屏");')
+        hits += 1
+    d = 'mLandscapePortraitBtn.setText("竖屏");'
+    if d in s:
+        s = s.replace(d, 'mLandscapePortraitBtn.setText("旋屏");')
+        hits += 1
+    e = 'mLandscapePortraitBtn.setText("横屏");'
+    if e in s:
+        s = s.replace(e, 'mLandscapePortraitBtn.setText("旋屏");')
+        hits += 1
+    f2 = 'showButton = width > 0 && height > 0 && (width <= height || shortVideo) && ScreenUtils.getSqrt(mActivity) < 10.0;'
+    if f2 in s:
+        s = s.replace(f2, 'showButton = true;')
+        hits += 1
+    # 片头片尾：00:00 与汉字拆成两种字号（13dp / 10dp）
+    g1 = 'mPlayerTimeStartBtn.setText((start == 0 ? "00:00" : stringForTime(start * 1000)) + "\\n片头");'
+    g2 = 'mPlayerTimeSkipBtn.setText((end == 0 ? "00:00" : stringForTime(end * 1000)) + "\\n片尾");'
+    if g1 in s and g2 in s:
+        s = s.replace(g1, 'mPlayerTimeStartBtn.setText(buildTimeLabel(start == 0 ? "00:00" : stringForTime(start * 1000), "片头"));')
+        s = s.replace(g2, 'mPlayerTimeSkipBtn.setText(buildTimeLabel(end == 0 ? "00:00" : stringForTime(end * 1000), "片尾"));')
+        helper = ('    private CharSequence buildTimeLabel(String time, String label) {' + chr(10)
+                  + '        android.text.SpannableString ss = new android.text.SpannableString(time + "\\n" + label);' + chr(10)
+                  + '        ss.setSpan(new android.text.style.AbsoluteSizeSpan(15, true), 0, time.length(), android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);' + chr(10)
+                  + '        ss.setSpan(new android.text.style.AbsoluteSizeSpan(10, true), time.length() + 1, ss.length(), android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);' + chr(10)
+                  + '        return ss;' + chr(10)
+                  + '    }' + chr(10) + chr(10))
+        anchor = '    private String getPlayerShortName(int playerType) {'
+        if anchor in s:
+            s = s.replace(anchor, helper + anchor, 1)
+        hits += 1
     write(f, s)
-    print('  + Java 已锁死弹幕搜索/视轨为 GONE（%d 处）' % hits)
+    print('  + Java 补丁已打（%d 处）：弹幕搜索/视轨锁死 GONE、旋屏常显改字、片头片尾分字号' % hits)
+
+
+def swap_order(s):
+    # 上集挪到最左（原版是 下集 在前）
+    jn = s.find('@+id/play_next"')
+    jp = s.find('@+id/play_pre"')
+    if jn < 0 or jp < 0 or jp < jn:
+        print('  · 上集/下集 顺序已正确')
+        return s
+    an = s.rfind('<', 0, jn); bn = s.find('/>', jn) + 2
+    ap = s.rfind('<', 0, jp); bp = s.find('/>', jp) + 2
+    blk_n = s[an:bn]
+    blk_p = s[ap:bp]
+    s = s[:an] + blk_p + chr(10) + '            ' + blk_n + s[bp:]
+    print('  + 已把「上集」挪到「下集」左边')
+    return s
+
+
+def unify_timepair(s):
+    # 片头片尾：汉字与其它按钮统一 10sp，两行高度重排
+    for key in ('play_time_start', 'play_time_end'):
+        j = s.find('@+id/%s"' % key)
+        if j < 0:
+            continue
+        a = s.rfind('<', 0, j); b = s.find('/>', j)
+        blk = s[a:b]
+        blk = re.sub(r'android:textSize="[^"]*"', 'android:textSize="10dp"', blk)
+        blk = re.sub(r'android:paddingTop="[^"]*"', 'android:paddingTop="19dp"', blk)
+        blk = re.sub(r'android:lineSpacingExtra="[^"]*"', 'android:lineSpacingExtra="1dp"', blk)
+        blk = re.sub(r'android:minHeight="[^"]*"', 'android:minHeight="50dp"', blk)
+        s = s[:a] + blk + s[b:]
+    print('  + 片头片尾汉字已统一 10dp（00:00 由 Java 单独放大）')
+    return s
 
 
 def main():
@@ -832,6 +900,8 @@ def main():
     s = narrow_seek(s)
     s = unstick_bar(s)
     s = center_pair(s)
+    s = swap_order(s)
+    s = unify_timepair(s)
     add_mpv_player()
     stamp_replay_icon()
     patch_java()
