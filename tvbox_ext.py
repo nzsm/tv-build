@@ -266,8 +266,34 @@ def make_replay_icon():
     print('  + 重播图标已生成：完整圆环 + 居中播放三角')
 
 
-HTVO_B64 = ('iVBORw0KGgoAAAANSUhEUgAAADYAAAA2CAYAAACMRWrdAAAEuklEQVR42u1aTUhjVxQ+994XfXk6WpXk'
-           'JWszg5ofuipxIaWx6mKwuOhQaNUwzlAps3BRXBS6sYKbVFdCuzISdDEMpepGEAN2Y6A7f4LUH9DaaohhIHm0Jnn3vttFfTZjO07+pskM74O7SLg57335zjn33HsugAEDBgwYMPBqYIwBAGBsbOzdtra2GgAAQsi/5iGEAADAbrfjhYWFLxKJxL6qqpeU0gxjTL1tUEozqqpeJhKJ/fn5+cdWqxW/dmKCIAAAwNzc3MjBwcG6xWLBN8khhAAhBLIs42g0usJLxNbW1jObzXYrOaEQEgghIIQA5/z6O/1zMpl87nA4utfX15/29fV9EovFNEIIMMYAYwyMMZiamvJ3dHT0M8aylNL00dHRT5xzLc9nY4fD8QEhpMbj8XwcCAQ+Hxoa+r5kZXRXehmmp6c/YoypnHO+s7Pzo/6P6sqJoginp6c/M8bUVCp11tnZeScfu7lzOjs77yiKEmOMqclk8reSFUMIAeccCCHg9/vv+Xy+7sbGRgtCCGGMiaZpzOl0fogxFlRV/dPlcg2sra096+npeRCPxzUAAEmSkNlsfgdjLBwfH0cikYgCAC+o/zLocyKRiHJ8fBxxuVwD9fX1cslKYYyhoaEBhcPhb/OJgWw2+wfnnEej0RVJkgAAoLm5GSUSiX1dUT3pFJqodnd3lzjnnDGmlqSYHh+BQOAzn8/3JaU0LQiCqGkavRkDCCGsaRolhNQAAMzOzn6VyWTgv5TRNK1gYsX85lbfbmlpQalU6owxpiqKEhseHm51Op21LpdL9Hg8otPprF1cXHySq9bDhw/v5sZYU1PTC4oV+05lUUyPLZvNViNJUgvGWNjc3JwLhUJHN+een5//yjnXTCaTNDIyci8YDB6YTCaglFZkfRUKUA8DAGSz2TQh5NpFBUEASimIomhGCGG/3+8IhUJHJpMJVFXNK+tVlFgOQcQYu/Z5fRBCyPj4+Hu5pCoJoVQDuqtNTEw8jcViGsa44qQAAMpWc+mkypa5qoUYQqhqSJWVWD4VxBtJrOq2U4Wme1Sp/F3OrKjHzOHhYcbtdksIIaQoCtUX7mrmKOSTFFRVhWg0mqnmmCqqpOKcgyiKUFdXhwotRhVF4ZUoq4RXZTqr1YonJyc/7e7uHmloaLBfVfF5+2BXV5d7b28vU8w25bURs9vtOBwOr7S3t98v9gEmkwlVnSvOzMw8aW9vv08pTetnFFdK5h1gl5eXrOqI9ff3f61pGk2n08ne3t67kUhE0eOu0D3d/12V3Or4ZrO5uZgzijdmgb46tHk7K49qKnCNWtEgZhAziBnEDGKFEiv3Al1sU6KsxDjnvNQFOnen87e54poSvBw1XW4jwuv11t98wUII1dbWwsnJSURv/BViT5/j9Xrr9cZfKpU6K7q6X15e/mZwcPA7SZJaNjY2fi+ktapjYGDgweHhoZrJZGB1dXV2dHR0oRh7CCHc2tr6viAIIsZYWFpamihaMVmW8fb29g+lNMLdbreox4fFYsF6G6jU5rosy6UFvSzLeH5+/vHFxcUv+V5fyB1Op7MW4J/bBTabDQeDwUeF2NOvQ8Tj8b1gMPioZFIGDBgwYOBtwV+WdcgT60j7TwAAAABJRU5ErkJggg==')
+HTVO_B64 = ('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')
 
 
 def make_extra_icons():
@@ -792,6 +818,43 @@ def patch_java():
         if anchor in s:
             s = s.replace(anchor, helper + anchor, 1)
         hits += 1
+    # 运行时兜底：布局与系统字号都可能把它改回去，这里在 initView 里再钉一次
+    anchor_init = ('        mCastBtn = findViewById(R.id.play_cast);' + chr(10)
+                   + '        updateDanmuBtn();' + chr(10)
+                   + '        updateDanmuSearchUiBtn();')
+    if anchor_init in s and 'forceBarStyle()' not in s:
+        s = s.replace(anchor_init, anchor_init + chr(10) + '        forceBarStyle();', 1)
+        method = (
+            '    private void forceBarStyle() {' + chr(10)
+          + '        android.widget.TextView[] btns = new android.widget.TextView[]{' + chr(10)
+          + '                mPreBtn, mNextBtn, mPlayerRetry, mPlayrefresh, mPlayerScaleBtn, mPlayerSpeedBtn,' + chr(10)
+          + '                mPlayerBtn, mPlayerIJKBtn, mPlayerTimeResetBtn, mCastBtn, mZimuBtn,' + chr(10)
+          + '                mAudioTrackBtn, mDanmuSettingBtn, mLandscapePortraitBtn, mScreenDisplay};' + chr(10)
+          + '        for (android.widget.TextView b : btns) {' + chr(10)
+          + '            if (b == null) continue;' + chr(10)
+          + '            b.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 10);' + chr(10)
+          + '            b.setIncludeFontPadding(false);' + chr(10)
+          + '            b.setGravity(android.view.Gravity.CENTER_HORIZONTAL);' + chr(10)
+          + '            b.setPadding(dp(6), dp(10), dp(6), dp(10));' + chr(10)
+          + '        }' + chr(10)
+          + '        if (mVideoTrackBtn != null) mVideoTrackBtn.setVisibility(View.GONE);' + chr(10)
+          + '        if (mDanmuSearchUiBtn != null) mDanmuSearchUiBtn.setVisibility(View.GONE);' + chr(10)
+          + '        if (mDanmuSettingBtn != null) mDanmuSettingBtn.setVisibility(View.VISIBLE);' + chr(10)
+          + '        if (mAudioTrackBtn != null) mAudioTrackBtn.setVisibility(View.VISIBLE);' + chr(10)
+          + '        if (mLandscapePortraitBtn != null) {' + chr(10)
+          + '            mLandscapePortraitBtn.setVisibility(View.VISIBLE);' + chr(10)
+          + '            mLandscapePortraitBtn.setText("\u65cb\u5c4f");' + chr(10)
+          + '            mLandscapePortraitBtn.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.htov, 0, 0);' + chr(10)
+          + '        }' + chr(10)
+          + '    }' + chr(10) + chr(10)
+          + '    private int dp(int v) {' + chr(10)
+          + '        return (int) (v * getResources().getDisplayMetrics().density + 0.5f);' + chr(10)
+          + '    }' + chr(10) + chr(10)
+        )
+        anchor3 = '    private String getPlayerShortName(int playerType) {'
+        s = s.replace(anchor3, method + anchor3, 1)
+        hits += 1
+
     write(f, s)
     print('  + Java 补丁已打（%d 处）：弹幕搜索/视轨锁死 GONE、旋屏常显改字、片头片尾分字号' % hits)
 
@@ -830,6 +893,7 @@ def unify_timepair(s):
 
 
 def main():
+    print('*** 脚本版本 VER-20261117-A ***')
     print('=== 图标版（图标 %s、字缩小、整排居中）===' % ICON_SIZE)
     print('源码:', os.path.abspath(SRC))
     files = json.loads(zlib.decompress(base64.b64decode(TK_BUNDLE)).decode('utf-8'))
