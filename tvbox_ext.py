@@ -741,6 +741,26 @@ def stamp_replay_icon():
     print('  + 重播图标已统一尺寸（圆环与三角占满画幅）')
 
 
+def patch_java():
+    # 弹幕搜索 / 视轨：Java 运行时会把它们重新设成 VISIBLE，必须在这里断掉
+    f = os.path.join(SRC, 'app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java')
+    if not os.path.exists(f):
+        print('  · 找不到 VodController.java')
+        return
+    s = read(f)
+    hits = 0
+    a = 'mDanmuSearchUiBtn.setVisibility(hasDanmuSearchUi ? VISIBLE : GONE);'
+    if a in s:
+        s = s.replace(a, 'mDanmuSearchUiBtn.setVisibility(GONE);')
+        hits += 1
+    b = 'mVideoTrackBtn.setVisibility((playerType == 1 || playerType == 2) ? VISIBLE : GONE);'
+    if b in s:
+        s = s.replace(b, 'mVideoTrackBtn.setVisibility(GONE);')
+        hits += 1
+    write(f, s)
+    print('  + Java 已锁死弹幕搜索/视轨为 GONE（%d 处）' % hits)
+
+
 def main():
     print('=== 图标版（图标 %s、字缩小、整排居中）===' % ICON_SIZE)
     print('源码:', os.path.abspath(SRC))
@@ -814,6 +834,7 @@ def main():
     s = center_pair(s)
     add_mpv_player()
     stamp_replay_icon()
+    patch_java()
     open(p, 'w', encoding='utf-8').write(s)
     print('  + 图标已加到 %d 处（%d 个按钮）' % (hit, hit))
     if miss:
