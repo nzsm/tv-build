@@ -1,4 +1,4 @@
-# CI 失败日志  2026-11-16 03:04:19Z
+# CI 失败日志  2026-11-17 12:03:09Z
 
 ## 环境
 openjdk version "17.0.21" 2026-10-20
@@ -12,7 +12,7 @@ ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
 /usr/local/lib/android/sdk/ndk/30.0.16248370
 
 ## 复现自检（源码目录状态）
--rwxr-xr-x 1 runner runner 5296 Nov 16 03:03 tvboxos-src/gradlew
+-rwxr-xr-x 1 runner runner 5296 Nov 17 12:02 tvboxos-src/gradlew
 #!/usr/bin/env sh
 
 ##############################################################################
@@ -28,13 +28,23 @@ org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g
 
 ## 增强脚本输出（最后 120 行）
 ```
-=== 只换图标版（布局结构/代码/内核全部不动）===
+*** 脚本版本 VER-20261117-E ***
+=== 只做图标 + 图标与汉字对齐（不碰其它） ===
 源码: /home/runner/work/tv-build/tv-build/tvboxos-src
-自定义图标目录: /home/runner/work/tv-build/tv-build/icon (不存在就用内置)
-+ 图标已铺入 drawable：内置 12 个，仓库 icon/ 覆盖 0 个
-+ 颜色/尺寸已补入 values/tk_port.xml（跳过工程已有 2 项）
-+ 按钮图标已加上：17 处
-------------------------------------------------------------
+  + 图标铺入 37 个
+  + 重播图标已生成：完整圆环 + 居中播放三角
+  + 横竖屏图标已铺：htov.png（takagen 原图）
+  + 投屏图标已生成：v_cast.xml
+  + 透明占位图 tk_space.xml（严格 26dp）
+  + 图标视觉尺寸已统一（15 个）
+  + 图标本体尺寸钉到 26dp（2 个）
+  + 滚动容器撑满视口，整排才有"居中"的基准
+  + 上集移到下集左边
+  + 视轨、搜弹幕压成 0dp 并隐藏
+  + 按钮 21 个：图标位 26dp、汉字 10dp、左右居中
+  + 片头/片尾改为两行：上格 26dp 时间（当图标对齐）、下格 10dp 汉字
+  + Java 补丁 2 项：片头片尾时间分格、搜弹幕/视轨物理摘除
+----------------------------------------------
 === 完成 ===
 ```
 
@@ -43,200 +53,143 @@ org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g
 Execution failed for task ':app:processPython64ReleaseResources'.
 > A failure occurred while executing com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction
    > Android resource linking failed
-     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3153: AAPT: error: resource drawable/play_progress_horizontal (aka com.github.tvbox.osc.jun:drawable/play_progress_horizontal) not found.
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/box_controller_bottom_bg.xml:4: AAPT: error: resource color/color_000000_70 (aka com.github.tvbox.osc.jun:color/color_000000_70) not found.
          
-     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3164: AAPT: error: resource drawable/play_progress_vertical (aka com.github.tvbox.osc.jun:drawable/play_progress_vertical) not found.
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/box_controller_bottom_bg.xml:4: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
          
-
-* Try:
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights.
-
-* Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:processPython64ReleaseResources'.
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:142)
-	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:282)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:140)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:128)
-	at org.gradle.api.internal.tasks.execution.CleanupStaleOutputsExecuter.execute(CleanupStaleOutputsExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
-	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
-	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
-	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:56)
-	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
-	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
-	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:69)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:327)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:314)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:307)
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/box_controller_top_bg.xml:4: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/button_dialog_vod.xml:6: AAPT: error: resource color/tk_theme_40 (aka com.github.tvbox.osc.jun:color/tk_theme_40) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/button_dialog_vod.xml:12: AAPT: error: resource color/tk_theme_40 (aka com.github.tvbox.osc.jun:color/tk_theme_40) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/button_dialog_vod.xml:18: AAPT: error: resource color/tk_theme_40 (aka com.github.tvbox.osc.jun:color/tk_theme_40) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_horizontal.xml:5: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_horizontal.xml:14: AAPT: error: resource color/tk_theme_80 (aka com.github.tvbox.osc.jun:color/tk_theme_80) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_vertical.xml:5: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_vertical.xml:14: AAPT: error: resource color/tk_theme_80 (aka com.github.tvbox.osc.jun:color/tk_theme_80) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:30: AAPT: error: resource color/tk_theme (aka com.github.tvbox.osc.jun:color/tk_theme) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:42: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:74: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:92: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:152: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:187: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:202: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:216: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:231: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
 
 ## 关键错误行
 253:FAILURE: Build failed with an exception.
-259:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3153: AAPT: error: resource drawable/play_progress_horizontal (aka com.github.tvbox.osc.jun:drawable/play_progress_horizontal) not found.
-261:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3164: AAPT: error: resource drawable/play_progress_vertical (aka com.github.tvbox.osc.jun:drawable/play_progress_vertical) not found.
-268:* Exception is:
-269:org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:processPython64ReleaseResources'.
-279:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-301:Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction
-399:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-421:Caused by: com.android.builder.internal.aapt.v2.Aapt2Exception: Android resource linking failed
-422:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3153: AAPT: error: resource drawable/play_progress_horizontal (aka com.github.tvbox.osc.jun:drawable/play_progress_horizontal) not found.
-424:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3164: AAPT: error: resource drawable/play_progress_vertical (aka com.github.tvbox.osc.jun:drawable/play_progress_vertical) not found.
-426:	at com.android.builder.internal.aapt.v2.Aapt2Exception$Companion.create(Aapt2Exception.kt:45)
-427:	at com.android.builder.internal.aapt.v2.Aapt2Exception$Companion.create$default(Aapt2Exception.kt:33)
-428:	at com.android.build.gradle.internal.res.Aapt2ErrorUtils.rewriteException(Aapt2ErrorUtils.kt:260)
-429:	at com.android.build.gradle.internal.res.Aapt2ErrorUtils.rewriteLinkException(Aapt2ErrorUtils.kt:133)
+259:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/box_controller_bottom_bg.xml:4: AAPT: error: resource color/color_000000_70 (aka com.github.tvbox.osc.jun:color/color_000000_70) not found.
+261:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/box_controller_bottom_bg.xml:4: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+263:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/box_controller_top_bg.xml:4: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+265:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/button_dialog_vod.xml:6: AAPT: error: resource color/tk_theme_40 (aka com.github.tvbox.osc.jun:color/tk_theme_40) not found.
+267:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/button_dialog_vod.xml:12: AAPT: error: resource color/tk_theme_40 (aka com.github.tvbox.osc.jun:color/tk_theme_40) not found.
+269:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/button_dialog_vod.xml:18: AAPT: error: resource color/tk_theme_40 (aka com.github.tvbox.osc.jun:color/tk_theme_40) not found.
+271:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_horizontal.xml:5: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+273:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_horizontal.xml:14: AAPT: error: resource color/tk_theme_80 (aka com.github.tvbox.osc.jun:color/tk_theme_80) not found.
+275:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_vertical.xml:5: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+277:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_vertical.xml:14: AAPT: error: resource color/tk_theme_80 (aka com.github.tvbox.osc.jun:color/tk_theme_80) not found.
+279:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:30: AAPT: error: resource color/tk_theme (aka com.github.tvbox.osc.jun:color/tk_theme) not found.
+281:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:42: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+283:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:74: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+285:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:92: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+287:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:152: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+289:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:187: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+291:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:202: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+293:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:216: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+295:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:231: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+297:     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:267: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+304:* Exception is:
+305:org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:processPython64ReleaseResources'.
+315:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+365:Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction
+463:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+513:Caused by: com.android.builder.internal.aapt.v2.Aapt2Exception: Android resource linking failed
+514:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/box_controller_bottom_bg.xml:4: AAPT: error: resource color/color_000000_70 (aka com.github.tvbox.osc.jun:color/color_000000_70) not found.
+516:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/box_controller_bottom_bg.xml:4: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+518:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/box_controller_top_bg.xml:4: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+520:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/button_dialog_vod.xml:6: AAPT: error: resource color/tk_theme_40 (aka com.github.tvbox.osc.jun:color/tk_theme_40) not found.
+522:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/button_dialog_vod.xml:12: AAPT: error: resource color/tk_theme_40 (aka com.github.tvbox.osc.jun:color/tk_theme_40) not found.
+524:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/button_dialog_vod.xml:18: AAPT: error: resource color/tk_theme_40 (aka com.github.tvbox.osc.jun:color/tk_theme_40) not found.
+526:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_horizontal.xml:5: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+528:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_horizontal.xml:14: AAPT: error: resource color/tk_theme_80 (aka com.github.tvbox.osc.jun:color/tk_theme_80) not found.
+530:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_vertical.xml:5: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+532:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_vertical.xml:14: AAPT: error: resource color/tk_theme_80 (aka com.github.tvbox.osc.jun:color/tk_theme_80) not found.
+534:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:30: AAPT: error: resource color/tk_theme (aka com.github.tvbox.osc.jun:color/tk_theme) not found.
+536:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:42: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+538:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:74: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+540:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:92: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+542:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:152: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+544:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:187: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+546:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:202: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+548:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:216: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+550:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:231: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+552:ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:267: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+554:	at com.android.builder.internal.aapt.v2.Aapt2Exception$Companion.create(Aapt2Exception.kt:45)
+555:	at com.android.builder.internal.aapt.v2.Aapt2Exception$Companion.create$default(Aapt2Exception.kt:33)
+556:	at com.android.build.gradle.internal.res.Aapt2ErrorUtils.rewriteException(Aapt2ErrorUtils.kt:260)
 
 ## 日志尾部 350 行
 ```
-> Task :pyramid:generatePython64ReleaseBuildConfig
-> Task :pyramid:extractPythonBuildPackages
-
-> Task :pyramid:generatePython64ReleasePythonRequirements
-Chaquopy: Installing for arm64-v8a
-Looking in indexes: https://pypi.org/simple, https://chaquo.com/pypi-7.0
-Collecting lxml
-  Using version 4.6.3 (newest version is 6.1.3, but Chaquopy prefers native wheels)
-  Downloading https://chaquo.com/pypi-7.0/lxml/lxml-4.6.3-0-cp38-cp38-android_21_arm64_v8a.whl (1.4MB)
-Collecting ujson
-  Using version 1.35 (newest version is 5.10.0, but Chaquopy prefers native wheels)
-  Downloading https://chaquo.com/pypi-7.0/ujson/ujson-1.35-4-cp38-cp38-android_21_arm64_v8a.whl
-Collecting pyquery==2.0.2
-  Downloading https://files.pythonhosted.org/packages/63/74/187449a465d4cbf008ffdebe3396d702ea34ee2d34d9c1d71d13e31a5dd7/pyquery-2.0.2-py3-none-any.whl
-Collecting requests
-  Downloading https://files.pythonhosted.org/packages/7c/e4/56027c4a6b4ae70ca9de302488c5ca95ad4a39e190093d6c1a8ace08341b/requests-2.32.4-py3-none-any.whl (64kB)
-Collecting jsonpath
-  Downloading https://files.pythonhosted.org/packages/cf/a1/693351acd0a9edca4de9153372a65e75398898ea7f8a5c722ab00f464929/jsonpath-0.82.2.tar.gz
-Collecting cachetools
-  Downloading https://files.pythonhosted.org/packages/72/76/20fa66124dbe6be5cafeb312ece67de6b61dd91a0247d1ea13db4ebb33c2/cachetools-5.5.2-py3-none-any.whl
-Collecting pycryptodome
-  Using version 3.9.4 (newest version is 3.24.1, but Chaquopy prefers native wheels)
-  Downloading https://chaquo.com/pypi-7.0/pycryptodome/pycryptodome-3.9.4-1-cp38-cp38-android_21_arm64_v8a.whl (1.1MB)
-Collecting beautifulsoup4
-  Downloading https://files.pythonhosted.org/packages/88/c6/92fcd42f1ba33e1184263f25bfabf3d27c383410470f169e4b8163bf9c17/beautifulsoup4-4.15.0-py3-none-any.whl (109kB)
-Collecting chaquopy-libxml2>=2.9.8 (from lxml)
-  Downloading https://chaquo.com/pypi-7.0/chaquopy-libxml2/chaquopy_libxml2-2.9.8-2-py3-none-android_21_arm64_v8a.whl (773kB)
-Collecting chaquopy-libxslt>=1.1.32 (from lxml)
-  Downloading https://chaquo.com/pypi-7.0/chaquopy-libxslt/chaquopy_libxslt-1.1.32-2-py3-none-android_21_arm64_v8a.whl (178kB)
-Collecting cssselect<=1.4.99,>=1.2.0 (from pyquery==2.0.2)
-  Downloading https://files.pythonhosted.org/packages/06/a9/2da08717a6862c48f1d61ef957a7bba171e7eefa6c0aa0ceb96a140c2a6b/cssselect-1.2.0-py2.py3-none-any.whl
-Collecting idna<4,>=2.5 (from requests)
-  Downloading https://files.pythonhosted.org/packages/d2/23/408243171aa9aaba178d3e2559159c24c1171a641aa83b67bdd3394ead8e/idna-3.15-py3-none-any.whl (72kB)
-Collecting certifi>=2017.4.17 (from requests)
-  Downloading https://files.pythonhosted.org/packages/32/d1/a3652fe2c19134d0d15922177821d863cbd7e842d53a21bbe7e8e3a1b5ac/certifi-2026.10.23-py3-none-any.whl (135kB)
-Collecting charset_normalizer<4,>=2 (from requests)
-  Downloading https://files.pythonhosted.org/packages/fc/ad/d07d7862a62ffa6d79d68074d14823243dd235a77c45262acbf6adeb28bf/charset_normalizer-3.5.2-py3-none-any.whl (68kB)
-Collecting urllib3<3,>=1.21.1 (from requests)
-  Downloading https://files.pythonhosted.org/packages/ce/d9/5f4c13cecde62396b0d3fe530a50ccea91e7dfc1ccf0e09c228841bb5ba8/urllib3-2.2.3-py3-none-any.whl (126kB)
-Collecting soupsieve>=1.6.1 (from beautifulsoup4)
-  Downloading https://files.pythonhosted.org/packages/e7/9c/0e6afc12c269578be5c0c1c9f4b49a8d32770a080260c333ac04cc1c832d/soupsieve-2.7-py3-none-any.whl
-Collecting typing-extensions>=4.0.0 (from beautifulsoup4)
-  Downloading https://files.pythonhosted.org/packages/8b/54/b1ae86c0973cc6f0210b53d508ca3641fb6d0c56823f288d108bc7ab3cc8/typing_extensions-4.13.2-py3-none-any.whl (45kB)
-Building wheels for collected packages: jsonpath
-  Building wheel for jsonpath (setup.py): started
-  Building wheel for jsonpath (setup.py): finished with status 'done'
-  Created wheel for jsonpath: filename=jsonpath-0.82.2-cp39-none-any.whl size=5619 sha256=21151a1ff40459fc191b6a4f578c1b4fdeb7727157c164580bd03cfcfc690bf3
-  Stored in directory: /home/runner/.cache/chaquopy/pip/wheels/1a/7d/6e/393bb72381be6c5fef79020aabdcf87de53b1ed57e5ec8b9d5
-Successfully built jsonpath
-Installing collected packages: chaquopy-libxml2, chaquopy-libxslt, lxml, ujson, cssselect, pyquery, idna, certifi, charset-normalizer, urllib3, requests, jsonpath, cachetools, pycryptodome, soupsieve, typing-extensions, beautifulsoup4
-Successfully installed beautifulsoup4-4.15.0 cachetools-5.5.2 certifi-2026.10.23 chaquopy-libxml2-2.9.8 chaquopy-libxslt-1.1.32 charset-normalizer-3.5.2 cssselect-1.2.0 idna-3.15 jsonpath-0.82.2 lxml-4.6.3 pycryptodome-3.9.4 pyquery-2.0.2 requests-2.32.4 soupsieve-2.7 typing-extensions-4.13.2 ujson-1.35 urllib3-2.2.3
-Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompatible. See https://chaquo.com/chaquopy/doc/current/android.html#android-bytecode.
-
-> Task :pyramid:mergePython64ReleasePythonSources
-Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompatible. See https://chaquo.com/chaquopy/doc/current/android.html#android-bytecode.
-
-> Task :pyramid:generatePython64ReleasePythonProxies
-> Task :pyramid:generatePython64ReleaseResValues
-> Task :pyramid:generatePython64ReleaseResources
-> Task :pyramid:packagePython64ReleaseResources
-> Task :pyramid:parsePython64ReleaseLocalResources
-> Task :pyramid:javaPreCompilePython64Release
-> Task :app:compilePython64ReleaseAidl NO-SOURCE
-> Task :pyramid:processPython64ReleaseManifest
-> Task :player:packageReleaseRenderscript NO-SOURCE
-> Task :pyramid:packagePython64ReleaseRenderscript NO-SOURCE
-> Task :pyramid:generatePython64ReleaseRFile
-> Task :quickjs:packageReleaseRenderscript NO-SOURCE
-> Task :pyramid:compilePython64ReleaseJavaWithJavac
-> Task :pyramid:mergePython64ReleaseGeneratedProguardFiles
-> Task :pyramid:exportPython64ReleaseConsumerProguardFiles
-> Task :app:compilePython64ReleaseRenderscript NO-SOURCE
-> Task :app:generatePython64ReleaseBuildConfig
-> Task :app:javaPreCompilePython64Release
-> Task :player:writeReleaseAarMetadata
-> Task :pyramid:writePython64ReleaseAarMetadata
-> Task :quickjs:writeReleaseAarMetadata
-> Task :app:generatePython64ReleaseResValues
-> Task :app:generatePython64ReleaseResources
-> Task :app:checkPython64ReleaseAarMetadata
-> Task :app:createPython64ReleaseCompatibleScreenManifests
-> Task :app:extractDeepLinksPython64Release
-> Task :player:extractDeepLinksRelease
-> Task :pyramid:extractDeepLinksPython64Release
-> Task :quickjs:extractDeepLinksRelease
-> Task :app:mergePython64ReleaseResources
-
-> Task :app:processPython64ReleaseMainManifest
-[org.chromium.net:cronet-embedded:101.4951.41] /home/runner/.gradle/caches/transforms-3/afb769089853f9fe157a8408a42d871b/transformed/jetified-cronet-embedded-101.4951.41/AndroidManifest.xml Warning:
-	Namespace 'org.chromium.net' used in: org.chromium.net:cronet-embedded:101.4951.41, org.chromium.net:cronet-common:101.4951.41, org.chromium.net:cronet-api:101.4951.41.
-[:quickjs] /home/runner/work/tv-build/tv-build/tvboxos-src/quickjs/build/intermediates/merged_manifest/release/AndroidManifest.xml Warning:
-	Namespace 'com.whl.quickjs.android' used in: :quickjs, wang.harlon.quickjs:wrapper-android:2.1.0.
-
-> Task :app:mapPython64ReleaseSourceSetPaths
-> Task :app:processPython64ReleaseManifest
-> Task :app:processPython64ReleaseManifestForPackage
-> Task :player:compileReleaseLibraryResources
-> Task :pyramid:compilePython64ReleaseLibraryResources
-> Task :quickjs:compileReleaseLibraryResources
-> Task :player:bundleLibCompileToJarRelease
-> Task :pyramid:bundleLibCompileToJarPython64Release
-> Task :quickjs:bundleLibCompileToJarRelease
-> Task :app:processPython64ReleaseJavaRes NO-SOURCE
-> Task :player:processReleaseJavaRes NO-SOURCE
-> Task :player:bundleLibResRelease NO-SOURCE
-> Task :pyramid:processPython64ReleaseJavaRes NO-SOURCE
-> Task :pyramid:bundleLibResPython64Release NO-SOURCE
-> Task :quickjs:processReleaseJavaRes NO-SOURCE
-> Task :quickjs:bundleLibResRelease NO-SOURCE
-> Task :player:bundleLibRuntimeToJarRelease
-> Task :pyramid:bundleLibRuntimeToJarPython64Release
-> Task :quickjs:bundleLibRuntimeToJarRelease
-> Task :app:mergePython64ReleaseShaders
-> Task :app:compilePython64ReleaseShaders NO-SOURCE
-> Task :app:generatePython64ReleaseAssets UP-TO-DATE
-> Task :player:mergeReleaseShaders
-> Task :player:compileReleaseShaders NO-SOURCE
-> Task :player:generateReleaseAssets UP-TO-DATE
-> Task :player:packageReleaseAssets
-> Task :pyramid:mergePython64ReleaseShaders
-> Task :pyramid:compilePython64ReleaseShaders NO-SOURCE
-> Task :pyramid:generatePython64ReleaseAssets UP-TO-DATE
-> Task :pyramid:generatePython64ReleasePythonAppAssets
-> Task :pyramid:generatePython64ReleasePythonLicenseAssets
-> Task :app:processPython64ReleaseResources FAILED
-> Task :pyramid:generatePython64ReleasePythonMiscAssets
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_5-1794798225889.json
-
 FAILURE: Build failed with an exception.
 
 * What went wrong:
 Execution failed for task ':app:processPython64ReleaseResources'.
 > A failure occurred while executing com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction
    > Android resource linking failed
-     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3153: AAPT: error: resource drawable/play_progress_horizontal (aka com.github.tvbox.osc.jun:drawable/play_progress_horizontal) not found.
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/box_controller_bottom_bg.xml:4: AAPT: error: resource color/color_000000_70 (aka com.github.tvbox.osc.jun:color/color_000000_70) not found.
          
-     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3164: AAPT: error: resource drawable/play_progress_vertical (aka com.github.tvbox.osc.jun:drawable/play_progress_vertical) not found.
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/box_controller_bottom_bg.xml:4: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/box_controller_top_bg.xml:4: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/button_dialog_vod.xml:6: AAPT: error: resource color/tk_theme_40 (aka com.github.tvbox.osc.jun:color/tk_theme_40) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/button_dialog_vod.xml:12: AAPT: error: resource color/tk_theme_40 (aka com.github.tvbox.osc.jun:color/tk_theme_40) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/button_dialog_vod.xml:18: AAPT: error: resource color/tk_theme_40 (aka com.github.tvbox.osc.jun:color/tk_theme_40) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_horizontal.xml:5: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_horizontal.xml:14: AAPT: error: resource color/tk_theme_80 (aka com.github.tvbox.osc.jun:color/tk_theme_80) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_vertical.xml:5: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_vertical.xml:14: AAPT: error: resource color/tk_theme_80 (aka com.github.tvbox.osc.jun:color/tk_theme_80) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:30: AAPT: error: resource color/tk_theme (aka com.github.tvbox.osc.jun:color/tk_theme) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:42: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:74: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:92: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:152: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:187: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:202: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:216: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:231: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+         
+     ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:267: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
          
 
 * Try:
@@ -274,6 +227,34 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:pro
 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:293)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:417)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:339)
+	at org.gradle.execution.plan.DefaultPlanExecutor.process(DefaultPlanExecutor.java:96)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.executeWithServices(DefaultTaskExecutionGraph.java:140)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.execute(DefaultTaskExecutionGraph.java:125)
+	at org.gradle.execution.SelectedTaskExecutionAction.execute(SelectedTaskExecutionAction.java:39)
+	at org.gradle.execution.DryRunBuildExecutionAction.execute(DryRunBuildExecutionAction.java:51)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:54)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:43)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor.execute(BuildOperationFiringBuildWorkerExecutor.java:40)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.lambda$executeTasks$7(DefaultBuildLifecycleController.java:161)
+	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:247)
+	at org.gradle.internal.model.StateTransitionController.lambda$tryTransition$7(StateTransitionController.java:174)
+	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:44)
+	at org.gradle.internal.model.StateTransitionController.tryTransition(StateTransitionController.java:174)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.executeTasks(DefaultBuildLifecycleController.java:161)
+	at org.gradle.internal.build.DefaultBuildWorkGraphController$DefaultBuildWorkGraph.runWork(DefaultBuildWorkGraphController.java:156)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:249)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:109)
+	at org.gradle.composite.internal.DefaultBuildController.doRun(DefaultBuildController.java:164)
+	at org.gradle.composite.internal.DefaultBuildController.access$000(DefaultBuildController.java:45)
+	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.run(DefaultBuildController.java:183)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.ManagedExecutorImpl$1.run(ManagedExecutorImpl.java:48)
 Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction
@@ -394,12 +375,76 @@ Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionExcept
 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:293)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:417)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:339)
+	at org.gradle.execution.plan.DefaultPlanExecutor.process(DefaultPlanExecutor.java:96)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.executeWithServices(DefaultTaskExecutionGraph.java:140)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.execute(DefaultTaskExecutionGraph.java:125)
+	at org.gradle.execution.SelectedTaskExecutionAction.execute(SelectedTaskExecutionAction.java:39)
+	at org.gradle.execution.DryRunBuildExecutionAction.execute(DryRunBuildExecutionAction.java:51)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:54)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:43)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor.execute(BuildOperationFiringBuildWorkerExecutor.java:40)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.lambda$executeTasks$7(DefaultBuildLifecycleController.java:161)
+	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:247)
+	at org.gradle.internal.model.StateTransitionController.lambda$tryTransition$7(StateTransitionController.java:174)
+	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:44)
+	at org.gradle.internal.model.StateTransitionController.tryTransition(StateTransitionController.java:174)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.executeTasks(DefaultBuildLifecycleController.java:161)
+	at org.gradle.internal.build.DefaultBuildWorkGraphController$DefaultBuildWorkGraph.runWork(DefaultBuildWorkGraphController.java:156)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:249)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:109)
+	at org.gradle.composite.internal.DefaultBuildController.doRun(DefaultBuildController.java:164)
+	at org.gradle.composite.internal.DefaultBuildController.access$000(DefaultBuildController.java:45)
+	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.run(DefaultBuildController.java:183)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.ManagedExecutorImpl$1.run(ManagedExecutorImpl.java:48)
 Caused by: com.android.builder.internal.aapt.v2.Aapt2Exception: Android resource linking failed
-ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3153: AAPT: error: resource drawable/play_progress_horizontal (aka com.github.tvbox.osc.jun:drawable/play_progress_horizontal) not found.
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/box_controller_bottom_bg.xml:4: AAPT: error: resource color/color_000000_70 (aka com.github.tvbox.osc.jun:color/color_000000_70) not found.
     
-ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/incremental/python64Release/mergePython64ReleaseResources/merged.dir/values/values.xml:3164: AAPT: error: resource drawable/play_progress_vertical (aka com.github.tvbox.osc.jun:drawable/play_progress_vertical) not found.
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/box_controller_bottom_bg.xml:4: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/box_controller_top_bg.xml:4: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/button_dialog_vod.xml:6: AAPT: error: resource color/tk_theme_40 (aka com.github.tvbox.osc.jun:color/tk_theme_40) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/button_dialog_vod.xml:12: AAPT: error: resource color/tk_theme_40 (aka com.github.tvbox.osc.jun:color/tk_theme_40) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/button_dialog_vod.xml:18: AAPT: error: resource color/tk_theme_40 (aka com.github.tvbox.osc.jun:color/tk_theme_40) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_horizontal.xml:5: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_horizontal.xml:14: AAPT: error: resource color/tk_theme_80 (aka com.github.tvbox.osc.jun:color/tk_theme_80) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_vertical.xml:5: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/play_progress_vertical.xml:14: AAPT: error: resource color/tk_theme_80 (aka com.github.tvbox.osc.jun:color/tk_theme_80) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:30: AAPT: error: resource color/tk_theme (aka com.github.tvbox.osc.jun:color/tk_theme) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:42: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:74: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:92: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:152: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:187: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:202: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:216: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:231: AAPT: error: resource color/color_FFFFFF_80 (aka com.github.tvbox.osc.jun:color/color_FFFFFF_80) not found.
+    
+ERROR:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/res/drawable/player_vod_control_view.xml:267: AAPT: error: resource color/color_FF000000 (aka com.github.tvbox.osc.jun:color/color_FF000000) not found.
     
 	at com.android.builder.internal.aapt.v2.Aapt2Exception$Companion.create(Aapt2Exception.kt:45)
 	at com.android.builder.internal.aapt.v2.Aapt2Exception$Companion.create$default(Aapt2Exception.kt:33)
@@ -448,6 +493,6 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 See https://docs.gradle.org/7.5/userguide/command_line_interface.html#sec:command_line_warnings
 
-BUILD FAILED in 37s
-86 actionable tasks: 86 executed
+BUILD FAILED in 41s
+87 actionable tasks: 87 executed
 ```
