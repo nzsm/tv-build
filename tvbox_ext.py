@@ -163,7 +163,7 @@ def apply_layout():
     hsv.set(A + 'layout_width', 'match_parent')
     hsv.set(A + 'layout_height', 'wrap_content')
     hsv.set(A + 'fillViewport', 'true')
-    hsv.set(A + 'horizontalScrollBarEnabled', 'false')
+    hsv.set(A + 'scrollbarAlwaysDrawHorizontalTrack', 'false')
     hsv.set(A + 'scrollbars', 'none')
     hsv.set(A + 'overScrollMode', 'never')
     hsv.set(A + 'focusable', 'false')
