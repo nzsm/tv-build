@@ -236,7 +236,15 @@ def apply_layout():
                 c.set(A + 'gravity', 'center_vertical')
                 c.set(A + 'textSize', TEXT_SIZE)
                 c.set(A + 'includeFontPadding', 'false')
-        log('进度条：条高 4dp、左右各收 %s、时间与条同轴居中' % SEEK_INSET)
+        # 时间与条两端各 3dp、进度条下方到按钮排 -3dp、底板去掉、旋屏常显
+        ct = find_id(root, 'curr_time'); tt = find_id(root, 'total_time')
+        if ct is not None: ct.set(A + 'layout_marginEnd', '3dp')
+        if tt is not None: tt.set(A + 'layout_marginStart', '3dp')
+        seek_row.set(A + 'layout_marginBottom', '7dp')
+        bottom.set(A + 'background', '@null')
+        lp = find_id(root, 'landscape_portrait')
+        if lp is not None: lp.set(A + 'visibility', 'visible')
+        log('间距：时间↔条 3dp、条↔按钮排 7dp（原 10dp -3dp）；底板去掉；旋屏常显')
 
     # ⑧ 片头 / 片尾：上格 26dp 时间（当图标位）+ 下格 10dp 汉字
     for rid, slot_id, text in (('play_time_start', 'tk_slot_start', '片头'),
@@ -348,11 +356,7 @@ def apply_java():
 
     a1 = ('                    if (current > duration / 2) return;\n'
           '                    mPlayerConfig.put("st",current/1000);')
-    b1 = ('                    if (current > duration / 2) {\n'
-          '                        Toast.makeText(getContext(), "片头只能设在视频前半段", Toast.LENGTH_SHORT).show();\n'
-          '                        return;\n'
-          '                    }\n'
-          '                    mPlayerConfig.put("st",current/1000);\n'
+    b1 = ('                    mPlayerConfig.put("st",current/1000);\n'
           '                    Toast.makeText(getContext(), "片头已设为 " + stringForTime(current), Toast.LENGTH_SHORT).show();')
     if a1 not in t:
         sys.exit('锚点丢失：片头点击')
@@ -360,11 +364,7 @@ def apply_java():
 
     a2 = ('                    if (current < duration / 2) return;\n'
           '                    mPlayerConfig.put("et", (duration - current)/1000);')
-    b2 = ('                    if (current < duration / 2) {\n'
-          '                        Toast.makeText(getContext(), "片尾只能设在视频后半段", Toast.LENGTH_SHORT).show();\n'
-          '                        return;\n'
-          '                    }\n'
-          '                    mPlayerConfig.put("et", (duration - current)/1000);\n'
+    b2 = ('                    mPlayerConfig.put("et", (duration - current)/1000);\n'
           '                    Toast.makeText(getContext(), "片尾已设为 距结束 " + stringForTime(duration - current), Toast.LENGTH_SHORT).show();')
     if a2 not in t:
         sys.exit('锚点丢失：片尾点击')
@@ -393,6 +393,14 @@ def apply_java():
         sys.exit('锚点丢失：findViewById 段')
     t = t.replace(a3, b3, 1)
     log('片头/片尾：点击提示 + 整块可点')
+
+    # 旋屏：Java 里 showButton=false 时会被再藏一次
+    a4 = '        mLandscapePortraitBtn.setVisibility(showButton ? VISIBLE : GONE);'
+    b4 = '        mLandscapePortraitBtn.setVisibility(VISIBLE);'
+    if a4 not in t:
+        sys.exit('锚点丢失：旋屏可见性')
+    t = t.replace(a4, b4, 1)
+    log('旋屏按钮：不再被 showButton 条件隐藏')
 
     # 「推送」这个字样会出现在播放页的线路菜单里（push_agent 伪源），改名成“直链”
     for fname, old, new in (
