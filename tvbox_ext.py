@@ -343,6 +343,89 @@ def apply_java():
         sys.exit('锚点丢失：getPlayerShortName')
     t = t.replace(anchor, HELPERS + anchor, 1)
 
+    # 片头/片尾：① 原来在"半段外"是静默 return，看着像没反应 → 给提示
+    #            ② 外包一层容器后点击命中区只剩下面那行小字 → 整块可点
+
+    a1 = ('                    if (current > duration / 2) return;\n'
+          '                    mPlayerConfig.put("st",current/1000);')
+    b1 = ('                    if (current > duration / 2) {\n'
+          '                        Toast.makeText(getContext(), "片头只能设在视频前半段", Toast.LENGTH_SHORT).show();\n'
+          '                        return;\n'
+          '                    }\n'
+          '                    mPlayerConfig.put("st",current/1000);\n'
+          '                    Toast.makeText(getContext(), "片头已设为 " + stringForTime(current), Toast.LENGTH_SHORT).show();')
+    if a1 not in t:
+        sys.exit('锚点丢失：片头点击')
+    t = t.replace(a1, b1, 1)
+
+    a2 = ('                    if (current < duration / 2) return;\n'
+          '                    mPlayerConfig.put("et", (duration - current)/1000);')
+    b2 = ('                    if (current < duration / 2) {\n'
+          '                        Toast.makeText(getContext(), "片尾只能设在视频后半段", Toast.LENGTH_SHORT).show();\n'
+          '                        return;\n'
+          '                    }\n'
+          '                    mPlayerConfig.put("et", (duration - current)/1000);\n'
+          '                    Toast.makeText(getContext(), "片尾已设为 距结束 " + stringForTime(duration - current), Toast.LENGTH_SHORT).show();')
+    if a2 not in t:
+        sys.exit('锚点丢失：片尾点击')
+    t = t.replace(a2, b2, 1)
+
+    a3 = '        mPlayerTimeResetBtn = findViewById(R.id.play_time_reset);'
+    b3 = ('        mPlayerTimeResetBtn = findViewById(R.id.play_time_reset);\n'
+          '        // 片头/片尾整块可点：外包容器后命中区只剩下面那行小字\n'
+          '        for (final TextView b : new TextView[]{mPlayerTimeStartBtn, mPlayerTimeSkipBtn}) {\n'
+          '            View wrap = (View) b.getParent();\n'
+          '            if (wrap != null) {\n'
+          '                wrap.setFocusable(true);\n'
+          '                wrap.setClickable(true);\n'
+          '                wrap.setOnClickListener(new OnClickListener() {\n'
+          '                    @Override\n'
+          '                    public void onClick(View v) { b.performClick(); }\n'
+          '                });\n'
+          '                wrap.setOnLongClickListener(new OnLongClickListener() {\n'
+          '                    @Override\n'
+          '                    public boolean onLongClick(View v) { b.performLongClick(); return true; }\n'
+          '                });\n'
+          '                b.setFocusable(false);\n'
+          '            }\n'
+          '        }')
+    if a3 not in t:
+        sys.exit('锚点丢失：findViewById 段')
+    t = t.replace(a3, b3, 1)
+    log('片头/片尾：点击提示 + 整块可点')
+
+    # 「推送」这个字样会出现在播放页的线路菜单里（push_agent 伪源），改名成“直链”
+    for fname, old, new in (
+        ('api/ApiConfig.java', 'sourceBean.setName("推送");', 'sourceBean.setName("直链");'),
+        ('viewmodel/SourceViewModel.java', 'video.type = "推送";', 'video.type = "直链";'),
+        ('viewmodel/SourceViewModel.java', 'urlInfo.flag = "推送";', 'urlInfo.flag = "直链";'),
+    ):
+        fp = os.path.join(SRC, 'app/src/main/java/com/github/tvbox/osc', fname)
+        if not os.path.exists(fp):
+            sys.exit('缺失文件 ' + fname)
+        txt = open(fp, encoding='utf-8').read()
+        if old not in txt:
+            sys.exit('锚点丢失：' + old)
+        txt = txt.replace(old, new, 1)
+        open(fp, 'w', encoding='utf-8').write(txt)
+    log('推送字样：改为“直链”（播放页线路菜单不再出现“推送”）')
+
+    # 投屏按钮：底座用 SDK>=30 才显示，很多电视是 SDK 28/29，按钮直接被藏了
+    gate = ('        if (Build.VERSION.SDK_INT < 30) {' + '\n'
+            + '            mCastBtn.setVisibility(GONE);' + '\n'
+            + '        } else {' + '\n'
+            + '            mCastBtn.setVisibility(VISIBLE);' + '\n'
+            + '        }')
+    if gate in t:
+        t = t.replace(gate, '        mCastBtn.setVisibility(VISIBLE);', 1)
+        # 横竖屏切换复位处还有一次同样的门槛判定，一起放行
+        n2 = t.count('mCastBtn.setVisibility(Build.VERSION.SDK_INT < 30 ? GONE : VISIBLE);')
+        t = t.replace('mCastBtn.setVisibility(Build.VERSION.SDK_INT < 30 ? GONE : VISIBLE);',
+                      'mCastBtn.setVisibility(VISIBLE);')
+        log('投屏按钮：去掉 %d 处系统版本门槛，任何电视都显示' % (n2 + 1))
+    else:
+        sys.exit('锚点丢失：投屏按钮的系统版本判定')
+
     head = ('    public void updateDanmuSearchUiBtn() {' + '\n'
             + '        if (mDanmuSearchUiBtn == null) return;')
     if head not in t:
