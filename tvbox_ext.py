@@ -226,11 +226,22 @@ def apply_layout():
         styled += 1
     log('按钮统一样式 %d 个（图标 %s、汉字 %s、无底、左右居中）' % (styled, ICON_SIZE, TEXT_SIZE))
 
+    # ⓪ 进度条收边 / 时间框宽度：竖屏单独覆盖（条尽量长、贴两边）
+    for rel, inset, minw in (('values', SEEK_INSET, '60dp'), ('values-port', '6dp', '34dp')):
+        d = os.path.join(SRC, 'app/src/main/res', rel)
+        os.makedirs(d, exist_ok=True)
+        xml = ('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
+               + '    <dimen name="tk_seek_inset">' + inset + '</dimen>\n'
+               + '    <dimen name="tk_time_minw">' + minw + '</dimen>\n'
+               + '</resources>\n')
+        open(os.path.join(d, 'tk_dimens.xml'), 'w', encoding='utf-8').write(xml)
+    log('进度条收边：横屏 %s / 竖屏 6dp；时间框 60dp / 34dp' % SEEK_INSET)
+
     # ⑦ 进度条行：上下居中、左右各收 24dp、时间紧贴条两端
     if seek_row is not None:
         seek_row.set(A + 'gravity', 'center_vertical')
-        seek_row.set(A + 'paddingLeft', SEEK_INSET)
-        seek_row.set(A + 'paddingRight', SEEK_INSET)
+        seek_row.set(A + 'paddingLeft', '@dimen/tk_seek_inset')
+        seek_row.set(A + 'paddingRight', '@dimen/tk_seek_inset')
         for c in list(seek_row):
             c.set(A + 'layout_gravity', 'center_vertical')
             if c.tag == 'SeekBar':
@@ -250,13 +261,13 @@ def apply_layout():
             ct.set(A + 'layout_marginEnd', '3dp')
             ct.set(A + 'textSize', '10dp')
             ct.set(A + 'textColor', '@android:color/white')
-            ct.set(A + 'minWidth', '60dp')
+            ct.set(A + 'minWidth', '@dimen/tk_time_minw')
             ct.set(A + 'gravity', 'center_vertical|right')
         if tt is not None:
             tt.set(A + 'layout_marginStart', '3dp')
             tt.set(A + 'textSize', '10dp')
             tt.set(A + 'textColor', '#B3FFFFFF')
-            tt.set(A + 'minWidth', '60dp')
+            tt.set(A + 'minWidth', '@dimen/tk_time_minw')
             tt.set(A + 'gravity', 'center_vertical|left')
         seek_row.set(A + 'layout_marginBottom', '7dp')
         bottom.set(A + 'background', '@null')
@@ -289,7 +300,8 @@ def apply_layout():
         slot.set(A + 'id', '@+id/' + slot_id)
         slot.set(A + 'layout_width', 'wrap_content')
         slot.set(A + 'layout_height', ICON_SIZE)
-        slot.set(A + 'gravity', 'center')
+        slot.set(A + 'gravity', 'top|center_horizontal')
+        slot.set(A + 'paddingTop', '3dp')
         slot.set(A + 'textSize', '15dp')
         slot.set(A + 'fontFamily', 'sans-serif-light')
         slot.set(A + 'includeFontPadding', 'false')
