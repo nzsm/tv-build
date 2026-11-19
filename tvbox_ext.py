@@ -22,6 +22,7 @@ ICONS = {'htov': '<layer-list xmlns:android="http://schemas.android.com/apk/res/
 
 HTVO_B64 = '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'
 
+import glob
 import os
 import re
 import sys
@@ -958,7 +959,7 @@ public class AdRuleUpdater {
                 if (isHostLike(host) && isVideoAdHost(host)) out.add(host.toLowerCase());
                 continue;
             }
-            if (line.indexOf(' ') >= 0 || line.indexOf('/') >= 0 || line.indexOf('*') >= 0 || line.indexOf('##') >= 0) continue;
+            if (line.indexOf(' ') >= 0 || line.indexOf('/') >= 0 || line.indexOf('*') >= 0 || line.indexOf("##") >= 0) continue;
             if (isHostLike(line) && isVideoAdHost(line)) out.add(line.toLowerCase());
         }
     }
@@ -1129,10 +1130,26 @@ public class AdRuleUpdater {
                 write_text(ph, pt)
 
     emit_builtin()
+    lint_java_literals()
     log('内置规则固化：广告域名/源级正则/网页规则/插片正则全部编译进包')
 
 
 # ---------------------------------------------------------------- 自检
+
+def lint_java_literals():
+    """防再犯：多字符 char 字面量（如 '##'）会导致 javac unclosed character literal"""
+    import re as _re
+    bad = []
+    for f in glob.glob(jp('app/src/main/java/com/github/tvbox/osc/**/*.java'), recursive=True):
+        txt = read_text(f)
+        for i, line in enumerate(txt.split(chr(10)), 1):
+            for m in _re.finditer(r"indexOf\\('([^'\\\\]{2,})'\\)", line):
+                bad.append('%s:%d %s' % (os.path.basename(f), i, m.group(0)))
+    if bad:
+        sys.exit('多字符 char 字面量（编译必炸）：' + '; '.join(bad[:5]))
+    log('字面量检查通过：无多字符 char')
+
+
 def self_check():
     res = jp('app/src/main/res')
     colors = set()
