@@ -1,4 +1,4 @@
-# CI 失败日志  2026-11-19 10:47:34Z
+# CI 失败日志  2026-11-19 14:03:25Z
 
 ## 环境
 openjdk version "17.0.21" 2026-10-20
@@ -12,7 +12,7 @@ ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
 /usr/local/lib/android/sdk/ndk/30.0.16248370
 
 ## 复现自检（源码目录状态）
--rwxr-xr-x 1 runner runner 5296 Nov 19 10:46 tvboxos-src/gradlew
+-rwxr-xr-x 1 runner runner 5296 Nov 19 14:02 tvboxos-src/gradlew
 #!/usr/bin/env sh
 
 ##############################################################################
@@ -51,6 +51,7 @@ org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g
   + 投屏按钮：去掉 2 处系统版本门槛，任何电视都显示
   + VodController：片头时间入上格、搜弹幕/视轨物理摘除（+1.5s/5s 复扫）
   + 播放器名称缩短：IJK / EXO / MX / Reex / Kodi / VLC
+  + 字面量检查通过：无多字符 char
   + 内置规则固化：广告域名/源级正则/网页规则/插片正则全部编译进包
   + 自检通过：@color 全部存在，图标 18 个齐全
 ----------------------------------------------
@@ -97,105 +98,40 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:com
 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:293)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:417)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:339)
-	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
-	at org.gradle.internal.concurrent.ManagedExecutorImpl$1.run(ManagedExecutorImpl.java:48)
+	at org.gradle.execution.plan.DefaultPlanExecutor.process(DefaultPlanExecutor.java:96)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.executeWithServices(DefaultTaskExecutionGraph.java:140)
 
 ## 关键错误行
-254:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/java/com/github/tvbox/osc/util/AdRuleUpdater.java:190: error: unclosed character literal
-257:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/java/com/github/tvbox/osc/util/AdRuleUpdater.java:190: error: illegal character: '#'
-260:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/java/com/github/tvbox/osc/util/AdRuleUpdater.java:190: error: unclosed character literal
-266:FAILURE: Build failed with an exception.
-276:* Exception is:
-277:org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compilePython64ReleaseJavaWithJavac'.
-287:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-309:Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler error output for details.
-437:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+255:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java:872: error: cannot find symbol
+260:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java:953: error: cannot find symbol
+274:FAILURE: Build failed with an exception.
+284:* Exception is:
+285:org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compilePython64ReleaseJavaWithJavac'.
+295:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+345:Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler error output for details.
+473:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
 
 ## 日志尾部 350 行
 ```
-> Task :quickjs:mergeReleaseGeneratedProguardFiles
-> Task :quickjs:exportReleaseConsumerProguardFiles
-> Task :pyramid:compilePython64ReleaseAidl NO-SOURCE
-> Task :pyramid:compilePython64ReleaseRenderscript NO-SOURCE
-> Task :pyramid:generatePython64ReleaseBuildConfig
-> Task :pyramid:extractPythonBuildPackages
-
-> Task :pyramid:generatePython64ReleasePythonRequirements
-Chaquopy: Installing for arm64-v8a
-Looking in indexes: https://pypi.org/simple, https://chaquo.com/pypi-7.0
-Collecting lxml
-  Using version 4.6.3 (newest version is 6.1.3, but Chaquopy prefers native wheels)
-  Downloading https://chaquo.com/pypi-7.0/lxml/lxml-4.6.3-0-cp38-cp38-android_21_arm64_v8a.whl (1.4MB)
-Collecting ujson
-  Using version 1.35 (newest version is 5.10.0, but Chaquopy prefers native wheels)
-  Downloading https://chaquo.com/pypi-7.0/ujson/ujson-1.35-4-cp38-cp38-android_21_arm64_v8a.whl
-Collecting pyquery==2.0.2
-  Downloading https://files.pythonhosted.org/packages/63/74/187449a465d4cbf008ffdebe3396d702ea34ee2d34d9c1d71d13e31a5dd7/pyquery-2.0.2-py3-none-any.whl
-Collecting requests
-  Downloading https://files.pythonhosted.org/packages/7c/e4/56027c4a6b4ae70ca9de302488c5ca95ad4a39e190093d6c1a8ace08341b/requests-2.32.4-py3-none-any.whl (64kB)
-Collecting jsonpath
-  Downloading https://files.pythonhosted.org/packages/cf/a1/693351acd0a9edca4de9153372a65e75398898ea7f8a5c722ab00f464929/jsonpath-0.82.2.tar.gz
-Collecting cachetools
-  Downloading https://files.pythonhosted.org/packages/72/76/20fa66124dbe6be5cafeb312ece67de6b61dd91a0247d1ea13db4ebb33c2/cachetools-5.5.2-py3-none-any.whl
-Collecting pycryptodome
-  Using version 3.9.4 (newest version is 3.24.1, but Chaquopy prefers native wheels)
-  Downloading https://chaquo.com/pypi-7.0/pycryptodome/pycryptodome-3.9.4-1-cp38-cp38-android_21_arm64_v8a.whl (1.1MB)
-Collecting beautifulsoup4
-  Downloading https://files.pythonhosted.org/packages/88/c6/92fcd42f1ba33e1184263f25bfabf3d27c383410470f169e4b8163bf9c17/beautifulsoup4-4.15.0-py3-none-any.whl (109kB)
-Collecting chaquopy-libxslt>=1.1.32 (from lxml)
-  Downloading https://chaquo.com/pypi-7.0/chaquopy-libxslt/chaquopy_libxslt-1.1.32-2-py3-none-android_21_arm64_v8a.whl (178kB)
-Collecting chaquopy-libxml2>=2.9.8 (from lxml)
-  Downloading https://chaquo.com/pypi-7.0/chaquopy-libxml2/chaquopy_libxml2-2.9.8-2-py3-none-android_21_arm64_v8a.whl (773kB)
-Collecting cssselect<=1.4.99,>=1.2.0 (from pyquery==2.0.2)
-  Downloading https://files.pythonhosted.org/packages/06/a9/2da08717a6862c48f1d61ef957a7bba171e7eefa6c0aa0ceb96a140c2a6b/cssselect-1.2.0-py2.py3-none-any.whl
-Collecting charset_normalizer<4,>=2 (from requests)
-  Downloading https://files.pythonhosted.org/packages/fc/ad/d07d7862a62ffa6d79d68074d14823243dd235a77c45262acbf6adeb28bf/charset_normalizer-3.5.2-py3-none-any.whl (68kB)
-Collecting idna<4,>=2.5 (from requests)
-  Downloading https://files.pythonhosted.org/packages/d2/23/408243171aa9aaba178d3e2559159c24c1171a641aa83b67bdd3394ead8e/idna-3.15-py3-none-any.whl (72kB)
-Collecting urllib3<3,>=1.21.1 (from requests)
-  Downloading https://files.pythonhosted.org/packages/ce/d9/5f4c13cecde62396b0d3fe530a50ccea91e7dfc1ccf0e09c228841bb5ba8/urllib3-2.2.3-py3-none-any.whl (126kB)
-Collecting certifi>=2017.4.17 (from requests)
-  Downloading https://files.pythonhosted.org/packages/32/d1/a3652fe2c19134d0d15922177821d863cbd7e842d53a21bbe7e8e3a1b5ac/certifi-2026.10.23-py3-none-any.whl (135kB)
-Collecting soupsieve>=1.6.1 (from beautifulsoup4)
-  Downloading https://files.pythonhosted.org/packages/e7/9c/0e6afc12c269578be5c0c1c9f4b49a8d32770a080260c333ac04cc1c832d/soupsieve-2.7-py3-none-any.whl
-Collecting typing-extensions>=4.0.0 (from beautifulsoup4)
-  Downloading https://files.pythonhosted.org/packages/8b/54/b1ae86c0973cc6f0210b53d508ca3641fb6d0c56823f288d108bc7ab3cc8/typing_extensions-4.13.2-py3-none-any.whl (45kB)
-Building wheels for collected packages: jsonpath
-  Building wheel for jsonpath (setup.py): started
-  Building wheel for jsonpath (setup.py): finished with status 'done'
-  Created wheel for jsonpath: filename=jsonpath-0.82.2-cp39-none-any.whl size=5619 sha256=fed0c233ec7e5a3676add765a3e736e62797827e754ee92df5776037c3599540
-  Stored in directory: /home/runner/.cache/chaquopy/pip/wheels/1a/7d/6e/393bb72381be6c5fef79020aabdcf87de53b1ed57e5ec8b9d5
-Successfully built jsonpath
-Installing collected packages: chaquopy-libxml2, chaquopy-libxslt, lxml, ujson, cssselect, pyquery, charset-normalizer, idna, urllib3, certifi, requests, jsonpath, cachetools, pycryptodome, soupsieve, typing-extensions, beautifulsoup4
-Successfully installed beautifulsoup4-4.15.0 cachetools-5.5.2 certifi-2026.10.23 chaquopy-libxml2-2.9.8 chaquopy-libxslt-1.1.32 charset-normalizer-3.5.2 cssselect-1.2.0 idna-3.15 jsonpath-0.82.2 lxml-4.6.3 pycryptodome-3.9.4 pyquery-2.0.2 requests-2.32.4 soupsieve-2.7 typing-extensions-4.13.2 ujson-1.35 urllib3-2.2.3
-Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompatible. See https://chaquo.com/chaquopy/doc/current/android.html#android-bytecode.
-
-> Task :pyramid:mergePython64ReleasePythonSources
-Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompatible. See https://chaquo.com/chaquopy/doc/current/android.html#android-bytecode.
-
-> Task :pyramid:generatePython64ReleasePythonProxies
-> Task :pyramid:generatePython64ReleaseResValues
-> Task :pyramid:generatePython64ReleaseResources
-> Task :pyramid:packagePython64ReleaseResources
 > Task :pyramid:parsePython64ReleaseLocalResources
 > Task :pyramid:javaPreCompilePython64Release
 > Task :app:compilePython64ReleaseAidl NO-SOURCE
-> Task :player:packageReleaseRenderscript NO-SOURCE
 > Task :pyramid:processPython64ReleaseManifest
+> Task :player:packageReleaseRenderscript NO-SOURCE
 > Task :pyramid:packagePython64ReleaseRenderscript NO-SOURCE
 > Task :quickjs:packageReleaseRenderscript NO-SOURCE
-> Task :app:compilePython64ReleaseRenderscript NO-SOURCE
 > Task :pyramid:generatePython64ReleaseRFile
-> Task :app:generatePython64ReleaseBuildConfig
+> Task :app:compilePython64ReleaseRenderscript NO-SOURCE
 > Task :pyramid:compilePython64ReleaseJavaWithJavac
 > Task :pyramid:mergePython64ReleaseGeneratedProguardFiles
 > Task :pyramid:exportPython64ReleaseConsumerProguardFiles
+> Task :app:generatePython64ReleaseBuildConfig
 > Task :app:javaPreCompilePython64Release
 > Task :player:writeReleaseAarMetadata
 > Task :pyramid:writePython64ReleaseAarMetadata
-> Task :quickjs:writeReleaseAarMetadata
 > Task :app:generatePython64ReleaseResValues
 > Task :app:generatePython64ReleaseResources
+> Task :quickjs:writeReleaseAarMetadata
 > Task :app:checkPython64ReleaseAarMetadata
 > Task :app:createPython64ReleaseCompatibleScreenManifests
 > Task :app:extractDeepLinksPython64Release
@@ -212,8 +148,8 @@ Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompa
 
 > Task :app:mapPython64ReleaseSourceSetPaths
 > Task :app:processPython64ReleaseManifest
-> Task :app:processPython64ReleaseManifestForPackage
 > Task :player:compileReleaseLibraryResources
+> Task :app:processPython64ReleaseManifestForPackage
 > Task :pyramid:compilePython64ReleaseLibraryResources
 > Task :quickjs:compileReleaseLibraryResources
 > Task :player:bundleLibCompileToJarRelease
@@ -245,18 +181,26 @@ Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompa
 > Task :app:processPython64ReleaseResources
 > Task :pyramid:generatePython64ReleasePythonRequirementsAssets
 
+> Task :app:compilePython64ReleaseJavaWithJavac
+Note: [1] Wrote GeneratedAppGlideModule with: []
+/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java:872: error: cannot find symbol
+            BuiltinAdRules.apply();
+            ^
+  symbol:   variable BuiltinAdRules
+  location: class ApiConfig
+/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java:953: error: cannot find symbol
+        BuiltinAdRules.apply();
+        ^
+  symbol:   variable BuiltinAdRules
+  location: class ApiConfig
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+2 errors
+
 > Task :app:compilePython64ReleaseJavaWithJavac FAILED
-/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/java/com/github/tvbox/osc/util/AdRuleUpdater.java:190: error: unclosed character literal
-            if (line.indexOf(' ') >= 0 || line.indexOf('/') >= 0 || line.indexOf('*') >= 0 || line.indexOf('##') >= 0) continue;
-                                                                                                           ^
-/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/java/com/github/tvbox/osc/util/AdRuleUpdater.java:190: error: illegal character: '#'
-            if (line.indexOf(' ') >= 0 || line.indexOf('/') >= 0 || line.indexOf('*') >= 0 || line.indexOf('##') >= 0) continue;
-                                                                                                             ^
-/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/java/com/github/tvbox/osc/util/AdRuleUpdater.java:190: error: unclosed character literal
-            if (line.indexOf(' ') >= 0 || line.indexOf('/') >= 0 || line.indexOf('*') >= 0 || line.indexOf('##') >= 0) continue;
-                                                                                                              ^
-3 errors
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_5-1795085219411.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_5-1795096959220.json
 
 FAILURE: Build failed with an exception.
 
@@ -299,6 +243,34 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:com
 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:293)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:417)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:339)
+	at org.gradle.execution.plan.DefaultPlanExecutor.process(DefaultPlanExecutor.java:96)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.executeWithServices(DefaultTaskExecutionGraph.java:140)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.execute(DefaultTaskExecutionGraph.java:125)
+	at org.gradle.execution.SelectedTaskExecutionAction.execute(SelectedTaskExecutionAction.java:39)
+	at org.gradle.execution.DryRunBuildExecutionAction.execute(DryRunBuildExecutionAction.java:51)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:54)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:43)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor.execute(BuildOperationFiringBuildWorkerExecutor.java:40)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.lambda$executeTasks$7(DefaultBuildLifecycleController.java:161)
+	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:247)
+	at org.gradle.internal.model.StateTransitionController.lambda$tryTransition$7(StateTransitionController.java:174)
+	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:44)
+	at org.gradle.internal.model.StateTransitionController.tryTransition(StateTransitionController.java:174)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.executeTasks(DefaultBuildLifecycleController.java:161)
+	at org.gradle.internal.build.DefaultBuildWorkGraphController$DefaultBuildWorkGraph.runWork(DefaultBuildWorkGraphController.java:156)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:249)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:109)
+	at org.gradle.composite.internal.DefaultBuildController.doRun(DefaultBuildController.java:164)
+	at org.gradle.composite.internal.DefaultBuildController.access$000(DefaultBuildController.java:45)
+	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.run(DefaultBuildController.java:183)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.ManagedExecutorImpl$1.run(ManagedExecutorImpl.java:48)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler error output for details.
@@ -449,6 +421,34 @@ Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Com
 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:293)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:417)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:339)
+	at org.gradle.execution.plan.DefaultPlanExecutor.process(DefaultPlanExecutor.java:96)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.executeWithServices(DefaultTaskExecutionGraph.java:140)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.execute(DefaultTaskExecutionGraph.java:125)
+	at org.gradle.execution.SelectedTaskExecutionAction.execute(SelectedTaskExecutionAction.java:39)
+	at org.gradle.execution.DryRunBuildExecutionAction.execute(DryRunBuildExecutionAction.java:51)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:54)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:43)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor.execute(BuildOperationFiringBuildWorkerExecutor.java:40)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.lambda$executeTasks$7(DefaultBuildLifecycleController.java:161)
+	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:247)
+	at org.gradle.internal.model.StateTransitionController.lambda$tryTransition$7(StateTransitionController.java:174)
+	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:44)
+	at org.gradle.internal.model.StateTransitionController.tryTransition(StateTransitionController.java:174)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.executeTasks(DefaultBuildLifecycleController.java:161)
+	at org.gradle.internal.build.DefaultBuildWorkGraphController$DefaultBuildWorkGraph.runWork(DefaultBuildWorkGraphController.java:156)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:249)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:109)
+	at org.gradle.composite.internal.DefaultBuildController.doRun(DefaultBuildController.java:164)
+	at org.gradle.composite.internal.DefaultBuildController.access$000(DefaultBuildController.java:45)
+	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.run(DefaultBuildController.java:183)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.ManagedExecutorImpl$1.run(ManagedExecutorImpl.java:48)
 
@@ -461,6 +461,6 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 See https://docs.gradle.org/7.5/userguide/command_line_interface.html#sec:command_line_warnings
 
-BUILD FAILED in 38s
+BUILD FAILED in 49s
 88 actionable tasks: 88 executed
 ```
