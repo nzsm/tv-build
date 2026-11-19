@@ -1062,6 +1062,8 @@ public class AdRuleUpdater {
     a6 = '    private void loadDefaultConfig() {'
     assert a6 in h2, '锚点丢失：loadDefaultConfig'
     if 'BuiltinAdRules' not in h2:
+        h2 = h2.replace('import com.github.tvbox.osc.util.AdBlocker;',
+                        'import com.github.tvbox.osc.util.AdBlocker;' + chr(10) + 'import com.github.tvbox.osc.util.BuiltinAdRules;', 1)
         h2 = h2.replace(a6, a6 + chr(10) + '        BuiltinAdRules.apply();', 1)
         h2 = h2.replace('            VideoParseRuler.clearRule();',
                         '            VideoParseRuler.clearRule();' + chr(10) + '            BuiltinAdRules.apply();', 1)
@@ -1131,6 +1133,11 @@ public class AdRuleUpdater {
 
     emit_builtin()
     lint_java_literals()
+
+    # 防再犯：跨包调用必须带 import
+    acx = read_text(jp('app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java'))
+    if 'BuiltinAdRules.apply()' in acx and 'import com.github.tvbox.osc.util.BuiltinAdRules;' not in acx:
+        sys.exit('ApiConfig 缺少 BuiltinAdRules 的 import')
     log('内置规则固化：广告域名/源级正则/网页规则/插片正则全部编译进包')
 
 
