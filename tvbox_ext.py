@@ -247,17 +247,17 @@ def apply_layout():
         # 时间与条两端各 3dp、进度条下方到按钮排 -3dp、底板去掉、旋屏常显
         ct = find_id(root, 'curr_time'); tt = find_id(root, 'total_time')
         if ct is not None:
-            ct.set(A + 'layout_marginEnd', '6dp')
+            ct.set(A + 'layout_marginEnd', '3dp')
             ct.set(A + 'textSize', '10dp')
             ct.set(A + 'textColor', '@android:color/white')
             ct.set(A + 'minWidth', '60dp')
-            ct.set(A + 'gravity', 'center_vertical|left')
+            ct.set(A + 'gravity', 'center_vertical|right')
         if tt is not None:
-            tt.set(A + 'layout_marginStart', '6dp')
+            tt.set(A + 'layout_marginStart', '3dp')
             tt.set(A + 'textSize', '10dp')
             tt.set(A + 'textColor', '#B3FFFFFF')
             tt.set(A + 'minWidth', '60dp')
-            tt.set(A + 'gravity', 'center_vertical|right')
+            tt.set(A + 'gravity', 'center_vertical|left')
         seek_row.set(A + 'layout_marginBottom', '7dp')
         bottom.set(A + 'background', '@null')
         sub = find_id(root, 'subtitle_view')
@@ -323,7 +323,13 @@ TIME_PATCH = [
 
 HELPERS = '''    private CharSequence buildTimeLabel(String time, String label) {
         int sid = "片头".equals(label) ? R.id.tk_slot_start : R.id.tk_slot_end;
-        android.widget.TextView slot = findViewById(sid);
+        android.widget.TextView slot = null;
+        android.view.View btn = "片头".equals(label) ? mPlayerTimeStartBtn : mPlayerTimeSkipBtn;
+        android.view.View p = btn == null ? null : btn.getParent();
+        if (p instanceof android.view.ViewGroup) {
+            slot = ((android.view.ViewGroup) p).findViewById(sid);
+        }
+        if (slot == null) slot = findViewById(sid);
         if (slot != null) slot.setText(time);
         return label;
     }
@@ -429,7 +435,7 @@ def apply_java():
         ('mLandscapePortraitBtn.setText("竖屏");', 'mLandscapePortraitBtn.setText("旋屏");'),
         ('mLandscapePortraitBtn.setText("横屏");', 'mLandscapePortraitBtn.setText("旋屏");'),
         ('mPlayerIJKBtn.setVisibility(playerType == 1 ? VISIBLE : GONE);',
-         'mPlayerIJKBtn.setVisibility(VISIBLE);'),
+         'mPlayerIJKBtn.setVisibility(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT ? GONE : VISIBLE);'),
     ):
         if o1 not in t:
             sys.exit('锚点丢失：' + o1)
@@ -441,6 +447,34 @@ def apply_java():
                       'mController.mLandscapePortraitBtn.setText("旋屏");')
         write_text(pf, h)
     log('旋屏文字固定为“旋屏”、硬解常显')
+
+    # 竖屏别再偷偷把进度条两端时间藏掉
+    for o6, n6 in (
+        ('if (mCurrentTime != null) mCurrentTime.setVisibility(isPortrait ? GONE : VISIBLE);',
+         'if (mCurrentTime != null) mCurrentTime.setVisibility(VISIBLE);'),
+        ('if (mTotalTime != null) mTotalTime.setVisibility(isPortrait ? GONE : VISIBLE);',
+         'if (mTotalTime != null) mTotalTime.setVisibility(VISIBLE);'),
+    ):
+        if o6 not in t:
+            sys.exit('锚点丢失：' + o6)
+        t = t.replace(o6, n6, 1)
+
+    # 竖屏分支里片头/片尾/重置也被藏掉了 —— 全部保留可点（用硬解那行做锚，避免误伤直播分支）
+    NL = chr(10)
+    pblock = ("            mPlayerIJKBtn.setVisibility(GONE);" + NL
+              + "            mPlayerTimeStartEndText.setVisibility(GONE);" + NL
+              + "            mPlayerTimeStartBtn.setVisibility(GONE);" + NL
+              + "            mPlayerTimeSkipBtn.setVisibility(GONE);" + NL
+              + "            mPlayerTimeResetBtn.setVisibility(GONE);" + NL)
+    nblock = ("            mPlayerIJKBtn.setVisibility(GONE);" + NL
+              + "            mPlayerTimeStartEndText.setVisibility(GONE);" + NL
+              + "            mPlayerTimeStartBtn.setVisibility(VISIBLE);" + NL
+              + "            mPlayerTimeSkipBtn.setVisibility(VISIBLE);" + NL
+              + "            mPlayerTimeResetBtn.setVisibility(VISIBLE);" + NL)
+    if pblock not in t:
+        sys.exit('锚点丢失：竖屏分支片头片尾块')
+    t = t.replace(pblock, nblock, 1)
+    log('竖屏：进度条两端时间、片头/片尾/重置 全部保留')
 
     o5 = '        if (showButton) mLandscapePortraitBtn.setText(isPortrait ? "横屏" : "竖屏");'
     n5 = '        mLandscapePortraitBtn.setText("旋屏");'
