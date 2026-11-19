@@ -325,7 +325,7 @@ HELPERS = '''    private CharSequence buildTimeLabel(String time, String label) 
         int sid = "片头".equals(label) ? R.id.tk_slot_start : R.id.tk_slot_end;
         android.widget.TextView slot = null;
         android.view.View btn = "片头".equals(label) ? mPlayerTimeStartBtn : mPlayerTimeSkipBtn;
-        android.view.View p = btn == null ? null : btn.getParent();
+        android.view.ViewParent p = (btn == null) ? null : btn.getParent();
         if (p instanceof android.view.ViewGroup) {
             slot = ((android.view.ViewGroup) p).findViewById(sid);
         }
