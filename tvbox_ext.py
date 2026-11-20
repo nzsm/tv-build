@@ -94,6 +94,16 @@ def write_icons():
         xml = re.sub(r'android:(width|height)="[0-9.]+dp"',
                      'android:\\1="' + ICON_SIZE + '"', xml)
         write_text(os.path.join(ddir, name + '.xml'), xml)
+    # 弹幕“已开启”图标：左下角一个小对号，画布/尺寸不变
+    base_danmu = ICONS.get('v_danmu', '')
+    if base_danmu:
+        mark = ('<path android:pathData="M58,292 L74,308 L104,268"'
+                ' android:strokeColor="#FFFFFF" android:strokeWidth="18"'
+                ' android:fillColor="@android:color/transparent"/>')
+        on_xml = base_danmu.replace('</vector>', mark + '</vector>', 1)
+        on_xml = re.sub(r'android:(width|height)="[0-9.]+dp"',
+                        'android:\\1="' + ICON_SIZE + '"', on_xml)
+        write_text(os.path.join(ddir, 'v_danmu_on.xml'), on_xml)
     dpi = jp('app/src/main/res/drawable-xxhdpi')
     os.makedirs(dpi, exist_ok=True)
     with open(os.path.join(dpi, 'htov_png.png'), 'wb') as f:
@@ -480,12 +490,13 @@ def apply_java():
         sys.exit('锚点丢失：getPlayerShortName')
     t = t.replace(anchor, HELPERS + anchor, 1)
 
-    # 片头/片尾：① 原来在"半段外"是静默 return，看着像没反应 → 给提示
+    # 片头/片尾：① 保留上游"只能前半场设片头 / 后半场设片尾"的限制，设成功才提示
     #            ② 外包一层容器后点击命中区只剩下面那行小字 → 整块可点
 
     a1 = ('                    if (current > duration / 2) return;\n'
           '                    mPlayerConfig.put("st",current/1000);')
-    b1 = ('                    mPlayerConfig.put("st",current/1000);\n'
+    b1 = ('                    if (current > duration / 2) return;\n'
+          '                    mPlayerConfig.put("st",current/1000);\n'
           '                    Toast.makeText(getContext(), "片头已设为 " + stringForTime(current), Toast.LENGTH_SHORT).show();')
     if a1 not in t:
         sys.exit('锚点丢失：片头点击')
@@ -493,7 +504,8 @@ def apply_java():
 
     a2 = ('                    if (current < duration / 2) return;\n'
           '                    mPlayerConfig.put("et", (duration - current)/1000);')
-    b2 = ('                    mPlayerConfig.put("et", (duration - current)/1000);\n'
+    b2 = ('                    if (current < duration / 2) return;\n'
+          '                    mPlayerConfig.put("et", (duration - current)/1000);\n'
           '                    Toast.makeText(getContext(), "片尾已设为 距结束 " + stringForTime(duration - current), Toast.LENGTH_SHORT).show();')
     if a2 not in t:
         sys.exit('锚点丢失：片尾点击')
@@ -1179,6 +1191,113 @@ public class AdRuleUpdater {
 
 # ---------------------------------------------------------------- 自检
 
+def apply_danmu_alpha():
+    """弹幕透明度下限从 10% 放宽到 0%（彻底看不见，但仍算开启）"""
+    h = jp('app/src/main/java/com/github/tvbox/osc/util/DanmuHelper.java')
+    if not os.path.isfile(h):
+        sys.exit('找不到 DanmuHelper.java')
+    t = read_text(h)
+    old = 'Hawk.put(HawkConfig.DANMU_ALPHA, Math.max(0.1f, Math.min(alpha, 1.0f)));'
+    if old not in t:
+        sys.exit('锚点丢失：DanmuHelper.setAlpha')
+    t = t.replace(old, 'Hawk.put(HawkConfig.DANMU_ALPHA, Math.max(0f, Math.min(alpha, 1.0f)));', 1)
+    write_text(h, t)
+
+    d = jp('app/src/main/java/com/github/tvbox/osc/ui/dialog/DanmuSettingDialog.java')
+    if not os.path.isfile(d):
+        sys.exit('找不到 DanmuSettingDialog.java')
+    dt = read_text(d)
+    old2 = '            if (alpha.get() <= 10) return;'
+    if old2 not in dt:
+        sys.exit('锚点丢失：透明度减档下限')
+    dt = dt.replace(old2, '            if (alpha.get() <= 0) return;', 1)
+    write_text(d, dt)
+    log('弹幕透明度：下限 10% -> 0%（0% 时彻底不可见）')
+
+
+def apply_danmu_doubletap():
+    """弹幕按钮：双击 = 持久关闭；开启时图标左下角带小对号"""
+    NL = chr(10)
+    v = read_text(jp(VOD))
+
+    field = ("    private long tkDanmuClickTs = 0L;" + NL + NL +
+             "    private final Runnable tkDanmuSingleClick = new Runnable() {" + NL +
+             "        @Override" + NL +
+             "        public void run() {" + NL +
+             "            tkDanmuClickTs = 0L;" + NL +
+             "            if (mDanmuSettingBtn == null) return;" + NL +
+             "            if (!DanmuHelper.isOpen()) {" + NL +
+             "                DanmuHelper.setOpen(true);" + NL +
+             "                updateDanmuBtn();" + NL +
+             "                try {" + NL +
+             "                    org.greenrobot.eventbus.EventBus.getDefault().post(new com.github.tvbox.osc.event.RefreshEvent(com.github.tvbox.osc.event.RefreshEvent.TYPE_SET_DANMU_SETTINGS, false));" + NL +
+             "                } catch (Throwable ignored) {" + NL +
+             "                }" + NL +
+             "                Toast.makeText(getContext(), \"弹幕已开启\", Toast.LENGTH_SHORT).show();" + NL +
+             "                return;" + NL +
+             "            }" + NL +
+             "            if (listener != null) listener.showDanmuSetting();" + NL +
+             "        }" + NL +
+             "    };" + NL + NL)
+    anchor = '    public void updateDanmuBtn() {'
+    if anchor not in v:
+        sys.exit('锚点丢失：updateDanmuBtn 定义')
+    v = v.replace(anchor, field + anchor, 1)
+
+    old_vis = ("    public void updateDanmuBtn() {" + NL +
+               "        if (mDanmuSettingBtn == null) return;" + NL +
+               "        mDanmuSettingBtn.setVisibility(DanmuHelper.isOpen() ? VISIBLE : GONE);" + NL +
+               "        updatePlayLabelVisibility();" + NL +
+               "    }")
+    new_vis = ("    public void updateDanmuBtn() {" + NL +
+               "        if (mDanmuSettingBtn == null) return;" + NL +
+               "        boolean isPortraitNow = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;" + NL +
+               "        mDanmuSettingBtn.setVisibility(isPortraitNow ? GONE : VISIBLE);" + NL +
+               "        mDanmuSettingBtn.setCompoundDrawablesWithIntrinsicBounds(0, DanmuHelper.isOpen() ? R.drawable.v_danmu_on : R.drawable.v_danmu, 0, 0);" + NL +
+               "        mDanmuSettingBtn.setCompoundDrawablePadding(0);" + NL +
+               "        mDanmuSettingBtn.setAlpha(DanmuHelper.isOpen() ? 1.0f : 0.45f);" + NL +
+               "        updatePlayLabelVisibility();" + NL +
+               "    }")
+    if old_vis not in v:
+        sys.exit('锚点丢失：updateDanmuBtn 主体')
+    v = v.replace(old_vis, new_vis, 1)
+
+    old_click = ("        mDanmuSettingBtn.setOnClickListener(new OnClickListener() {" + NL +
+                 "            @Override" + NL +
+                 "            public void onClick(View view) {" + NL +
+                 "                FastClickCheckUtil.check(view);" + NL +
+                 "                listener.showDanmuSetting();" + NL +
+                 "            }" + NL +
+                 "        });")
+    new_click = ("        mDanmuSettingBtn.setOnClickListener(new OnClickListener() {" + NL +
+                 "            @Override" + NL +
+                 "            public void onClick(View view) {" + NL +
+                 "                long now = System.currentTimeMillis();" + NL +
+                 "                if (now - tkDanmuClickTs < 380) {" + NL +
+                 "                    tkDanmuClickTs = 0L;" + NL +
+                 "                    mDanmuSettingBtn.removeCallbacks(tkDanmuSingleClick);" + NL +
+                 "                    DanmuHelper.setOpen(false);" + NL +
+                 "                    updateDanmuBtn();" + NL +
+                 "                    try {" + NL +
+                 "                        org.greenrobot.eventbus.EventBus.getDefault().post(new com.github.tvbox.osc.event.RefreshEvent(com.github.tvbox.osc.event.RefreshEvent.TYPE_SET_DANMU_SETTINGS, true));" + NL +
+                 "                    } catch (Throwable ignored) {" + NL +
+                 "                    }" + NL +
+                 "                    Toast.makeText(getContext(), \"弹幕已关闭，再点一下即可恢复\", Toast.LENGTH_SHORT).show();" + NL +
+                 "                    hideBottom();" + NL +
+                 "                    return;" + NL +
+                 "                }" + NL +
+                 "                tkDanmuClickTs = now;" + NL +
+                 "                mDanmuSettingBtn.removeCallbacks(tkDanmuSingleClick);" + NL +
+                 "                mDanmuSettingBtn.postDelayed(tkDanmuSingleClick, 380);" + NL +
+                 "            }" + NL +
+                 "        });")
+    if old_click not in v:
+        sys.exit('锚点丢失：弹幕按钮点击')
+    v = v.replace(old_click, new_click, 1)
+    write_text(jp(VOD), v)
+    log('弹幕按钮：双击 = 持久关闭；单击 = 设置面板（关着时单击=恢复）；开启时带小对号')
+
+
 def lint_java_literals():
     """防再犯：多字符 char 字面量（如 '##'）会导致 javac unclosed character literal"""
     import re as _re
@@ -1233,6 +1352,8 @@ def main():
     write_icons()
     apply_layout()
     apply_java()
+    apply_danmu_alpha()
+    apply_danmu_doubletap()
     self_check()
     print('-' * 46)
     print('=== 完成 ===')
