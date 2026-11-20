@@ -228,7 +228,7 @@ def apply_layout():
     log('按钮统一样式 %d 个（图标 %s、汉字 %s、无底、左右居中）' % (styled, ICON_SIZE, TEXT_SIZE))
 
     # ⓪ 进度条收边 / 时间框宽度：竖屏单独覆盖（条尽量长、贴两边）
-    for rel, inset, minw in (('values', SEEK_INSET, '60dp'), ('values-port', '6dp', '34dp')):
+    for rel, inset, minw in (('values', SEEK_INSET, '78dp'), ('values-port', '6dp', '62dp')):
         d = os.path.join(SRC, 'app/src/main/res', rel)
         os.makedirs(d, exist_ok=True)
         xml = ('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
@@ -236,7 +236,7 @@ def apply_layout():
                + '    <dimen name="tk_time_minw">' + minw + '</dimen>\n'
                + '</resources>\n')
         open(os.path.join(d, 'tk_dimens.xml'), 'w', encoding='utf-8').write(xml)
-    log('进度条收边：横屏 %s / 竖屏 6dp；时间框 60dp / 34dp' % SEEK_INSET)
+    log('进度条收边：横屏 %s / 竖屏 6dp；时间框 78dp / 62dp' % SEEK_INSET)
 
     # ⑦ 进度条行：上下居中、左右各收 24dp、时间紧贴条两端
     if seek_row is not None:
@@ -248,7 +248,7 @@ def apply_layout():
             if c.tag == 'SeekBar':
                 c.set(A + 'layout_width', '0dp')
                 c.set(A + 'layout_weight', '1')
-                c.set(A + 'maxHeight', '4dp')
+                c.set(A + 'maxHeight', '2dp')
                 c.set(A + 'thumbOffset', '0dp')
             else:
                 c.set(A + 'layout_width', 'wrap_content')
@@ -260,17 +260,17 @@ def apply_layout():
         ct = find_id(root, 'curr_time'); tt = find_id(root, 'total_time')
         if ct is not None:
             ct.set(A + 'layout_marginEnd', '3dp')
-            ct.set(A + 'textSize', '10dp')
+            ct.set(A + 'textSize', '12dp')
             ct.set(A + 'textColor', '@android:color/white')
             ct.set(A + 'minWidth', '@dimen/tk_time_minw')
             ct.set(A + 'gravity', 'center_vertical|right')
         if tt is not None:
             tt.set(A + 'layout_marginStart', '3dp')
-            tt.set(A + 'textSize', '10dp')
+            tt.set(A + 'textSize', '12dp')
             tt.set(A + 'textColor', '#B3FFFFFF')
             tt.set(A + 'minWidth', '@dimen/tk_time_minw')
             tt.set(A + 'gravity', 'center_vertical|left')
-        seek_row.set(A + 'layout_marginBottom', '7dp')
+        seek_row.set(A + 'layout_marginBottom', '5dp')
         bottom.set(A + 'background', '@null')
         sub = find_id(root, 'subtitle_view')
         if sub is not None:
@@ -278,7 +278,7 @@ def apply_layout():
             log('字幕：底部抬高 104dp，不再压住按钮')
         lp = find_id(root, 'landscape_portrait')
         if lp is not None: lp.set(A + 'visibility', 'visible')
-        log('间距：时间↔条 6dp、条↔按钮排 7dp；底板去掉；旋屏常显')
+        log('间距：时间↔条 3dp、条↔按钮排 5dp；底板去掉；旋屏常显')
 
     # ⑧ 片头 / 片尾：上格 26dp 时间（当图标位）+ 下格 10dp 汉字
     for rid, slot_id, text in (('play_time_start', 'tk_slot_start', '片头'),
@@ -302,7 +302,7 @@ def apply_layout():
         slot.set(A + 'layout_width', 'wrap_content')
         slot.set(A + 'layout_height', ICON_SIZE)
         slot.set(A + 'gravity', 'top|center_horizontal')
-        slot.set(A + 'paddingTop', '4dp')
+        slot.set(A + 'paddingTop', '8dp')
         slot.set(A + 'textSize', '12dp')
         slot.set(A + 'fontFamily', 'sans-serif-light')
         slot.set(A + 'includeFontPadding', 'false')
@@ -325,6 +325,13 @@ def apply_layout():
 
     tree.write(path, encoding='utf-8', xml_declaration=True)
 
+    # 轨道再细一档：3dp -> 2dp
+    seek_drawable = jp('app/src/main/res/drawable/shape_player_control_vod_seek.xml')
+    if os.path.isfile(seek_drawable):
+        sd = read_text(seek_drawable).replace('android:height="3dp"', 'android:height="2dp"')
+        write_text(seek_drawable, sd)
+        log('进度条轨道：3dp -> 2dp')
+
 
 # ---------------------------------------------------------------- Java
 TIME_PATCH = [
@@ -332,9 +339,28 @@ TIME_PATCH = [
      'mPlayerTimeStartBtn.setText(buildTimeLabel(start == 0 ? "00:00" : stringForTime(start * 1000), "片头"));'),
     ('mPlayerTimeSkipBtn.setText(end == 0 ? "片尾" : stringForTime(end * 1000));',
      'mPlayerTimeSkipBtn.setText(buildTimeLabel(end == 0 ? "00:00" : stringForTime(end * 1000), "片尾"));'),
+
+    ('mCurrentTime.setText(stringForTime(safeTimeMs(newPosition)));',
+     'mCurrentTime.setText(formatHMS(safeTimeMs(newPosition)));'),
+    ('mCurrentTime.setText(stringForTime(position));',
+     'mCurrentTime.setText(formatHMS(position)));'),
+    ('mTotalTime.setText(stringForTime(duration));',
+     'mTotalTime.setText(formatHMS(duration)));'),
+    ('Toast.makeText(getContext(), "已移除视频广告 "+M3u8.currentAdCount+" 条", Toast.LENGTH_SHORT).show();',
+     '// 静默：不再弹出广告过滤条数提示'),
 ]
 
-HELPERS = '''    private CharSequence buildTimeLabel(String time, String label) {
+HELPERS = '''
+    private String formatHMS(long timeMs) {
+        if (timeMs < 0) timeMs = 0;
+        long total = timeMs / 1000;
+        long h = total / 3600;
+        long m = (total % 3600) / 60;
+        long sec = total % 60;
+        return String.format("%02d:%02d:%02d", h, m, sec);
+    }
+
+    private CharSequence buildTimeLabel(String time, String label) {
         int sid = "片头".equals(label) ? R.id.tk_slot_start : R.id.tk_slot_end;
         android.widget.TextView slot = null;
         android.view.View btn = "片头".equals(label) ? mPlayerTimeStartBtn : mPlayerTimeSkipBtn;
