@@ -245,7 +245,7 @@ def apply_layout():
     log('按钮统一样式 %d 个（图标 %s、汉字 %s、无底、左右居中）' % (styled, ICON_SIZE, TEXT_SIZE))
 
     # ⓪ 进度条收边 / 时间框宽度：竖屏单独覆盖（条尽量长、贴两边）
-    for rel, inset, minw, rowpad in (('values', '0dp', '0dp', '6dp'), ('values-port', '0dp', '0dp', '6dp')):
+    for rel, inset, minw, rowpad in (('values', '0dp', '0dp', '18dp'), ('values-port', '0dp', '0dp', '5dp')):
         d = os.path.join(SRC, 'app/src/main/res', rel)
         os.makedirs(d, exist_ok=True)
         xml = ('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
@@ -255,7 +255,7 @@ def apply_layout():
                + '    <dimen name="tk_row_pad_lr">' + rowpad + '</dimen>\n'
                + '</resources>\n')
         open(os.path.join(d, 'tk_dimens.xml'), 'w', encoding='utf-8').write(xml)
-    log('进度条收边：左右边 6dp / 条与时间 6dp（横竖屏一致）')
+    log('进度条收边：横屏边 18dp / 竖屏边 5dp；条与时间 0.6dp')
 
     # ⑦ 进度条行：上下居中、左右各收 24dp、时间紧贴条两端
     if seek_row is not None:
@@ -278,13 +278,13 @@ def apply_layout():
         # 时间与条两端各 3dp、进度条下方到按钮排 -3dp、底板去掉、旋屏常显
         ct = find_id(root, 'curr_time'); tt = find_id(root, 'total_time')
         if ct is not None:
-            ct.set(A + 'layout_marginEnd', '6dp')
+            ct.set(A + 'layout_marginEnd', '0.6dp')
             ct.set(A + 'textSize', '@dimen/tk_time_ts')
             ct.set(A + 'textColor', '@android:color/white')
             ct.set(A + 'minWidth', '@dimen/tk_time_minw')
             ct.set(A + 'gravity', 'center_vertical|right')
         if tt is not None:
-            tt.set(A + 'layout_marginStart', '6dp')
+            tt.set(A + 'layout_marginStart', '0.6dp')
             tt.set(A + 'textSize', '@dimen/tk_time_ts')
             tt.set(A + 'textColor', '#B3FFFFFF')
             tt.set(A + 'minWidth', '@dimen/tk_time_minw')
@@ -419,6 +419,21 @@ HELPERS = '''
                 }
             }
             purgeSearchViews(c);
+        }
+    }
+
+    // 切播放器/切解码后会 replay 重建 player，标签可能被刷回旧值 → 延迟再同步一次
+    private void tkRefreshCfgView() {
+        try {
+            if (myHandle != null) {
+                myHandle.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        updatePlayerCfgView();
+                    }
+                }, 500);
+            }
+        } catch (Throwable ignored) {
         }
     }
 
@@ -1169,6 +1184,32 @@ public class AdRuleUpdater {
     if head not in t:
         sys.exit('锚点丢失：updateDanmuSearchUiBtn')
     t = t.replace(head, head + '\n' + PURGE_CALL, 1)
+    # 播放器/解码切换：replay 后控件标签可能被刷回旧值 → 延迟补刷一次
+    for o, n in (
+        ('listener.setAllowSwitchPlayer(false);',
+         'listener.setAllowSwitchPlayer(false);' + NL + '                    tkRefreshCfgView();'),
+        ('                    listener.replay(false);' + NL
+         + '                    hideBottom();' + NL
+         + '                } catch (JSONException e) {',
+         '                    listener.replay(false);' + NL
+         + '                    tkRefreshCfgView();' + NL
+         + '                    hideBottom();' + NL
+         + '                } catch (JSONException e) {'),
+    ):
+        if o not in t:
+            sys.exit('锚点丢失：切换后刷新 ' + o[:40])
+        t = t.replace(o, n)
+
+    a5 = '                    String ijk = mPlayerConfig.getString("ijk");'
+    if a5 in t:
+        t = t.replace(a5, '                    if (mPlayerConfig.getInt("pl") != 1) {' + NL
+                      + '                        try { hideBottom(); } catch (Throwable ignored) {}' + NL
+                      + '                        return;' + NL
+                      + '                    }' + NL
+                      + a5, 1)
+        log('硬解按钮：非 IJK 播放器下点击无效')
+    log('播放器/解码切换后延迟补刷标签')
+
     write_text(jp(VOD), t)
     log('VodController：片头时间入上格、搜弹幕/视轨物理摘除（+1.5s/5s 复扫）')
 
