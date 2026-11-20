@@ -149,6 +149,10 @@ def apply_layout():
     pm = parents(root)
 
     bottom = find_id(root, 'bottom_container')
+    if bottom is not None:
+        # 上游 vs_20 = 20mm（≈75dp），竖屏两侧被吃掉 15cm 视野；改为按横/竖屏取值的 dimen
+        bottom.set(A + 'paddingLeft', '@dimen/tk_row_pad_lr')
+        bottom.set(A + 'paddingRight', '@dimen/tk_row_pad_lr')
     group = find_id(root, 'play_btn_group')
     if bottom is None or group is None:
         sys.exit('布局结构不符：缺少 bottom_container / play_btn_group')
@@ -238,13 +242,14 @@ def apply_layout():
     log('按钮统一样式 %d 个（图标 %s、汉字 %s、无底、左右居中）' % (styled, ICON_SIZE, TEXT_SIZE))
 
     # ⓪ 进度条收边 / 时间框宽度：竖屏单独覆盖（条尽量长、贴两边）
-    for rel, inset, minw in (('values', SEEK_INSET, '78dp'), ('values-port', '2dp', '52dp')):
+    for rel, inset, minw, rowpad in (('values', SEEK_INSET, '78dp', '20mm'), ('values-port', '2dp', '52dp', '6dp')):
         d = os.path.join(SRC, 'app/src/main/res', rel)
         os.makedirs(d, exist_ok=True)
         xml = ('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
                + '    <dimen name="tk_seek_inset">' + inset + '</dimen>\n'
                + '    <dimen name="tk_time_minw">' + minw + '</dimen>\n'
                + '    <dimen name="tk_time_ts">' + ('12dp' if rel == 'values' else '10dp') + '</dimen>\n'
+               + '    <dimen name="tk_row_pad_lr">' + rowpad + '</dimen>\n'
                + '</resources>\n')
         open(os.path.join(d, 'tk_dimens.xml'), 'w', encoding='utf-8').write(xml)
     log('进度条收边：横屏 %s / 竖屏 2dp；时间框 78dp / 52dp' % SEEK_INSET)
