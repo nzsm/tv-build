@@ -343,9 +343,9 @@ TIME_PATCH = [
     ('mCurrentTime.setText(stringForTime(safeTimeMs(newPosition)));',
      'mCurrentTime.setText(formatHMS(safeTimeMs(newPosition)));'),
     ('mCurrentTime.setText(stringForTime(position));',
-     'mCurrentTime.setText(formatHMS(position)));'),
+     'mCurrentTime.setText(formatHMS(position));'),
     ('mTotalTime.setText(stringForTime(duration));',
-     'mTotalTime.setText(formatHMS(duration)));'),
+     'mTotalTime.setText(formatHMS(duration));'),
     ('Toast.makeText(getContext(), "已移除视频广告 "+M3u8.currentAdCount+" 条", Toast.LENGTH_SHORT).show();',
      '// 静默：不再弹出广告过滤条数提示'),
 ]
@@ -1159,6 +1159,12 @@ public class AdRuleUpdater {
 
     emit_builtin()
     lint_java_literals()
+
+    # 防再犯：括号配平检查（曾出现 formatHMS(position))); 多一个右括号）
+    vc = read_text(jp('app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'))
+    for line in vc.split(chr(10)):
+        if '));' in line and 'setText(' in line and line.count(')') > line.count('('):
+            sys.exit('括号不配平：' + line.strip())
 
     # 防再犯：跨包调用必须带 import
     acx = read_text(jp('app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java'))
