@@ -1,14 +1,12 @@
 # ============================================================
-# 云编译 TVBoxOS 定制 APK —— 增强版
-# 在 nzsm 的 v10 基础上，新增：
-#   ① tvbox_ext.py 注入：内置默认订阅地址（装上就自动加载你的订阅）
-#   ② tvbox_ext.py 注入：APP 显示名称可自定义
-#   ③ 防重复提交、防并发、失败自动打印日志
-# 保留 v10 原有能力：
-#   · tvbox_optimize.py 注入 DNS 回退 + AdGuard 最新广告规则
-#   · keystore 正式重签 + 验签
-#   · 产物回写 apk/ 并生成下载链接.txt
-# 用法：上传到 仓库/.github/workflows/build-apk.yml，Actions 页 Run workflow
+# 云编译 TVBoxOS 定制 APK —— 精简版（v2）
+# 本版改动（相对仓库里那一版）：
+#   ① 删掉原来的第 7 步 tvbox_optimize.py（它注入的 DNS 与广告，全部被 tvbox_ext.py 覆盖，纯白做；
+#      它唯一有用的 DoH 失败回退，已经并进 tvbox_ext.py v58，删掉不丢功能）
+#   ② 加了 3 条"脚本版本守卫"：仓库里要是又放了旧的 tvbox_ext.py，20 秒内直接失败并写明原因，
+#      不会再跑 40 分钟 gradle 才在 AdBlocker.java 上报 missing return statement
+#   ③ 步骤重新编号 1~13，其余逻辑与旧版逐字一致（签名、artifact、回写 apk/、失败写 ci-error.log 都没动）
+# 用法：覆盖仓库 .github/workflows/build-apk.yml，然后 Actions 页 Run workflow
 # ============================================================
 name: 云编译 TVBoxOS 定制 APK
 
@@ -20,9 +18,9 @@ on:
         required: false
         default: ''
       app_name:
-        description: 'APP 显示名称'
+        description: 'APP 显示名称（留空=NZ）'
         required: false
-        default: '影视仓v4'
+        default: 'NZ'
 
 permissions:
   contents: write
@@ -82,18 +80,10 @@ jobs:
           else
             echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" > gradle.properties
           fi
+          echo "org.gradle.caching=true" >> gradle.properties
           cat gradle.properties
 
-      - name: 7. 注入优化（DNS 回退 + 最新广告规则）
-        run: |
-          echo "=== 注入 DNS 优化 + 最新 AdGuard 广告规则 ==="
-          python3 tvbox_optimize.py tvboxos-src
-          echo "=== 检查关键改动 ==="
-          grep -c "114.114.114.114" tvboxos-src/app/src/main/java/com/github/tvbox/osc/util/OkGoHelper.java || true
-          grep -c "catch (Throwable e)" tvboxos-src/app/src/main/java/com/github/tvbox/osc/util/OkGoHelper.java || true
-          echo
-
-      - name: 8. 注入定制增强（内置订阅地址 + APP 名称）
+      - name: 7. 注入定制增强（DNS + 广告 + 内置订阅 + APP 名称）
         env:
           IN_URL: ${{ github.event.inputs.default_url }}
           IN_NAME: ${{ github.event.inputs.app_name }}
@@ -104,7 +94,7 @@ jobs:
           fi
           APP_NAME="${IN_NAME}"
           if [ -z "${APP_NAME}" ]; then
-            APP_NAME="影视仓定制版"
+            APP_NAME="NZ"
           fi
           echo "内置订阅: ${DEF_URL}"
           echo "APP 名称: ${APP_NAME}"
@@ -116,11 +106,27 @@ jobs:
             echo "增强脚本执行失败，终止以便回写日志"
             exit ${EXT_EXIT}
           fi
-          echo "--- 注入后核对 ---"
-          grep -n 'HawkConfig.API_URL, "http' tvboxos-src/app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java | head -3 || true
+
+          echo "--- 脚本版本守卫（防旧版脚本再编译一次白跑）---"
+          J=tvboxos-src/app/src/main/java/com/github/tvbox/osc
+          FAIL=0
+          grep -q 'return AD_HOSTS.isEmpty();' "$J/util/AdBlocker.java" \
+            || { echo "!!! AdBlocker.java 里 isEmpty() 没有 return —— 仓库的 tvbox_ext.py 是旧版，先更新成最新版"; FAIL=1; }
+          grep -q 'public static boolean enabled()' "$J/util/AdBlocker.java" \
+            || { echo "!!! AdBlocker.java 缺 enabled() 总开关，去广告开关会失效 —— 脚本是旧版"; FAIL=1; }
+          grep -q 'Dns.SYSTEM.lookup(hostname)' "$J/util/OkGoHelper.java" \
+            || { echo "!!! OkGoHelper 缺 DoH 失败回退（设了 DNS 会搜不到）—— 脚本是旧版"; FAIL=1; }
+          [ -f "$J/util/BuiltinAdRules.java" ] || { echo "!!! 没生成 BuiltinAdRules.java"; FAIL=1; }
+          [ -f "$J/util/AdRuleUpdater.java" ] || { echo "!!! 没生成 AdRuleUpdater.java（广告规则就不会自动更新）"; FAIL=1; }
+          grep -q '<string name="app_name">TVBox</string>' tvboxos-src/app/src/main/res/values/strings.xml \
+            && { echo "!!! 应用名还是 TVBox —— APP_NAME 没写进去，脚本是旧版"; FAIL=1; }
+          [ ${FAIL} -ne 0 ] && { echo "版本守卫未通过，直接停止，别浪费 40 分钟编译"; exit 1; }
+          echo "版本守卫通过：脚本是最新版（含应用名注入）"
+          echo "--- 关键改动核对 ---"
+          grep -n 'HawkConfig.API_URL, "http' "$J/api/ApiConfig.java" | head -3 || true
           grep -n 'name="app_name"' tvboxos-src/app/src/main/res/values/strings.xml || true
 
-      - name: 9. 编译 arm64 变体（python64）
+      - name: 8. 编译 arm64 变体（python64）
         working-directory: tvboxos-src
         run: |
           chmod +x gradlew
@@ -131,7 +137,7 @@ jobs:
           echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"
           ls -d ${ANDROID_HOME}/ndk/* 2>/dev/null || echo "（未发现 NDK 目录）"
           echo "=== 编译 python64（arm64），低并行防 OOM ==="
-          ./gradlew assemblePython64Release --no-daemon --max-workers=2 --stacktrace 2>&1 | tee /tmp/gradle.log
+          ./gradlew assemblePython64Release --no-daemon --max-workers=2 --build-cache -x lint -x lintVitalPython64Release --stacktrace 2>&1 | tee /tmp/gradle.log
           EXIT_CODE=${PIPESTATUS[0]}
           echo "=== 编译退出码: ${EXIT_CODE} ==="
           if [ ${EXIT_CODE} -ne 0 ]; then
@@ -155,7 +161,7 @@ jobs:
             exit 1
           fi
 
-      - name: 10. 收集 APK（只收 release 产物）
+      - name: 9. 收集 APK（只收 release 产物）
         run: |
           set -e
           mkdir -p apk-out
@@ -170,7 +176,7 @@ jobs:
             echo "!!! 没有找到编译产物"; exit 1
           fi
 
-      - name: 11. 正式签名 + 验签
+      - name: 10. 正式签名 + 验签
         env:
           KS_PASS: "${{ secrets.KEYSTORE_PASS || 'tvbox2026' }}"
         run: |
@@ -195,14 +201,14 @@ jobs:
             echo "仓库无 keystore/tvbox.keystore，使用原始签名（安装前需卸载旧版）"
           fi
 
-      - name: 12. 上传 Artifacts
+      - name: 11. 上传 Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: TVBoxOS-APK-定制版
           path: apk-out/*
           if-no-files-found: error
 
-      - name: 13. git 回写 apk/ 目录
+      - name: 12. git 回写 apk/ 目录
         run: |
           set -e
           TOKEN="${{ github.token }}"
@@ -230,7 +236,7 @@ jobs:
           git push origin "HEAD:${BRANCH}"
           echo "--- 完成，apk/ 已更新 ---"
 
-      - name: 14. 失败时把编译日志回写仓库（便于远程读取）
+      - name: 13. 失败时把编译日志回写仓库（便于远程读取）
         if: failure()
         run: |
           set +e
