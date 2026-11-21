@@ -245,17 +245,18 @@ def apply_layout():
     log('按钮统一样式 %d 个（图标 %s、汉字 %s、无底、左右居中）' % (styled, ICON_SIZE, TEXT_SIZE))
 
     # ⓪ 进度条收边 / 时间框宽度：竖屏单独覆盖（条尽量长、贴两边）
-    for rel, inset, minw, rowpad in (('values', '0dp', '0dp', '18dp'), ('values-port', '0dp', '0dp', '5dp')):
+    for rel, inset, minw, rowpad in (('values', '0dp', '0dp', '35dp'), ('values-port', '0dp', '0dp', '5dp')):
         d = os.path.join(SRC, 'app/src/main/res', rel)
         os.makedirs(d, exist_ok=True)
         xml = ('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
                + '    <dimen name="tk_seek_inset">' + inset + '</dimen>\n'
                + '    <dimen name="tk_time_minw">' + minw + '</dimen>\n'
-               + '    <dimen name="tk_time_ts">' + ('12dp' if rel == 'values' else '10dp') + '</dimen>\n'
+               + '    <dimen name="tk_time_ts">' + ('16dp' if rel == 'values' else '10dp') + '</dimen>\n'
                + '    <dimen name="tk_row_pad_lr">' + rowpad + '</dimen>\n'
+               + '    <dimen name="tk_time_gap">' + ('0.5dp' if rel == 'values' else '0.6dp') + '</dimen>\n'
                + '</resources>\n')
         open(os.path.join(d, 'tk_dimens.xml'), 'w', encoding='utf-8').write(xml)
-    log('进度条收边：横屏边 18dp / 竖屏边 5dp；条与时间 0.6dp')
+    log('进度条收边：横屏边 35dp / 竖屏边 5dp；条与时间 横屏0.5dp / 竖屏0.6dp')
 
     # ⑦ 进度条行：上下居中、左右各收 24dp、时间紧贴条两端
     if seek_row is not None:
@@ -278,13 +279,13 @@ def apply_layout():
         # 时间与条两端各 3dp、进度条下方到按钮排 -3dp、底板去掉、旋屏常显
         ct = find_id(root, 'curr_time'); tt = find_id(root, 'total_time')
         if ct is not None:
-            ct.set(A + 'layout_marginEnd', '0.6dp')
+            ct.set(A + 'layout_marginEnd', '@dimen/tk_time_gap')
             ct.set(A + 'textSize', '@dimen/tk_time_ts')
             ct.set(A + 'textColor', '@android:color/white')
             ct.set(A + 'minWidth', '@dimen/tk_time_minw')
             ct.set(A + 'gravity', 'center_vertical|right')
         if tt is not None:
-            tt.set(A + 'layout_marginStart', '0.6dp')
+            tt.set(A + 'layout_marginStart', '@dimen/tk_time_gap')
             tt.set(A + 'textSize', '@dimen/tk_time_ts')
             tt.set(A + 'textColor', '#B3FFFFFF')
             tt.set(A + 'minWidth', '@dimen/tk_time_minw')
@@ -511,6 +512,76 @@ def emit_builtin():
         lines.append('        AdBlocker.addPageSelector("%s");' % esc(sel))
     lines += ['    }', '}', '']
     write_text(jp('app/src/main/java/com/github/tvbox/osc/util/BuiltinAdRules.java'), chr(10).join(lines))
+
+
+TK_ADAPTIVE = """    // 自适应：按屏幕 dp 宽 + 是否电视，调两端时间字号 / 底栏边距 / 按钮间距（图标 23dp 不变）
+    private void tkAdaptiveUi() {
+        try {
+            if (mActivity == null) return;
+            android.util.DisplayMetrics dm = mActivity.getResources().getDisplayMetrics();
+            float d = dm.density <= 0f ? 1f : dm.density;
+            float wDp = dm.widthPixels / d;
+            float hDp = dm.heightPixels / d;
+            if (wDp <= 0 || hDp <= 0) return;
+            boolean portrait = hDp > wDp;
+            boolean tv = com.github.tvbox.osc.util.ScreenUtils.isTv(mActivity);
+            float ts = 16f, edge = 35f;
+            if (portrait) {
+                ts = 10f; edge = 5f;
+            } else if (tv) {
+                ts = Math.max(18f, Math.min(24f, wDp * 0.019f));
+                edge = Math.max(48f, Math.min(60f, wDp * 0.052f));
+            } else {
+                ts = Math.max(14f, Math.min(20f, wDp * 0.0175f));
+                edge = Math.max(24f, Math.min(44f, wDp * 0.038f));
+            }
+            int tsPx = Math.round(ts * d);
+            int edgePx = Math.round(edge * d);
+            android.widget.TextView c1 = findViewById(R.id.curr_time);
+            android.widget.TextView c2 = findViewById(R.id.total_time);
+            if (c1 != null) { c1.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, tsPx); c1.setIncludeFontPadding(false); }
+            if (c2 != null) { c2.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, tsPx); c2.setIncludeFontPadding(false); }
+            android.view.View bottom = findViewById(R.id.bottom_container);
+            if (bottom != null) bottom.setPadding(edgePx, bottom.getPaddingTop(), edgePx, bottom.getPaddingBottom());
+            android.view.ViewGroup group = findViewById(R.id.play_btn_group);
+            if (group != null) {
+                int count = 0;
+                int sum = 0;
+                for (int i = 0; i < group.getChildCount(); i++) {
+                    android.view.View v = group.getChildAt(i);
+                    if (v.getVisibility() != android.view.View.VISIBLE) continue;
+                    int w = v.getMeasuredWidth();
+                    if (w <= 0) {
+                        v.measure(android.view.View.MeasureSpec.makeMeasureSpec(0, android.view.View.MeasureSpec.UNSPECIFIED),
+                                  android.view.View.MeasureSpec.makeMeasureSpec(0, android.view.View.MeasureSpec.UNSPECIFIED));
+                        w = v.getMeasuredWidth();
+                    }
+                    if (w <= 0) continue;
+                    count++;
+                    sum += w;
+                }
+                if (count > 0) {
+                    int gap = (dm.widthPixels - 2 * edgePx - sum) / count;
+                    int minGap = Math.round(6f * d);
+                    int maxGap = Math.round(30f * d);
+                    if (gap < minGap) gap = minGap;
+                    if (gap > maxGap) gap = maxGap;
+                    for (int i = 0; i < group.getChildCount(); i++) {
+                        android.view.View v = group.getChildAt(i);
+                        if (v.getVisibility() != android.view.View.VISIBLE) continue;
+                        android.view.ViewGroup.LayoutParams lp = v.getLayoutParams();
+                        if (lp instanceof android.view.ViewGroup.MarginLayoutParams) {
+                            ((android.view.ViewGroup.MarginLayoutParams) lp).rightMargin = gap;
+                            v.setLayoutParams(lp);
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+"""
 
 
 def apply_java():
@@ -1209,6 +1280,27 @@ public class AdRuleUpdater {
                       + a5, 1)
         log('硬解按钮：非 IJK 播放器下点击无效')
     log('播放器/解码切换后延迟补刷标签')
+
+    # 自适应 UI
+    if 'tkAdaptiveUi' in t:
+        sys.exit('tkAdaptiveUi 已存在，拒绝重复注入')
+    t = t.replace('    private String getPlayerShortName(int playerType) {',
+                  TK_ADAPTIVE + '    private String getPlayerShortName(int playerType) {', 1)
+    a6 = ('    public void setPlayerConfig(JSONObject playerCfg) {' + NL
+          + '        this.mPlayerConfig = playerCfg;' + NL
+          + '        updatePlayerCfgView();' + NL
+          + '    }')
+    if a6 not in t:
+        sys.exit('锚点丢失：setPlayerConfig')
+    t = t.replace(a6, a6[:-1] + '    tkAdaptiveUi();' + NL + '    }', 1)
+    a7 = ('        super.onSizeChanged(w, h, oldw, oldh);' + NL
+          + '        initLandscapePortraitBtnInfo();' + NL
+          + '    }')
+    if a7 not in t:
+        sys.exit('锚点丢失：onSizeChanged')
+    t = t.replace(a7, a7.replace('        initLandscapePortraitBtnInfo();' + NL,
+                                 '        initLandscapePortraitBtnInfo();' + NL + '        tkAdaptiveUi();' + NL), 1)
+    log('自适应：按屏宽/电视判定调整时间字号、底栏边距、按钮间距')
 
     write_text(jp(VOD), t)
     log('VodController：片头时间入上格、搜弹幕/视轨物理摘除（+1.5s/5s 复扫）')
