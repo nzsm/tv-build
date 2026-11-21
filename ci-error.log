@@ -1,4 +1,4 @@
-# CI 失败日志  2026-11-21 11:24:34Z
+# CI 失败日志  2026-11-21 14:32:06Z
 
 ## 环境
 openjdk version "17.0.21" 2026-10-20
@@ -12,7 +12,7 @@ ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
 /usr/local/lib/android/sdk/ndk/30.0.16248370
 
 ## 复现自检（源码目录状态）
--rwxr-xr-x 1 runner runner 5296 Nov 21 11:23 tvboxos-src/gradlew
+-rwxr-xr-x 1 runner runner 5296 Nov 21 14:31 tvboxos-src/gradlew
 #!/usr/bin/env sh
 
 ##############################################################################
@@ -21,14 +21,14 @@ distributionPath=wrapper/dists
 zipStorePath=wrapper/dists
 zipStoreBase=GRADLE_USER_HOME
 sdk.dir=/usr/local/lib/android/sdk
-#android.injected.build.abi=armeabi-v7a
 IsDebug=true
 #build on off
 org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g
+org.gradle.caching=true
 
 ## 增强脚本输出（最后 120 行）
 ```
-*** 脚本版本 VER-20261117-G ***
+*** 脚本版本 VER-20261122-H ***
 === 底部菜单：图标 23dp / 汉字 8dp / 结构对齐 / 不动内核 ===
 源码： /home/runner/work/tv-build/tv-build/tvboxos-src
   + 图标写入 18 个（自包含，不引用任何外部资源）
@@ -41,6 +41,7 @@ org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g
   + 间距：时间↔条 3dp、条↔按钮排 5dp；底板去掉；旋屏按画面自动显示
   + 片头/片尾：上格 23dp 时间 + 下格 8dp 汉字（结构对齐）
   + 进度条轨道：3dp -> 2dp
+  + 应用名：NZ（桌面显示 + 最近任务）
   + 片头/片尾：点击提示 + 整块可点
   + 旋屏按钮：保持上游自动判定（电视/横屏视频不显示）
   + 旋屏文字固定为“旋屏”、硬解常显
@@ -55,8 +56,10 @@ org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g
   + 自适应：按屏宽/电视判定调整时间字号、底栏边距、按钮间距
   + VodController：片头时间入上格、搜弹幕/视轨物理摘除（+1.5s/5s 复扫）
   + 播放器名称缩短：IJK / EXO / MX / Reex / Kodi / VLC
+  + 去广告：内置规则 + 本地缓存 + 24h 自动更新（tvbox-server 的 ads/rules）
   + 字面量检查通过：无多字符 char
   + 内置规则固化：广告域名/源级正则/网页规则/插片正则全部编译进包
+  + 起播放行：净化仍在，但 3.5 秒没抓完就直接播（不再等 20 秒）
   + 弹幕透明度：下限 10% -> 0%（0% 时彻底不可见）
   + 弹幕按钮：双击 = 持久关闭；单击 = 设置面板（关着时单击=恢复）；开启时带小对号
   + 自检通过：@color 全部存在，图标 18 个齐全
@@ -66,287 +69,38 @@ org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g
 
 ## gradle: What went wrong
 * What went wrong:
-Execution failed for task ':app:compilePython64ReleaseJavaWithJavac'.
-> Compilation failed; see the compiler error output for details.
+Task 'lintVitalPython64Release' not found in root project 'TVBox'.
 
 * Try:
+> Run gradlew tasks to get a list of available tasks.
 > Run with --info or --debug option to get more log output.
 > Run with --scan to get full insights.
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compilePython64ReleaseJavaWithJavac'.
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:142)
-	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:282)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:140)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:128)
-	at org.gradle.api.internal.tasks.execution.CleanupStaleOutputsExecuter.execute(CleanupStaleOutputsExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
-	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
-	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
-	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:56)
-	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
-	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
-	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:69)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:327)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:314)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:307)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:293)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:417)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:339)
-	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
-	at org.gradle.internal.concurrent.ManagedExecutorImpl$1.run(ManagedExecutorImpl.java:48)
-
-## 关键错误行
-254:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/java/com/github/tvbox/osc/util/AdBlocker.java:32: error: missing return statement
-266:FAILURE: Build failed with an exception.
-276:* Exception is:
-277:org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compilePython64ReleaseJavaWithJavac'.
-287:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-309:Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler error output for details.
-437:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-
-## 日志尾部 350 行
-```
-> Task :quickjs:exportReleaseConsumerProguardFiles
-> Task :pyramid:compilePython64ReleaseAidl NO-SOURCE
-> Task :pyramid:compilePython64ReleaseRenderscript NO-SOURCE
-> Task :pyramid:generatePython64ReleaseBuildConfig
-> Task :pyramid:extractPythonBuildPackages
-
-> Task :pyramid:generatePython64ReleasePythonRequirements
-Chaquopy: Installing for arm64-v8a
-Looking in indexes: https://pypi.org/simple, https://chaquo.com/pypi-7.0
-Collecting lxml
-  Using version 4.6.3 (newest version is 6.1.3, but Chaquopy prefers native wheels)
-  Downloading https://chaquo.com/pypi-7.0/lxml/lxml-4.6.3-0-cp38-cp38-android_21_arm64_v8a.whl (1.4MB)
-Collecting ujson
-  Using version 1.35 (newest version is 5.10.0, but Chaquopy prefers native wheels)
-  Downloading https://chaquo.com/pypi-7.0/ujson/ujson-1.35-4-cp38-cp38-android_21_arm64_v8a.whl
-Collecting pyquery==2.0.2
-  Downloading https://files.pythonhosted.org/packages/63/74/187449a465d4cbf008ffdebe3396d702ea34ee2d34d9c1d71d13e31a5dd7/pyquery-2.0.2-py3-none-any.whl
-Collecting requests
-  Downloading https://files.pythonhosted.org/packages/7c/e4/56027c4a6b4ae70ca9de302488c5ca95ad4a39e190093d6c1a8ace08341b/requests-2.32.4-py3-none-any.whl (64kB)
-Collecting jsonpath
-  Downloading https://files.pythonhosted.org/packages/cf/a1/693351acd0a9edca4de9153372a65e75398898ea7f8a5c722ab00f464929/jsonpath-0.82.2.tar.gz
-Collecting cachetools
-  Downloading https://files.pythonhosted.org/packages/72/76/20fa66124dbe6be5cafeb312ece67de6b61dd91a0247d1ea13db4ebb33c2/cachetools-5.5.2-py3-none-any.whl
-Collecting pycryptodome
-  Using version 3.9.4 (newest version is 3.24.1, but Chaquopy prefers native wheels)
-  Downloading https://chaquo.com/pypi-7.0/pycryptodome/pycryptodome-3.9.4-1-cp38-cp38-android_21_arm64_v8a.whl (1.1MB)
-Collecting beautifulsoup4
-  Downloading https://files.pythonhosted.org/packages/88/c6/92fcd42f1ba33e1184263f25bfabf3d27c383410470f169e4b8163bf9c17/beautifulsoup4-4.15.0-py3-none-any.whl (109kB)
-Collecting chaquopy-libxslt>=1.1.32 (from lxml)
-  Downloading https://chaquo.com/pypi-7.0/chaquopy-libxslt/chaquopy_libxslt-1.1.32-2-py3-none-android_21_arm64_v8a.whl (178kB)
-Collecting chaquopy-libxml2>=2.9.8 (from lxml)
-  Downloading https://chaquo.com/pypi-7.0/chaquopy-libxml2/chaquopy_libxml2-2.9.8-2-py3-none-android_21_arm64_v8a.whl (773kB)
-Collecting cssselect<=1.4.99,>=1.2.0 (from pyquery==2.0.2)
-  Downloading https://files.pythonhosted.org/packages/06/a9/2da08717a6862c48f1d61ef957a7bba171e7eefa6c0aa0ceb96a140c2a6b/cssselect-1.2.0-py2.py3-none-any.whl
-Collecting certifi>=2017.4.17 (from requests)
-  Downloading https://files.pythonhosted.org/packages/6d/39/5eec3296860b94ac20bb8ed807725b88f6adfab3f343df592afd975f5f86/certifi-2026.11.20-py3-none-any.whl (127kB)
-Collecting charset_normalizer<4,>=2 (from requests)
-  Downloading https://files.pythonhosted.org/packages/fc/ad/d07d7862a62ffa6d79d68074d14823243dd235a77c45262acbf6adeb28bf/charset_normalizer-3.5.2-py3-none-any.whl (68kB)
-Collecting urllib3<3,>=1.21.1 (from requests)
-  Downloading https://files.pythonhosted.org/packages/ce/d9/5f4c13cecde62396b0d3fe530a50ccea91e7dfc1ccf0e09c228841bb5ba8/urllib3-2.2.3-py3-none-any.whl (126kB)
-Collecting idna<4,>=2.5 (from requests)
-  Downloading https://files.pythonhosted.org/packages/d2/23/408243171aa9aaba178d3e2559159c24c1171a641aa83b67bdd3394ead8e/idna-3.15-py3-none-any.whl (72kB)
-Collecting typing-extensions>=4.0.0 (from beautifulsoup4)
-  Downloading https://files.pythonhosted.org/packages/8b/54/b1ae86c0973cc6f0210b53d508ca3641fb6d0c56823f288d108bc7ab3cc8/typing_extensions-4.13.2-py3-none-any.whl (45kB)
-Collecting soupsieve>=1.6.1 (from beautifulsoup4)
-  Downloading https://files.pythonhosted.org/packages/e7/9c/0e6afc12c269578be5c0c1c9f4b49a8d32770a080260c333ac04cc1c832d/soupsieve-2.7-py3-none-any.whl
-Building wheels for collected packages: jsonpath
-  Building wheel for jsonpath (setup.py): started
-  Building wheel for jsonpath (setup.py): finished with status 'done'
-  Created wheel for jsonpath: filename=jsonpath-0.82.2-cp39-none-any.whl size=5619 sha256=52af86c0fcfb7deb1444979305c39120c3dc6a2c6ebdf00f15c02aab4d0253a9
-  Stored in directory: /home/runner/.cache/chaquopy/pip/wheels/1a/7d/6e/393bb72381be6c5fef79020aabdcf87de53b1ed57e5ec8b9d5
-Successfully built jsonpath
-Installing collected packages: chaquopy-libxml2, chaquopy-libxslt, lxml, ujson, cssselect, pyquery, certifi, charset-normalizer, urllib3, idna, requests, jsonpath, cachetools, pycryptodome, typing-extensions, soupsieve, beautifulsoup4
-Successfully installed beautifulsoup4-4.15.0 cachetools-5.5.2 certifi-2026.11.20 chaquopy-libxml2-2.9.8 chaquopy-libxslt-1.1.32 charset-normalizer-3.5.2 cssselect-1.2.0 idna-3.15 jsonpath-0.82.2 lxml-4.6.3 pycryptodome-3.9.4 pyquery-2.0.2 requests-2.32.4 soupsieve-2.7 typing-extensions-4.13.2 ujson-1.35 urllib3-2.2.3
-Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompatible. See https://chaquo.com/chaquopy/doc/current/android.html#android-bytecode.
-
-> Task :pyramid:mergePython64ReleasePythonSources
-Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompatible. See https://chaquo.com/chaquopy/doc/current/android.html#android-bytecode.
-
-> Task :pyramid:generatePython64ReleasePythonProxies
-> Task :pyramid:generatePython64ReleaseResValues
-> Task :pyramid:generatePython64ReleaseResources
-> Task :pyramid:packagePython64ReleaseResources
-> Task :pyramid:parsePython64ReleaseLocalResources
-> Task :pyramid:processPython64ReleaseManifest
-> Task :pyramid:javaPreCompilePython64Release
-> Task :app:compilePython64ReleaseAidl NO-SOURCE
-> Task :pyramid:generatePython64ReleaseRFile
-> Task :player:packageReleaseRenderscript NO-SOURCE
-> Task :pyramid:compilePython64ReleaseJavaWithJavac
-> Task :pyramid:mergePython64ReleaseGeneratedProguardFiles
-> Task :pyramid:packagePython64ReleaseRenderscript NO-SOURCE
-> Task :pyramid:exportPython64ReleaseConsumerProguardFiles
-> Task :quickjs:packageReleaseRenderscript NO-SOURCE
-> Task :app:compilePython64ReleaseRenderscript NO-SOURCE
-> Task :app:generatePython64ReleaseBuildConfig
-> Task :player:writeReleaseAarMetadata
-> Task :app:javaPreCompilePython64Release
-> Task :pyramid:writePython64ReleaseAarMetadata
-> Task :quickjs:writeReleaseAarMetadata
-> Task :app:generatePython64ReleaseResValues
-> Task :app:generatePython64ReleaseResources
-> Task :app:checkPython64ReleaseAarMetadata
-> Task :app:createPython64ReleaseCompatibleScreenManifests
-> Task :app:extractDeepLinksPython64Release
-> Task :player:extractDeepLinksRelease
-> Task :pyramid:extractDeepLinksPython64Release
-> Task :quickjs:extractDeepLinksRelease
-> Task :app:mergePython64ReleaseResources
-
-> Task :app:processPython64ReleaseMainManifest
-[org.chromium.net:cronet-embedded:101.4951.41] /home/runner/.gradle/caches/transforms-3/afb769089853f9fe157a8408a42d871b/transformed/jetified-cronet-embedded-101.4951.41/AndroidManifest.xml Warning:
-	Namespace 'org.chromium.net' used in: org.chromium.net:cronet-embedded:101.4951.41, org.chromium.net:cronet-common:101.4951.41, org.chromium.net:cronet-api:101.4951.41.
-[:quickjs] /home/runner/work/tv-build/tv-build/tvboxos-src/quickjs/build/intermediates/merged_manifest/release/AndroidManifest.xml Warning:
-	Namespace 'com.whl.quickjs.android' used in: :quickjs, wang.harlon.quickjs:wrapper-android:2.1.0.
-
-> Task :app:mapPython64ReleaseSourceSetPaths
-> Task :app:processPython64ReleaseManifest
-> Task :player:compileReleaseLibraryResources
-> Task :app:processPython64ReleaseManifestForPackage
-> Task :pyramid:compilePython64ReleaseLibraryResources
-> Task :quickjs:compileReleaseLibraryResources
-> Task :player:bundleLibCompileToJarRelease
-> Task :pyramid:bundleLibCompileToJarPython64Release
-> Task :quickjs:bundleLibCompileToJarRelease
-> Task :app:processPython64ReleaseJavaRes NO-SOURCE
-> Task :player:processReleaseJavaRes NO-SOURCE
-> Task :player:bundleLibResRelease NO-SOURCE
-> Task :pyramid:processPython64ReleaseJavaRes NO-SOURCE
-> Task :pyramid:bundleLibResPython64Release NO-SOURCE
-> Task :quickjs:processReleaseJavaRes NO-SOURCE
-> Task :quickjs:bundleLibResRelease NO-SOURCE
-> Task :player:bundleLibRuntimeToJarRelease
-> Task :pyramid:bundleLibRuntimeToJarPython64Release
-> Task :quickjs:bundleLibRuntimeToJarRelease
-> Task :app:mergePython64ReleaseShaders
-> Task :app:compilePython64ReleaseShaders NO-SOURCE
-> Task :app:generatePython64ReleaseAssets UP-TO-DATE
-> Task :player:mergeReleaseShaders
-> Task :player:compileReleaseShaders NO-SOURCE
-> Task :player:generateReleaseAssets UP-TO-DATE
-> Task :player:packageReleaseAssets
-> Task :pyramid:mergePython64ReleaseShaders
-> Task :pyramid:compilePython64ReleaseShaders NO-SOURCE
-> Task :pyramid:generatePython64ReleaseAssets UP-TO-DATE
-> Task :pyramid:generatePython64ReleasePythonAppAssets
-> Task :pyramid:generatePython64ReleasePythonLicenseAssets
-> Task :pyramid:generatePython64ReleasePythonMiscAssets
-> Task :app:processPython64ReleaseResources
-> Task :pyramid:generatePython64ReleasePythonRequirementsAssets
-
-> Task :app:compilePython64ReleaseJavaWithJavac
-Note: [1] Wrote GeneratedAppGlideModule with: []
-/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/java/com/github/tvbox/osc/util/AdBlocker.java:32: error: missing return statement
-    }
-    ^
-Note: Some input files use or override a deprecated API.
-Note: Recompile with -Xlint:deprecation for details.
-Note: Some input files use unchecked or unsafe operations.
-Note: Recompile with -Xlint:unchecked for details.
-1 error
-
-> Task :app:compilePython64ReleaseJavaWithJavac FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_5-1795260230271.json
-
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task ':app:compilePython64ReleaseJavaWithJavac'.
-> Compilation failed; see the compiler error output for details.
-
-* Try:
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights.
-
-* Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compilePython64ReleaseJavaWithJavac'.
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:142)
-	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:282)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:140)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:128)
-	at org.gradle.api.internal.tasks.execution.CleanupStaleOutputsExecuter.execute(CleanupStaleOutputsExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
-	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
-	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
-	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:56)
-	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
-	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
-	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:69)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:327)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:314)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:307)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:293)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:417)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:339)
-	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
-	at org.gradle.internal.concurrent.ManagedExecutorImpl$1.run(ManagedExecutorImpl.java:48)
-Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler error output for details.
-	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:56)
-	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:39)
-	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:97)
-	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.execute(NormalizingJavaCompiler.java:51)
-	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.execute(NormalizingJavaCompiler.java:37)
-	at org.gradle.api.internal.tasks.compile.AnnotationProcessorDiscoveringCompiler.execute(AnnotationProcessorDiscoveringCompiler.java:51)
-	at org.gradle.api.internal.tasks.compile.AnnotationProcessorDiscoveringCompiler.execute(AnnotationProcessorDiscoveringCompiler.java:37)
-	at org.gradle.api.internal.tasks.compile.ModuleApplicationNameWritingCompiler.execute(ModuleApplicationNameWritingCompiler.java:46)
-	at org.gradle.api.internal.tasks.compile.ModuleApplicationNameWritingCompiler.execute(ModuleApplicationNameWritingCompiler.java:36)
-	at org.gradle.jvm.toolchain.internal.DefaultToolchainJavaCompiler.execute(DefaultToolchainJavaCompiler.java:57)
-	at org.gradle.api.tasks.compile.JavaCompile.lambda$createToolchainCompiler$1(JavaCompile.java:232)
-	at org.gradle.api.internal.tasks.compile.CleaningJavaCompiler.execute(CleaningJavaCompiler.java:53)
-	at org.gradle.api.internal.tasks.compile.incremental.IncrementalCompilerFactory.lambda$createRebuildAllCompiler$0(IncrementalCompilerFactory.java:52)
-	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.execute(SelectiveCompiler.java:67)
-	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.execute(SelectiveCompiler.java:41)
-	at org.gradle.api.internal.tasks.compile.incremental.IncrementalResultStoringCompiler.execute(IncrementalResultStoringCompiler.java:66)
-	at org.gradle.api.internal.tasks.compile.incremental.IncrementalResultStoringCompiler.execute(IncrementalResultStoringCompiler.java:52)
-	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler$2.call(CompileJavaBuildOperationReportingCompiler.java:59)
-	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler$2.call(CompileJavaBuildOperationReportingCompiler.java:51)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
-	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
-	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler.execute(CompileJavaBuildOperationReportingCompiler.java:51)
-	at org.gradle.api.tasks.compile.JavaCompile.performCompilation(JavaCompile.java:279)
-	at org.gradle.api.tasks.compile.JavaCompile.performIncrementalCompilation(JavaCompile.java:165)
-	at org.gradle.api.tasks.compile.JavaCompile.compile(JavaCompile.java:146)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at org.gradle.internal.reflect.JavaMethod.invoke(JavaMethod.java:125)
-	at org.gradle.api.internal.project.taskfactory.IncrementalInputsTaskAction.doExecute(IncrementalInputsTaskAction.java:32)
-	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:51)
-	at org.gradle.api.internal.project.taskfactory.AbstractIncrementalTaskAction.execute(AbstractIncrementalTaskAction.java:25)
-	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:29)
-	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:236)
+org.gradle.execution.TaskSelectionException: Task 'lintVitalPython64Release' not found in root project 'TVBox'.
+	at org.gradle.execution.DefaultTaskSelector.getSelection(DefaultTaskSelector.java:118)
+	at org.gradle.execution.DefaultTaskSelector.getFilter(DefaultTaskSelector.java:65)
+	at org.gradle.execution.CompositeAwareTaskSelector.getFilter(CompositeAwareTaskSelector.java:56)
+	at org.gradle.execution.ExcludedTaskFilteringProjectsPreparer.prepareForTaskScheduling(ExcludedTaskFilteringProjectsPreparer.java:44)
+	at org.gradle.execution.DefaultTaskSchedulingPreparer.prepareForTaskScheduling(DefaultTaskSchedulingPreparer.java:32)
+	at org.gradle.initialization.VintageBuildModelController.lambda$initializeWorkGraph$0(VintageBuildModelController.java:76)
+	at org.gradle.internal.model.StateTransitionController.lambda$inState$1(StateTransitionController.java:110)
+	at org.gradle.internal.model.StateTransitionController.lambda$inState$2(StateTransitionController.java:125)
+	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:44)
+	at org.gradle.internal.model.StateTransitionController.inState(StateTransitionController.java:121)
+	at org.gradle.internal.model.StateTransitionController.inState(StateTransitionController.java:109)
+	at org.gradle.initialization.VintageBuildModelController.initializeWorkGraph(VintageBuildModelController.java:76)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.lambda$newWorkGraph$3(DefaultBuildLifecycleController.java:135)
+	at org.gradle.internal.model.StateTransitionController.lambda$inState$2(StateTransitionController.java:125)
+	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:44)
+	at org.gradle.internal.model.StateTransitionController.inState(StateTransitionController.java:121)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.newWorkGraph(DefaultBuildLifecycleController.java:133)
+	at org.gradle.internal.build.DefaultBuildWorkGraphController$DefaultBuildWorkGraph.createPlan(DefaultBuildWorkGraphController.java:132)
+	at org.gradle.internal.build.DefaultBuildWorkGraphController$DefaultBuildWorkGraph.populateWorkGraph(DefaultBuildWorkGraphController.java:125)
+	at org.gradle.composite.internal.DefaultBuildController.populateWorkGraph(DefaultBuildController.java:71)
+	at org.gradle.composite.internal.DefaultIncludedBuildTaskGraph$DefaultBuildTreeWorkGraphBuilder.withWorkGraph(DefaultIncludedBuildTaskGraph.java:142)
+	at org.gradle.internal.buildtree.DefaultBuildTreeWorkPreparer.lambda$scheduleRequestedTasks$0(DefaultBuildTreeWorkPreparer.java:34)
+	at org.gradle.composite.internal.DefaultIncludedBuildTaskGraph$DefaultBuildTreeWorkGraph$1.run(DefaultIncludedBuildTaskGraph.java:170)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:29)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:26)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
@@ -355,14 +109,89 @@ Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Com
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:47)
 	at org.gradle.internal.operations.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:68)
-	at org.gradle.api.internal.tasks.execution.TaskExecution.executeAction(TaskExecution.java:221)
-	at org.gradle.api.internal.tasks.execution.TaskExecution.executeActions(TaskExecution.java:204)
-	at org.gradle.api.internal.tasks.execution.TaskExecution.executeWithPreviousOutputFiles(TaskExecution.java:187)
-	at org.gradle.api.internal.tasks.execution.TaskExecution.execute(TaskExecution.java:165)
-	at org.gradle.internal.execution.steps.ExecuteStep.executeInternal(ExecuteStep.java:89)
-	at org.gradle.internal.execution.steps.ExecuteStep.access$000(ExecuteStep.java:40)
-	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:53)
-	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:50)
+
+## 关键错误行
+5:FAILURE: Build failed with an exception.
+15:* Exception is:
+16:org.gradle.execution.TaskSelectionException: Task 'lintVitalPython64Release' not found in root project 'TVBox'.
+
+## 日志尾部 350 行
+```
+To honour the JVM settings for this build a single-use Daemon process will be forked. See https://docs.gradle.org/7.5/userguide/gradle_daemon.html#sec:disabling_the_daemon.
+Daemon will be stopped at the end of the build 
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_4-1795271521649.json
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Task 'lintVitalPython64Release' not found in root project 'TVBox'.
+
+* Try:
+> Run gradlew tasks to get a list of available tasks.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+
+* Exception is:
+org.gradle.execution.TaskSelectionException: Task 'lintVitalPython64Release' not found in root project 'TVBox'.
+	at org.gradle.execution.DefaultTaskSelector.getSelection(DefaultTaskSelector.java:118)
+	at org.gradle.execution.DefaultTaskSelector.getFilter(DefaultTaskSelector.java:65)
+	at org.gradle.execution.CompositeAwareTaskSelector.getFilter(CompositeAwareTaskSelector.java:56)
+	at org.gradle.execution.ExcludedTaskFilteringProjectsPreparer.prepareForTaskScheduling(ExcludedTaskFilteringProjectsPreparer.java:44)
+	at org.gradle.execution.DefaultTaskSchedulingPreparer.prepareForTaskScheduling(DefaultTaskSchedulingPreparer.java:32)
+	at org.gradle.initialization.VintageBuildModelController.lambda$initializeWorkGraph$0(VintageBuildModelController.java:76)
+	at org.gradle.internal.model.StateTransitionController.lambda$inState$1(StateTransitionController.java:110)
+	at org.gradle.internal.model.StateTransitionController.lambda$inState$2(StateTransitionController.java:125)
+	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:44)
+	at org.gradle.internal.model.StateTransitionController.inState(StateTransitionController.java:121)
+	at org.gradle.internal.model.StateTransitionController.inState(StateTransitionController.java:109)
+	at org.gradle.initialization.VintageBuildModelController.initializeWorkGraph(VintageBuildModelController.java:76)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.lambda$newWorkGraph$3(DefaultBuildLifecycleController.java:135)
+	at org.gradle.internal.model.StateTransitionController.lambda$inState$2(StateTransitionController.java:125)
+	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:44)
+	at org.gradle.internal.model.StateTransitionController.inState(StateTransitionController.java:121)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.newWorkGraph(DefaultBuildLifecycleController.java:133)
+	at org.gradle.internal.build.DefaultBuildWorkGraphController$DefaultBuildWorkGraph.createPlan(DefaultBuildWorkGraphController.java:132)
+	at org.gradle.internal.build.DefaultBuildWorkGraphController$DefaultBuildWorkGraph.populateWorkGraph(DefaultBuildWorkGraphController.java:125)
+	at org.gradle.composite.internal.DefaultBuildController.populateWorkGraph(DefaultBuildController.java:71)
+	at org.gradle.composite.internal.DefaultIncludedBuildTaskGraph$DefaultBuildTreeWorkGraphBuilder.withWorkGraph(DefaultIncludedBuildTaskGraph.java:142)
+	at org.gradle.internal.buildtree.DefaultBuildTreeWorkPreparer.lambda$scheduleRequestedTasks$0(DefaultBuildTreeWorkPreparer.java:34)
+	at org.gradle.composite.internal.DefaultIncludedBuildTaskGraph$DefaultBuildTreeWorkGraph$1.run(DefaultIncludedBuildTaskGraph.java:170)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:29)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:26)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:47)
+	at org.gradle.internal.operations.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:68)
+	at org.gradle.composite.internal.DefaultIncludedBuildTaskGraph$DefaultBuildTreeWorkGraph.scheduleWork(DefaultIncludedBuildTaskGraph.java:167)
+	at org.gradle.internal.buildtree.DefaultBuildTreeWorkPreparer.scheduleRequestedTasks(DefaultBuildTreeWorkPreparer.java:34)
+	at org.gradle.internal.buildtree.DefaultBuildTreeLifecycleController.lambda$doScheduleAndRunTasks$2(DefaultBuildTreeLifecycleController.java:89)
+	at org.gradle.composite.internal.DefaultIncludedBuildTaskGraph.withNewWorkGraph(DefaultIncludedBuildTaskGraph.java:101)
+	at org.gradle.internal.buildtree.DefaultBuildTreeLifecycleController.doScheduleAndRunTasks(DefaultBuildTreeLifecycleController.java:88)
+	at org.gradle.internal.buildtree.DefaultBuildTreeLifecycleController.lambda$runBuild$4(DefaultBuildTreeLifecycleController.java:106)
+	at org.gradle.internal.model.StateTransitionController.lambda$transition$5(StateTransitionController.java:166)
+	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:247)
+	at org.gradle.internal.model.StateTransitionController.lambda$transition$6(StateTransitionController.java:166)
+	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:44)
+	at org.gradle.internal.model.StateTransitionController.transition(StateTransitionController.java:166)
+	at org.gradle.internal.buildtree.DefaultBuildTreeLifecycleController.runBuild(DefaultBuildTreeLifecycleController.java:103)
+	at org.gradle.internal.buildtree.DefaultBuildTreeLifecycleController.scheduleAndRunTasks(DefaultBuildTreeLifecycleController.java:69)
+	at org.gradle.tooling.internal.provider.ExecuteBuildActionRunner.run(ExecuteBuildActionRunner.java:31)
+	at org.gradle.launcher.exec.ChainingBuildActionRunner.run(ChainingBuildActionRunner.java:35)
+	at org.gradle.internal.buildtree.ProblemReportingBuildActionRunner.run(ProblemReportingBuildActionRunner.java:49)
+	at org.gradle.launcher.exec.BuildOutcomeReportingBuildActionRunner.run(BuildOutcomeReportingBuildActionRunner.java:65)
+	at org.gradle.tooling.internal.provider.FileSystemWatchingBuildActionRunner.run(FileSystemWatchingBuildActionRunner.java:136)
+	at org.gradle.launcher.exec.BuildCompletionNotifyingBuildActionRunner.run(BuildCompletionNotifyingBuildActionRunner.java:41)
+	at org.gradle.launcher.exec.RootBuildLifecycleBuildActionExecutor.lambda$execute$0(RootBuildLifecycleBuildActionExecutor.java:40)
+	at org.gradle.composite.internal.DefaultRootBuildState.run(DefaultRootBuildState.java:122)
+	at org.gradle.launcher.exec.RootBuildLifecycleBuildActionExecutor.execute(RootBuildLifecycleBuildActionExecutor.java:40)
+	at org.gradle.internal.buildtree.DefaultBuildTreeContext.execute(DefaultBuildTreeContext.java:40)
+	at org.gradle.launcher.exec.BuildTreeLifecycleBuildActionExecutor.lambda$execute$0(BuildTreeLifecycleBuildActionExecutor.java:65)
+	at org.gradle.internal.buildtree.BuildTreeState.run(BuildTreeState.java:53)
+	at org.gradle.launcher.exec.BuildTreeLifecycleBuildActionExecutor.execute(BuildTreeLifecycleBuildActionExecutor.java:65)
+	at org.gradle.launcher.exec.RunAsBuildOperationBuildActionExecutor$3.call(RunAsBuildOperationBuildActionExecutor.java:61)
+	at org.gradle.launcher.exec.RunAsBuildOperationBuildActionExecutor$3.call(RunAsBuildOperationBuildActionExecutor.java:57)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
@@ -371,89 +200,49 @@ Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Com
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
 	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
-	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:50)
-	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:40)
-	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:68)
-	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:38)
-	at org.gradle.internal.execution.steps.CancelExecutionStep.execute(CancelExecutionStep.java:41)
-	at org.gradle.internal.execution.steps.TimeoutStep.executeWithoutTimeout(TimeoutStep.java:74)
-	at org.gradle.internal.execution.steps.TimeoutStep.execute(TimeoutStep.java:55)
-	at org.gradle.internal.execution.steps.CreateOutputsStep.execute(CreateOutputsStep.java:51)
-	at org.gradle.internal.execution.steps.CreateOutputsStep.execute(CreateOutputsStep.java:29)
-	at org.gradle.internal.execution.steps.CaptureStateAfterExecutionStep.executeDelegateBroadcastingChanges(CaptureStateAfterExecutionStep.java:124)
-	at org.gradle.internal.execution.steps.CaptureStateAfterExecutionStep.execute(CaptureStateAfterExecutionStep.java:80)
-	at org.gradle.internal.execution.steps.CaptureStateAfterExecutionStep.execute(CaptureStateAfterExecutionStep.java:58)
-	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:48)
-	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:36)
-	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithoutCache(BuildCacheStep.java:181)
-	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$execute$1(BuildCacheStep.java:71)
-	at org.gradle.internal.Either$Right.fold(Either.java:175)
-	at org.gradle.internal.execution.caching.CachingState.fold(CachingState.java:59)
-	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:69)
-	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:47)
-	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:36)
-	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:25)
-	at org.gradle.internal.execution.steps.RecordOutputsStep.execute(RecordOutputsStep.java:36)
-	at org.gradle.internal.execution.steps.RecordOutputsStep.execute(RecordOutputsStep.java:22)
-	at org.gradle.internal.execution.steps.SkipUpToDateStep.executeBecause(SkipUpToDateStep.java:110)
-	at org.gradle.internal.execution.steps.SkipUpToDateStep.lambda$execute$2(SkipUpToDateStep.java:56)
-	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:56)
-	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:38)
-	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:73)
-	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:44)
-	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:37)
-	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:27)
-	at org.gradle.internal.execution.steps.ResolveCachingStateStep.execute(ResolveCachingStateStep.java:89)
-	at org.gradle.internal.execution.steps.ResolveCachingStateStep.execute(ResolveCachingStateStep.java:50)
-	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:114)
-	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:57)
-	at org.gradle.internal.execution.steps.CaptureStateBeforeExecutionStep.execute(CaptureStateBeforeExecutionStep.java:76)
-	at org.gradle.internal.execution.steps.CaptureStateBeforeExecutionStep.execute(CaptureStateBeforeExecutionStep.java:50)
-	at org.gradle.internal.execution.steps.SkipEmptyWorkStep.executeWithNoEmptySources(SkipEmptyWorkStep.java:254)
-	at org.gradle.internal.execution.steps.SkipEmptyWorkStep.executeWithNoEmptySources(SkipEmptyWorkStep.java:209)
-	at org.gradle.internal.execution.steps.SkipEmptyWorkStep.execute(SkipEmptyWorkStep.java:88)
-	at org.gradle.internal.execution.steps.SkipEmptyWorkStep.execute(SkipEmptyWorkStep.java:56)
-	at org.gradle.internal.execution.steps.RemoveUntrackedExecutionStateStep.execute(RemoveUntrackedExecutionStateStep.java:32)
-	at org.gradle.internal.execution.steps.RemoveUntrackedExecutionStateStep.execute(RemoveUntrackedExecutionStateStep.java:21)
-	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
-	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:43)
-	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:31)
-	at org.gradle.internal.execution.steps.AssignWorkspaceStep.lambda$execute$0(AssignWorkspaceStep.java:40)
-	at org.gradle.api.internal.tasks.execution.TaskExecution$4.withWorkspace(TaskExecution.java:281)
-	at org.gradle.internal.execution.steps.AssignWorkspaceStep.execute(AssignWorkspaceStep.java:40)
-	at org.gradle.internal.execution.steps.AssignWorkspaceStep.execute(AssignWorkspaceStep.java:30)
-	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:37)
-	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:27)
-	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:44)
-	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:33)
-	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:76)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:139)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:128)
-	at org.gradle.api.internal.tasks.execution.CleanupStaleOutputsExecuter.execute(CleanupStaleOutputsExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
-	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
-	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
-	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:56)
-	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
-	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
-	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:69)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:327)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:314)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:307)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:293)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:417)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:339)
+	at org.gradle.launcher.exec.RunAsBuildOperationBuildActionExecutor.execute(RunAsBuildOperationBuildActionExecutor.java:57)
+	at org.gradle.launcher.exec.RunAsWorkerThreadBuildActionExecutor.lambda$execute$0(RunAsWorkerThreadBuildActionExecutor.java:36)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:249)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:109)
+	at org.gradle.launcher.exec.RunAsWorkerThreadBuildActionExecutor.execute(RunAsWorkerThreadBuildActionExecutor.java:36)
+	at org.gradle.tooling.internal.provider.continuous.ContinuousBuildActionExecutor.execute(ContinuousBuildActionExecutor.java:110)
+	at org.gradle.tooling.internal.provider.SubscribableBuildActionExecutor.execute(SubscribableBuildActionExecutor.java:64)
+	at org.gradle.internal.session.DefaultBuildSessionContext.execute(DefaultBuildSessionContext.java:46)
+	at org.gradle.tooling.internal.provider.BuildSessionLifecycleBuildActionExecuter$ActionImpl.apply(BuildSessionLifecycleBuildActionExecuter.java:100)
+	at org.gradle.tooling.internal.provider.BuildSessionLifecycleBuildActionExecuter$ActionImpl.apply(BuildSessionLifecycleBuildActionExecuter.java:88)
+	at org.gradle.internal.session.BuildSessionState.run(BuildSessionState.java:69)
+	at org.gradle.tooling.internal.provider.BuildSessionLifecycleBuildActionExecuter.execute(BuildSessionLifecycleBuildActionExecuter.java:62)
+	at org.gradle.tooling.internal.provider.BuildSessionLifecycleBuildActionExecuter.execute(BuildSessionLifecycleBuildActionExecuter.java:41)
+	at org.gradle.tooling.internal.provider.StartParamsValidatingActionExecuter.execute(StartParamsValidatingActionExecuter.java:63)
+	at org.gradle.tooling.internal.provider.StartParamsValidatingActionExecuter.execute(StartParamsValidatingActionExecuter.java:31)
+	at org.gradle.tooling.internal.provider.SessionFailureReportingActionExecuter.execute(SessionFailureReportingActionExecuter.java:52)
+	at org.gradle.tooling.internal.provider.SessionFailureReportingActionExecuter.execute(SessionFailureReportingActionExecuter.java:40)
+	at org.gradle.tooling.internal.provider.SetupLoggingActionExecuter.execute(SetupLoggingActionExecuter.java:47)
+	at org.gradle.tooling.internal.provider.SetupLoggingActionExecuter.execute(SetupLoggingActionExecuter.java:31)
+	at org.gradle.launcher.daemon.server.exec.ExecuteBuild.doBuild(ExecuteBuild.java:65)
+	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:37)
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
+	at org.gradle.launcher.daemon.server.exec.WatchForDisconnection.execute(WatchForDisconnection.java:39)
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
+	at org.gradle.launcher.daemon.server.exec.ResetDeprecationLogger.execute(ResetDeprecationLogger.java:29)
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
+	at org.gradle.launcher.daemon.server.exec.RequestStopIfSingleUsedDaemon.execute(RequestStopIfSingleUsedDaemon.java:35)
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
+	at org.gradle.launcher.daemon.server.exec.ForwardClientInput$2.create(ForwardClientInput.java:78)
+	at org.gradle.launcher.daemon.server.exec.ForwardClientInput$2.create(ForwardClientInput.java:75)
+	at org.gradle.util.internal.Swapper.swap(Swapper.java:38)
+	at org.gradle.launcher.daemon.server.exec.ForwardClientInput.execute(ForwardClientInput.java:75)
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
+	at org.gradle.launcher.daemon.server.exec.LogAndCheckHealth.execute(LogAndCheckHealth.java:50)
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
+	at org.gradle.launcher.daemon.server.exec.LogToClient.doBuild(LogToClient.java:63)
+	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:37)
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
+	at org.gradle.launcher.daemon.server.exec.EstablishBuildEnvironment.doBuild(EstablishBuildEnvironment.java:84)
+	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:37)
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
+	at org.gradle.launcher.daemon.server.exec.StartBuildOrRespondWithBusy$1.run(StartBuildOrRespondWithBusy.java:52)
+	at org.gradle.launcher.daemon.server.DaemonStateCoordinator$1.run(DaemonStateCoordinator.java:297)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.ManagedExecutorImpl$1.run(ManagedExecutorImpl.java:48)
 
@@ -466,6 +255,5 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 See https://docs.gradle.org/7.5/userguide/command_line_interface.html#sec:command_line_warnings
 
-BUILD FAILED in 48s
-88 actionable tasks: 88 executed
+BUILD FAILED in 8s
 ```
