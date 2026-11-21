@@ -6,6 +6,7 @@
 #   ② 加了 3 条"脚本版本守卫"：仓库里要是又放了旧的 tvbox_ext.py，20 秒内直接失败并写明原因，
 #      不会再跑 40 分钟 gradle 才在 AdBlocker.java 上报 missing return statement
 #   ③ 步骤重新编号 1~13，其余逻辑与旧版逐字一致（签名、artifact、回写 apk/、失败写 ci-error.log 都没动）
+#   ④ 编译只加 --build-cache（复用缓存）；不加 -x lint 之类的排除参数——Gradle 对不存在的任务名会直接报错
 # 用法：覆盖仓库 .github/workflows/build-apk.yml，然后 Actions 页 Run workflow
 # ============================================================
 name: 云编译 TVBoxOS 定制 APK
@@ -137,7 +138,7 @@ jobs:
           echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"
           ls -d ${ANDROID_HOME}/ndk/* 2>/dev/null || echo "（未发现 NDK 目录）"
           echo "=== 编译 python64（arm64），低并行防 OOM ==="
-          ./gradlew assemblePython64Release --no-daemon --max-workers=2 --build-cache -x lint -x lintVitalPython64Release --stacktrace 2>&1 | tee /tmp/gradle.log
+          ./gradlew assemblePython64Release --no-daemon --max-workers=2 --build-cache --stacktrace 2>&1 | tee /tmp/gradle.log
           EXIT_CODE=${PIPESTATUS[0]}
           echo "=== 编译退出码: ${EXIT_CODE} ==="
           if [ ${EXIT_CODE} -ne 0 ]; then
