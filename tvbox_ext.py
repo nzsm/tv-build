@@ -1330,6 +1330,114 @@ public class AdBlocker {
 
 # ---------------------------------------------------------------- 自检
 
+def apply_fast_start():
+    """净化开着时不再傻等 m3u8 清单：3.5 秒没抓完就直接起播，晚到的净化结果放弃。"""
+    p = jp(SRC, VOD)
+    src = read_text(p)
+    if 'tkTakeOver' in src:
+        log('起播放行：补丁已存在，跳过')
+        return
+    L = chr(10)
+
+    a = '    private JSONObject mPlayerConfig = null;'
+    if a not in src:
+        sys.exit('起播放行锚点丢失: mPlayerConfig 字段')
+    src = src.replace(a, a + L + '    private boolean tkPlayed = false;', 1)
+
+    a = '    public void playM3u8(final String url, final HashMap<String, String> headers) {'
+    if a not in src:
+        sys.exit('起播放行锚点丢失: playM3u8 方法头')
+    helper = (
+        '    /** 起播只允许一次：谁先抢到谁播，后到的净化结果直接放弃，避免二次起播 */' + L
+        + '    private boolean tkTakeOver() {' + L
+        + '        if (tkPlayed) return false;' + L
+        + '        tkPlayed = true;' + L
+        + '        return true;' + L
+        + '    }' + L + L + a)
+    src = src.replace(a, helper, 1)
+
+    a = ('        if(url.contains("url=")){' + L
+         + '            listener.startPlayUrl(url, headers);' + L
+         + '            return;' + L
+         + '        }')
+    if a not in src:
+        sys.exit('起播放行锚点丢失: url= 分支')
+    b = ('        if(url.contains("url=")){' + L
+         + '            if (tkTakeOver()) listener.startPlayUrl(url, headers);' + L
+         + '            return;' + L
+         + '        }')
+    src = src.replace(a, b, 1)
+
+    a = '        OkGo.getInstance().cancelTag("m3u8-2");'
+    if src.count(a) != 1:
+        sys.exit('起播放行锚点丢失: cancelTag m3u8-2 不唯一')
+    timer = (a + L
+        + '        tkPlayed = false;' + L
+        + '        try {' + L
+        + '            final android.os.Handler tkHandler = new android.os.Handler(android.os.Looper.getMainLooper());' + L
+        + '            tkHandler.postDelayed(new Runnable() {' + L
+        + '                @Override' + L
+        + '                public void run() {' + L
+        + '                    if (!tkTakeOver()) return;' + L
+        + '                    LOG.i("echo-m3u8起播超时放行: " + url);' + L
+        + '                    try { OkGo.getInstance().cancelTag("m3u8-1"); } catch (Throwable ignored) {}' + L
+        + '                    try { OkGo.getInstance().cancelTag("m3u8-2"); } catch (Throwable ignored) {}' + L
+        + '                    listener.startPlayUrl(url, headers);' + L
+        + '                }' + L
+        + '            }, 3500);' + L
+        + '        } catch (Throwable ignored) {}')
+    src = src.replace(a, timer, 1)
+
+    a = ('                        String content = response.body();' + L
+         + '                        if (!content.startsWith("#EXTM3U")) {' + L
+         + '                            listener.startPlayUrl(url, headers);' + L
+         + '                            return;' + L
+         + '                        }')
+    if a not in src:
+        sys.exit('起播放行锚点丢失: onSuccess 非 m3u8 分支')
+    b = ('                        String content = response.body();' + L
+         + '                        if (!content.startsWith("#EXTM3U")) {' + L
+         + '                            if (tkTakeOver()) listener.startPlayUrl(url, headers);' + L
+         + '                            return;' + L
+         + '                        }')
+    src = src.replace(a, b, 1)
+
+    a = ('                        LOG.e("echo-m3u8请求错误1: " + response.getException());' + L
+         + '                        listener.startPlayUrl(url, headers);')
+    if a not in src:
+        sys.exit('起播放行锚点丢失: onError m3u8-1')
+    b = ('                        LOG.e("echo-m3u8请求错误1: " + response.getException());' + L
+         + '                        if (!tkTakeOver()) return;' + L
+         + '                        listener.startPlayUrl(url, headers);')
+    src = src.replace(a, b, 1)
+
+    a = ('    private void processM3u8Content(String url, String content, HashMap<String, String> headers) {' + L
+         + '        String basePath = getBasePath(url);')
+    if src.count('        String basePath = getBasePath(url);') != 1:
+        sys.exit('起播放行锚点丢失: processM3u8Content 不唯一')
+    b = ('    private void processM3u8Content(String url, String content, HashMap<String, String> headers) {' + L
+         + '        if (!tkTakeOver()) { LOG.i("echo-m3u8净化结果晚到，已直接起播，放弃代理"); return; }' + L
+         + '        String basePath = getBasePath(url);')
+    src = src.replace(a, b, 1)
+
+    a = ('                        LOG.e("echo-重定向 m3u8 请求错误: " + response.getException());' + L
+         + '                        listener.startPlayUrl(fallbackUrl, headers);')
+    if a not in src:
+        sys.exit('起播放行锚点丢失: 重定向 onError')
+    b = ('                        LOG.e("echo-重定向 m3u8 请求错误: " + response.getException());' + L
+         + '                        if (!tkTakeOver()) return;' + L
+         + '                        listener.startPlayUrl(fallbackUrl, headers);')
+    src = src.replace(a, b, 1)
+
+    write_text(p, src)
+    txt = read_text(p)
+    if txt.count('tkTakeOver') != 7:
+        sys.exit('起播放行自检失败: tkTakeOver 出现 %d 次（应为 7）' % txt.count('tkTakeOver'))
+    if 'private boolean tkPlayed = false;' not in txt:
+        sys.exit('起播放行自检失败: 字段没写进去')
+    log('起播放行：净化仍在，但 3.5 秒没抓完就直接播（不再等 20 秒）')
+
+
 def apply_danmu_alpha():
     """弹幕透明度下限从 10% 放宽到 0%（彻底看不见，但仍算开启）"""
     h = jp('app/src/main/java/com/github/tvbox/osc/util/DanmuHelper.java')
@@ -1517,6 +1625,7 @@ def main():
     apply_layout()
     apply_app_name()
     apply_java()
+    apply_fast_start()
     apply_danmu_alpha()
     apply_danmu_doubletap()
     self_check()
