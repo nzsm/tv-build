@@ -37,9 +37,9 @@ import xml.etree.ElementTree as ET
 
 SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
-APP_NAME = sys.argv[3] if len(sys.argv) > 3 else '影道仓定制版'
+APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261117-G'
+VER = 'VER-20261122-H'
 LAYOUT = 'app/src/main/res/layout/player_vod_control_view.xml'
 VOD = 'app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'
 PLAYER_HELPER = 'app/src/main/java/com/github/tvbox/osc/util/PlayerHelper.java'
@@ -1451,6 +1451,31 @@ def lint_java_literals():
     log('字面量检查通过：无多字符 char')
 
 
+def apply_app_name():
+    """把 APP_NAME 写进 values/strings.xml 的 app_name（桌面图标名 + 任务列表名）。"""
+    p = jp(SRC, 'app/src/main/res/values/strings.xml')
+    if not os.path.isfile(p):
+        print('  ! 跳过应用名：未找到 values/strings.xml')
+        return
+    safe = APP_NAME.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+    want = '<string name="app_name">%s</string>' % safe
+    src = read_text(p)
+    m = re.search(r'<string name="app_name">[^<]*</string>', src)
+    if m:
+        if m.group(0) == want:
+            print('  + 应用名已是 %s，无需修改' % APP_NAME)
+            return
+        src = src[:m.start()] + want + src[m.end():]
+    else:
+        if '</resources>' not in src:
+            raise RuntimeError('strings.xml 里找不到 app_name，也没有 </resources>')
+        src = src.replace('</resources>', '    %s\n</resources>' % want, 1)
+    write_text(p, src)
+    if want not in read_text(p):
+        raise RuntimeError('应用名写入失败')
+    print('  + 应用名：%s（桌面显示 + 最近任务）' % APP_NAME)
+
+
 def self_check():
     res = jp('app/src/main/res')
     colors = set()
@@ -1490,6 +1515,7 @@ def main():
     print('源码：', SRC)
     write_icons()
     apply_layout()
+    apply_app_name()
     apply_java()
     apply_danmu_alpha()
     apply_danmu_doubletap()
