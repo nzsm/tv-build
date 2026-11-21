@@ -473,6 +473,188 @@ BUILTIN_STREAM_RE = ['#EXT-X-DISCONTINUITY[^#]*#EXTINF[^#]*adjump', '#EXT-X-DISC
 
 BUILTIN_HEADER_HOSTS = ['ae01.alicdn.com', 'tips.gamevvip.com']
 
+# 播放页浮层广告文案（娱乐城/博彩/体彩/真人视讯这类，正常影视站不会这么写）
+BUILTIN_PAGE_TEXT = ["娱乐城", "博彩", "时时彩", "六合彩", "百家乐", "真人荷官", "体育投注", "滚球",
+                     "首存", "注册送", "优惠彩金", "电子游艺", "线上赌场", "AG真人", "沙巴体育",
+                     "威尼斯人", "新葡京", "澳门赌场", "老虎机", "棋牌游戏", "彩票代购", "体彩"]
+
+
+
+ADRULE_JAVA = r"""package com.github.tvbox.osc.util;
+
+import com.github.catvod.net.OkHttp;
+import com.github.tvbox.osc.base.App;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+
+/**
+ * 去广告规则自动更新（轻量）：
+ * 默认从 tvbox-server 的 tvbox.json 里只取 ads + rules 两段，24 小时最多拉一次，
+ * 失败/404 静默，直接用本地缓存或内置规则，绝不影响播放。
+ */
+public class AdRuleUpdater {
+
+    private static final String RULES_URL = "https://raw.githubusercontent.com/nzsm/tvbox-server/main/tvbox.json";
+    private static final long INTERVAL = 24L * 60L * 60L * 1000L;
+    private static String lastApply = "";
+
+    private static File cacheFile() {
+        return new File(App.getInstance().getFilesDir(), "adrules.json");
+    }
+
+    /** VideoParseRuler 被 clearRule 之后调用，允许缓存规则重新套一遍 */
+    public static void reset() {
+        lastApply = "";
+    }
+
+    /** 启动/换源时同步套用本地缓存（不联网） */
+    public static void loadCache() {
+        try {
+            if (!AdBlocker.enabled()) return;
+            File f = cacheFile();
+            if (!f.exists() || f.length() < 20) return;
+            apply(FileUtils.read(f.getAbsolutePath()));
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** 24h 节流后台更新；开关关着就不更新 */
+    public static void autoUpdate() {
+        try {
+            if (!AdBlocker.enabled()) return;
+            File f = cacheFile();
+            if (f.exists() && System.currentTimeMillis() - f.lastModified() < INTERVAL) return;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        String txt = OkHttp.string(RULES_URL, 15000);
+                        if (txt == null || txt.length() < 20) return;
+                        if (new Gson().fromJson(txt, JsonObject.class) == null) return;
+                        File dst = cacheFile();
+                        File tmp = new File(dst.getAbsolutePath() + ".tmp");
+                        FileOutputStream fos = new FileOutputStream(tmp);
+                        fos.write(txt.getBytes("UTF-8"));
+                        fos.flush();
+                        fos.close();
+                        if (dst.exists()) dst.delete();
+                        tmp.renameTo(dst);
+                        lastApply = "";
+                        apply(txt);
+                    } catch (Throwable ignored) {
+                    }
+                }
+            }, "tk-adrules").start();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void apply(String txt) {
+        try {
+            if (txt == null || txt.equals(lastApply)) return;
+            JsonObject root = new Gson().fromJson(txt, JsonObject.class);
+            if (root == null) return;
+            lastApply = txt;
+            JsonArray ads = root.getAsJsonArray("ads");
+            if (ads != null) {
+                for (JsonElement e : ads) {
+                    try {
+                        String h = e.getAsString();
+                        if (h == null || h.length() < 4) continue;
+                        if (h.contains("google-analytics") || h.contains("googletagmanager") || h.contains("cnzz")) continue;
+                        AdBlocker.addAdHost(h);
+                    } catch (Throwable ignored) {
+                    }
+                }
+            }
+            JsonArray rules = root.getAsJsonArray("rules");
+            if (rules == null) return;
+            for (JsonElement e : rules) {
+                try {
+                    if (!e.isJsonObject()) continue;
+                    JsonObject o = e.getAsJsonObject();
+                    String name = o.has("name") ? o.get("name").getAsString() : "";
+                    if (name.contains("proxy") || name.contains("嗅探") || name.contains("解析")) continue;
+                    ArrayList<String> hosts = new ArrayList<>();
+                    addStrings(hosts, o.get("hosts"));
+                    addStrings(hosts, o.get("host"));
+                    ArrayList<String> regex = new ArrayList<>();
+                    addStrings(regex, o.get("regex"));
+                    ArrayList<String> rule = new ArrayList<>();
+                    addStrings(rule, o.get("rule"));
+                    for (String h : hosts) {
+                        if (!regex.isEmpty()) VideoParseRuler.addHostRegex(h, regex);
+                        if (!rule.isEmpty()) VideoParseRuler.addHostRule(h, rule);
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void addStrings(ArrayList<String> out, JsonElement e) {
+        if (e == null || e.isJsonNull()) return;
+        try {
+            if (e.isJsonArray()) {
+                for (JsonElement one : e.getAsJsonArray()) {
+                    String v = one.getAsString();
+                    if (v != null && v.length() > 0 && !out.contains(v)) out.add(v);
+                }
+            } else {
+                String v = e.getAsString();
+                if (v != null && v.length() > 0 && !out.contains(v)) out.add(v);
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+}
+"""
+
+
+def emit_adrules():
+    """写 AdRuleUpdater.java + 挂载调用点（启动更新 / 换源套缓存 / 开关打开套缓存）"""
+    write_text(jp('app/src/main/java/com/github/tvbox/osc/util/AdRuleUpdater.java'), ADRULE_JAVA)
+
+    ap = jp('app/src/main/java/com/github/tvbox/osc/base/App.java')
+    at = read_text(ap)
+    anchor_app = '        FileUtils.cleanPlayerCache();'
+    assert anchor_app in at, '锚点丢失：App cleanPlayerCache'
+    at = at.replace(anchor_app,
+                    anchor_app + chr(10) + '        com.github.tvbox.osc.util.AdRuleUpdater.autoUpdate();', 1)
+    write_text(ap, at)
+
+    ac = jp('app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java')
+    hc = read_text(ac)
+    # 换源套用本地缓存（跟在内置规则后面，同一开关下）
+    old1 = '            BuiltinAdRules.apply();'
+    assert old1 in hc, '锚点丢失：ApiConfig apply'
+    hc = hc.replace(old1, old1 + chr(10) + '            com.github.tvbox.osc.util.AdRuleUpdater.loadCache();', 1)
+    hc = hc.replace('            VideoParseRuler.clearRule();',
+                    '            VideoParseRuler.clearRule();' + chr(10) + '            com.github.tvbox.osc.util.AdRuleUpdater.reset();', 1)
+    hc = hc.replace('if (!infoJson.has("rules")) VideoParseRuler.clearRule();',
+                    'if (!infoJson.has("rules")) { VideoParseRuler.clearRule(); com.github.tvbox.osc.util.AdRuleUpdater.reset(); }', 1)
+    old2 = '        if (Hawk.get(HawkConfig.M3U8_PURIFY, true)) BuiltinAdRules.apply();'
+    assert old2 in hc, '锚点丢失：loadDefaultConfig apply'
+    hc = hc.replace(old2,
+                    old2 + chr(10) + '        if (Hawk.get(HawkConfig.M3U8_PURIFY, true)) com.github.tvbox.osc.util.AdRuleUpdater.loadCache();', 1)
+    write_text(ac, hc)
+
+    mf = jp('app/src/main/java/com/github/tvbox/osc/ui/fragment/ModelSettingFragment.java')
+    hf = read_text(mf)
+    old3 = '                    com.github.tvbox.osc.util.BuiltinAdRules.apply();'
+    assert old3 in hf, '锚点丢失：设置页 apply'
+    hf = hf.replace(old3, old3 + chr(10) + '                    com.github.tvbox.osc.util.AdRuleUpdater.loadCache();', 1)
+    write_text(mf, hf)
+
+    log('去广告：内置规则 + 本地缓存 + 24h 自动更新（tvbox-server 的 ads/rules）')
+
 
 def emit_builtin():
     """把仓库里的去广告规则固化成 BuiltinAdRules.java（不依赖订阅）"""
@@ -510,6 +692,8 @@ def emit_builtin():
         lines.append('        M3u8.addGlobalRegex("%s");' % esc(r))
     for k in BUILTIN_PAGE_KW:
         lines.append('        AdBlocker.addUrlKeyword("%s");' % esc(k))
+    for k in BUILTIN_PAGE_TEXT:
+        lines.append('        AdBlocker.addPageTextKeyword("%s");' % esc(k))
     for r in BUILTIN_PAGE_RE:
         lines.append('        AdBlocker.addUrlRegex("%s");' % esc(r))
     for sel in BUILTIN_PAGE_SEL:
@@ -727,6 +911,19 @@ def apply_java():
                    + '            + "{\\\"name\\\": \\\"Google\\\", \\\"url\\\": \\\"https://dns.google/dns-query\\\", \\\"ips\\\": [\\\"8.8.8.8\\\", \\\"8.8.4.4\\\"]}"' + chr(10)
                    + '            + "]";')
         h = h[:i0] + new_dns + h[i1:]
+        # DoH 解析失败自动回退系统 DNS（原来只有 tvbox_optimize.py 在做，重复且会被覆盖）
+        old_lk = ('                Dns dns = dnsOverHttps != null ? dnsOverHttps : Dns.SYSTEM;' + chr(10) +
+                  '                return  dns.lookup(hostname);')
+        new_lk = ('                Dns dns = dnsOverHttps != null ? dnsOverHttps : Dns.SYSTEM;' + chr(10) +
+                  '                try {' + chr(10) +
+                  '                    return dns.lookup(hostname);' + chr(10) +
+                  '                } catch (Throwable e) {' + chr(10) +
+                  '                    return Dns.SYSTEM.lookup(hostname);' + chr(10) +
+                  '                }')
+        if 'Dns.SYSTEM.lookup(hostname)' not in h:
+            if old_lk not in h:
+                sys.exit('锚点丢失：CustomDns.lookup')
+            h = h.replace(old_lk, new_lk, 1)
         write_text(og, h)
 
     for rel, cnt in (('ui/fragment/ModelSettingFragment.java', 2), ('ui/fragment/PlayFragment.java', 1)):
@@ -795,16 +992,19 @@ public class AdBlocker {
     private static final List<Pattern> URL_REGEX = new ArrayList<>();
     // 播放页要摘掉的元素选择器
     private static final List<String> PAGE_SELECTORS = new ArrayList<>();
+    // 播放页广告浮层文案关键词（娱乐城/博彩/体彩这类，按文字识别后摘掉）
+    private static final List<String> PAGE_TEXT_KW = new ArrayList<>();
 
     public static void clear() {
         AD_HOSTS.clear();
         URL_KEYWORDS.clear();
         URL_REGEX.clear();
         PAGE_SELECTORS.clear();
+        PAGE_TEXT_KW.clear();
     }
 
     public static boolean isEmpty() {
-
+        return AD_HOSTS.isEmpty();
     }
 
     public static void addAdHost(String host) {
@@ -834,6 +1034,12 @@ public class AdBlocker {
 
     public static void addPageSelector(String selector) {
         if (selector != null && selector.length() > 2 && !PAGE_SELECTORS.contains(selector)) PAGE_SELECTORS.add(selector);
+    }
+
+    public static void addPageTextKeyword(String keyword) {
+        if (keyword == null) return;
+        String k = keyword.trim();
+        if (k.length() > 1 && !PAGE_TEXT_KW.contains(k)) PAGE_TEXT_KW.add(k);
     }
 
     private static String hostOf(String url) {
@@ -882,7 +1088,7 @@ public class AdBlocker {
     // 播放页（WebView 解析类源）加载完后摘除广告元素
     public static String removeElementScript() {
         if (!enabled()) return "";
-        if (PAGE_SELECTORS.isEmpty()) return "";
+        if (PAGE_SELECTORS.isEmpty() && PAGE_TEXT_KW.isEmpty()) return "";
         StringBuilder sb = new StringBuilder();
         sb.append("(function(){try{var list=[");
         for (int i = 0; i < PAGE_SELECTORS.size(); i++) {
@@ -890,6 +1096,27 @@ public class AdBlocker {
             sb.append('"').append(PAGE_SELECTORS.get(i).replace("\\", "\\\\").replace("\"", "\\\"")).append('"');
         }
         sb.append("];for(var i=0;i<list.length;i++){try{var els=document.querySelectorAll(list[i]);for(var j=0;j<els.length;j++){var el=els[j];if(el&&el.parentNode)el.parentNode.removeChild(el);}}catch(e){}}");
+        sb.append("}catch(e){}})();");
+        String textScript = buildTextKeywordScript();
+        return sb.toString() + textScript;
+    }
+
+    // 按文字特征摘浮层：娱乐城/博彩/体彩/百家乐这类广告层，正常影视站不会这样写字
+    private static String buildTextKeywordScript() {
+        if (PAGE_TEXT_KW.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        sb.append("(function(){try{var kw=[");
+        for (int i = 0; i < PAGE_TEXT_KW.size(); i++) {
+            if (i > 0) sb.append(",");
+            sb.append('"').append(PAGE_TEXT_KW.get(i).replace("\\", "\\\\").replace("\"", "\\\"")).append('"');
+        }
+        sb.append("];var all=document.querySelectorAll('body *');");
+        sb.append("for(var i=0;i<all.length;i++){var el=all[i];if(!el||!el.parentNode)continue;");
+        sb.append("var t=(el.innerText||el.textContent||'').replace(/\\s+/g,'');if(t.length===0||t.length>40)continue;");
+        sb.append("for(var j=0;j<kw.length;j++){if(t.indexOf(kw[j])>=0){var st=null;try{st=window.getComputedStyle(el);}catch(e){}");
+        sb.append("var fixed=st&&(st.position==='fixed'||st.position==='absolute');");
+        sb.append("var small=el.offsetWidth>0&&el.offsetHeight>0&&el.offsetHeight<400;");
+        sb.append("if(fixed||small){if(el.parentNode)el.parentNode.removeChild(el);}break;}}}");
         sb.append("}catch(e){}})();");
         return sb.toString();
     }
@@ -900,6 +1127,8 @@ public class AdBlocker {
 
 }
 """
+    assert 'return AD_HOSTS.isEmpty();' in ab_java, 'AdBlocker.isEmpty 缺 return'
+    assert 'public static boolean enabled()' in ab_java, 'AdBlocker.enabled 缺失'
     write_text(jp('app/src/main/java/com/github/tvbox/osc/util/AdBlocker.java'), ab_java)
 
     log('去广告/DNS：内置精简规则（无远程清单）+ 内置 DoH（不读订阅自定义字段）')
@@ -956,6 +1185,21 @@ public class AdBlocker {
         h2 = h2.replace(a6, a6 + chr(10) + '        if (Hawk.get(HawkConfig.M3U8_PURIFY, true)) BuiltinAdRules.apply();', 1)
         h2 = h2.replace('            VideoParseRuler.clearRule();',
                         '            VideoParseRuler.clearRule();' + chr(10) + '            if (Hawk.get(HawkConfig.M3U8_PURIFY, true)) BuiltinAdRules.apply();', 1)
+        # 开关关闭时整套 m3u8 规则（内置 + 订阅）都不加载：真关，不是摆设
+        wrap_old = ('        if (infoJson.has("rules")) {' + chr(10) +
+                    '            VideoParseRuler.clearRule();' + chr(10) +
+                    '            if (Hawk.get(HawkConfig.M3U8_PURIFY, true)) BuiltinAdRules.apply();')
+        wrap_new = ('        if (Hawk.get(HawkConfig.M3U8_PURIFY, true)) {' + chr(10) +
+                    '            if (infoJson.has("rules")) {' + chr(10) +
+                    '            VideoParseRuler.clearRule();')
+        assert wrap_old in h2, '锚点丢失：rules 块开头'
+        h2 = h2.replace(wrap_old, wrap_new, 1)
+        close_old = ('            }' + chr(10) + '        }' + chr(10) + chr(10) + '        // 安全DNS以内置列表为准')
+        close_new = ('            }' + chr(10) + '        }' + chr(10) +
+                     '            if (!infoJson.has("rules")) VideoParseRuler.clearRule();' + chr(10) +                     '            BuiltinAdRules.apply();' + chr(10) + '        }' + chr(10) + chr(10) +
+                     '        // 安全DNS以内置列表为准')
+        assert close_old in h2, '锚点丢失：rules 块收尾'
+        h2 = h2.replace(close_old, close_new, 1)
         write_text(ac2, h2)
 
     # 「推送」这个字样会出现在播放页的线路菜单里（push_agent 伪源），改名成“直链”
@@ -1068,6 +1312,7 @@ public class AdBlocker {
                 write_text(ph, pt)
 
     emit_builtin()
+    emit_adrules()
     lint_java_literals()
 
     # 防再犯：括号配平检查（曾出现 formatHMS(position))); 多一个右括号）
