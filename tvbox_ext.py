@@ -453,19 +453,25 @@ SHORT_NAMES = [('"EXO播放器"', '"EXO"'), ('"IJK播放器"', '"IJK"'), ('"MX�
                ('"Reex播放器"', '"Reex"'), ('"Kodi播放器"', '"Kodi"'), ('"VLC播放器"', '"VLC"'), ('"附近TVBox"', '"TVBox"')]
 
 
-BUILTIN_ADS = ['mimg.0c1q0l.cn', 'www.googletagmanager.com', 'www.google-analytics.com', 'mc.usihnbcq.cn', 'mg.g1mm3d.cn', 'mscs.svaeuzh.cn', 'cnzz.hhttm.top', 'tp.vinuxhome.com', 'cnzz.mmstat.com', 'www.baihuillq.com', 's23.cnzz.com', 'z3.cnzz.com', 'c.cnzz.com', 'stj.v1vo.top', 'z12.cnzz.com', 'img.mosflower.cn', 'tips.gamevvip.com', 'ehwe.yhdtns.com', 'xdn.cqqc3.com', 'www.jixunkyy.cn', 'sp.chemacid.cn', 'hm.baidu.com', 's9.cnzz.com', 'z6.cnzz.com', 'um.cavuc.com', 'mav.mavuz.com', 'wofwk.aoidf3.com', 'z5.cnzz.com', 'xc.hubeijieshikj.cn', 'tj.tianwenhu.com', 'xg.gars57.cn', 'k.jinxiuzhilv.com', 'cdn.bootcss.com', 'ppl.xunzhuo123.com', 'xomk.jiangjunmh.top', 'img.xunzhuo123.com', 'z1.cnzz.com', 's13.cnzz.com', 'xg.huataisangao.cn', 'z7.cnzz.com', 'z2.cnzz.com', 's96.cnzz.com', 'q11.cnzz.com', 'thy.dacedsfa.cn', 'xg.whsbpw.cn', 's19.cnzz.com', 'z8.cnzz.com', 's4.cnzz.com', 'f5w.as12df.top', 'ae01.alicdn.com', 'www.92424.cn', 'k.wudejia.com', 'vivovip.mmszxc.top', 'qiu.xixiqiu.com', 'cdnjs.hnfenxun.com', 'cms.qdwght.com', 'iqiyi.hbuioo.com', 'vip.ffzyad.com', 'wan.51img1.com', 'https://lf1-cdn-tos.bytegoofy.com/obj/tos-cn-i-dy/455ccf9e8ae744378118e4bd289288dd']
+BUILTIN_ADS = ['mimg.0c1q0l.cn', 'mc.usihnbcq.cn', 'mg.g1mm3d.cn', 'mscs.svaeuzh.cn',
+    'tp.vinuxhome.com', 'www.baihuillq.com', 'stj.v1vo.top', 'img.mosflower.cn', 'tips.gamevvip.com',
+    'ehwe.yhdtns.com', 'xdn.cqqc3.com', 'www.jixunkyy.cn', 'sp.chemacid.cn', 'xg.gars57.cn',
+    'k.jinxiuzhilv.com', 'ppl.xunzhuo123.com', 'xomk.jiangjunmh.top', 'img.xunzhuo123.com',
+    'xg.huataisangao.cn', 'thy.dacedsfa.cn', 'xg.whsbpw.cn', 'f5w.as12df.top', 'www.92424.cn',
+    'k.wudejia.com', 'vivovip.mmszxc.top', 'qiu.xixiqiu.com', 'wofwk.aoidf3.com',
+    'xc.hubeijieshikj.cn', 'tj.tianwenhu.com', 'vip.ffzyad.com', 'ae01.alicdn.com']
 
-BUILTIN_BLK = [{'name': '暴风', 'hosts': ['bfzy', 'bfbfvip', 'bfengbf'], 'regex': ['#EXTINF.*?\\s+.*?adjump.*?\\.ts']}, {'name': '量子', 'hosts': ['vip.lz', 'hd.lz', '.cdnlz'], 'regex': ['#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:7\\.166667,[\\s\\S]*?#EXT-X-DISCONTINUITY', '#EXTINF.*?\\s+.*?08646.*?\\.ts', '#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF.*?6\\.667,[\\s\\S]*?#EXT-X-DISCONTINUITY', '#EXTINF.*?\\s+.*?48234.*?\\.ts', '#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF.*?7\\.067,[\\s\\S]*?#EXT-X-DISCONTINUITY', '17.19', '19.63']}, {'name': '非凡', 'hosts': ['vip.ffzy', 'hd.ffzy', 'super.ffzy', 'cachem3u8.2s0'], 'regex': ['#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:6\\.400000,[\\s\\S]*?#EXT-X-DISCONTINUITY', '#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:6\\.666667,[\\s\\S]*?#EXT-X-DISCONTINUITY', '#EXTINF.*?\\s+.*?1171(057).*?\\.ts', '#EXTINF.*?\\s+.*?6d7b(077).*?\\.ts', '#EXTINF.*?\\s+.*?6718a(403).*?\\.ts', '17.99', '14.45']}, {'name': '索尼', 'hosts': ['suonizy'], 'regex': ['#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:1\\.000000,[\\s\\S]*?#EXT-X-DISCONTINUITY', '#EXTINF.*?\\s+.*?p1ayer.*?\\.ts', '#EXTINF.*?\\s+.*?\\/video\\/original.*?\\.ts']}, {'name': '快看', 'hosts': ['kuaikan'], 'regex': ['#EXT-X-KEY:METHOD=NONE\\r*\\n*#EXTINF:5,[\\s\\S]*?#EXT-X-DISCONTINUITY', '#EXT-X-KEY:METHOD=NONE\\r*\\n*#EXTINF:2\\.4,[\\s\\S]*?#EXT-X-DISCONTINUITY', '#EXT-X-KEY:METHOD=NONE\\r*\\n*#EXTINF:1\\.467,[\\s\\S]*?#EXT-X-DISCONTINUITY']}, {'name': 'leshiyun', 'hosts': ['leshiyuncdn'], 'regex': ['15.92']}, {'name': '看影网', 'hosts': ['fentvoss'], 'regex': ['38.68', '38.12', '38.80', '30.08', '44.00', '36.80', '40.68', '29.08', '29.28', '24.88']}, {'name': '1080zyk', 'hosts': ['high24-playback', 'high20-playback', 'yzzy.play', 'yzzy-dy'], 'regex': ['16.63', '17.66']}, {'name': 'ikun', 'hosts': ['bfikuncdn'], 'regex': ['#EXTINF.*?\\s+.*?XR8pDxQk.*?\\.ts', '#EXTINF.*?\\s+.*?p5XQill8.*?\\.ts']}, {'name': '黑木耳hmr', 'hosts': ['hmrvideo'], 'regex': ['#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:3\\.366667,[\\s\\S]*?#EXT-X-DISCONTINUITY']}, {'name': 'ryplay', 'hosts': ['cdn.ryplay'], 'regex': ['#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:6\\.633333,[\\s\\S]*?#EXT-X-DISCONTINUITY', '#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:8\\.333333,[\\s\\S].*?\\.ts', '#EXTINF:2\\.933333,[\\s\\S].*?\\.ts']}, {'name': '555DM', 'hosts': ['cqxfjz'], 'regex': ['10.56']}, {'name': '海外看', 'hosts': ['haiwaikan'], 'regex': ['10.0099', '10.3333', '16.0599', '8.1748', '10.85']}, {'name': '磁力广告', 'hosts': ['magnet'], 'regex': ['更多', '社 區', 'x u u', '最 新', '更 新', '社 区', '有趣', '有 趣', '英皇体育', '全中文AV在线', '澳门皇冠赌场', '哥哥快来', '美女荷官', '裸聊', '新片首发', 'UUE29']}, {'name': '通用-广告片段过滤', 'hosts': ['*'], 'regex': ['#EXTINF:\\s*([0-4]\\.\\d+|5\\.0),.*?(ad|promo|preroll|midroll|postroll)', '#EXT-X-DISCONTINUITY[^#]*#EXTINF[^#]*adjump', '.*popads\\.net.*', '.*doubleclick\\.net.*']}, {'name': '通用-广告域名拦截', 'hosts': ['*'], 'regex': ['.*googlesyndication\\.com.*', '.*propellerads\\.com.*', '.*adnxs\\.com.*', '.*ae01\\.alicdn\\.com.*']}]
+BUILTIN_BLK = [{'name': '暴风', 'hosts': ['bfzy', 'bfbfvip', 'bfengbf'], 'regex': ['#EXTINF.*?\\s+.*?adjump.*?\\.ts']}, {'name': '量子', 'hosts': ['vip.lz', 'hd.lz', '.cdnlz'], 'regex': ['#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:7\\.166667,[\\s\\S]*?#EXT-X-DISCONTINUITY', '#EXTINF.*?\\s+.*?08646.*?\\.ts', '#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF.*?6\\.667,[\\s\\S]*?#EXT-X-DISCONTINUITY', '#EXTINF.*?\\s+.*?48234.*?\\.ts', '#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF.*?7\\.067,[\\s\\S]*?#EXT-X-DISCONTINUITY', '17.19', '19.63']}, {'name': '非凡', 'hosts': ['vip.ffzy', 'hd.ffzy', 'super.ffzy', 'cachem3u8.2s0'], 'regex': ['#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:6\\.400000,[\\s\\S]*?#EXT-X-DISCONTINUITY', '#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:6\\.666667,[\\s\\S]*?#EXT-X-DISCONTINUITY', '#EXTINF.*?\\s+.*?1171(057).*?\\.ts', '#EXTINF.*?\\s+.*?6d7b(077).*?\\.ts', '#EXTINF.*?\\s+.*?6718a(403).*?\\.ts', '17.99', '14.45']}, {'name': '索尼', 'hosts': ['suonizy'], 'regex': ['#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:1\\.000000,[\\s\\S]*?#EXT-X-DISCONTINUITY', '#EXTINF.*?\\s+.*?p1ayer.*?\\.ts', '#EXTINF.*?\\s+.*?\\/video\\/original.*?\\.ts']}, {'name': '快看', 'hosts': ['kuaikan'], 'regex': ['#EXT-X-KEY:METHOD=NONE\\r*\\n*#EXTINF:5,[\\s\\S]*?#EXT-X-DISCONTINUITY', '#EXT-X-KEY:METHOD=NONE\\r*\\n*#EXTINF:2\\.4,[\\s\\S]*?#EXT-X-DISCONTINUITY', '#EXT-X-KEY:METHOD=NONE\\r*\\n*#EXTINF:1\\.467,[\\s\\S]*?#EXT-X-DISCONTINUITY']}, {'name': 'leshiyun', 'hosts': ['leshiyuncdn'], 'regex': ['15.92']}, {'name': '看影网', 'hosts': ['fentvoss'], 'regex': ['38.68', '38.12', '38.80', '30.08', '44.00', '36.80', '40.68', '29.08', '29.28', '24.88']}, {'name': '1080zyk', 'hosts': ['high24-playback', 'high20-playback', 'yzzy.play', 'yzzy-dy'], 'regex': ['16.63', '17.66']}, {'name': 'ikun', 'hosts': ['bfikuncdn'], 'regex': ['#EXTINF.*?\\s+.*?XR8pDxQk.*?\\.ts', '#EXTINF.*?\\s+.*?p5XQill8.*?\\.ts']}, {'name': '黑木耳hmr', 'hosts': ['hmrvideo'], 'regex': ['#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:3\\.366667,[\\s\\S]*?#EXT-X-DISCONTINUITY']}, {'name': 'ryplay', 'hosts': ['cdn.ryplay'], 'regex': ['#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:6\\.633333,[\\s\\S]*?#EXT-X-DISCONTINUITY', '#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:8\\.333333,[\\s\\S].*?\\.ts', '#EXTINF:2\\.933333,[\\s\\S].*?\\.ts']}, {'name': '555DM', 'hosts': ['cqxfjz'], 'regex': ['10.56']}, {'name': '海外看', 'hosts': ['haiwaikan'], 'regex': ['10.0099', '10.3333', '16.0599', '8.1748', '10.85']}, {'name': '磁力广告', 'hosts': ['magnet'], 'regex': ['更多', '社 區', 'x u u', '最 新', '更 新', '社 区', '有趣', '有 趣', '英皇体育', '全中文AV在线', '澳门皇冠赌场', '哥哥快来', '美女荷官', '裸聊', '新片首发', 'UUE29']}, {'name': '星星ulivetv', 'hosts': ['aws.ulivetv.net', 'ulivetv'], 'regex': ['#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:8,[\\s\\S]*?#EXT-X-DISCONTINUITY', '8.1748']}, {'name': '一起看yqk88', 'hosts': ['yqk88'], 'regex': ['#EXT-X-CUE-IN', '18.4', '15.1666', '16.5333']}, {'name': '农民toutiao', 'hosts': ['toutiaovod.com', 'toutiao'], 'regex': ['video/tos/cn']}, {'name': '通用-插片结构', 'hosts': ['*'], 'regex': ['#EXT-X-DISCONTINUITY|#EXTINF:\\s*([0-4]\\.\\d+|5\\.0),\\s*\\n*[^#]', '#EXT-X-CUE-OUT']}]
 
-BUILTIN_PAGE_KW = ['doubleclick.net', 'googlesyndication.com', 'googletagmanager.com', 'cnzz.com', 'um.cavuc.com', 'ae01.alicdn.com', 'tips.gamevvip.com', 'popads.net', 'propellerads.com', 'adnxs.com', 'adsafeprotected.com', 'cms.qdwght.com', 'api.htpan.net', 'ppl.xunzhuo123.com', 'qiu.xixiqiu.com']
+BUILTIN_PAGE_KW = ['ae01.alicdn.com', 'tips.gamevvip.com']
 
-BUILTIN_PAGE_RE = ['.*\\.cnzz\\..*', '.*popads\\.net.*', '.*googlesyndication.*', '.*doubleclick\\.net.*', '.*propellerads\\.com.*']
+BUILTIN_PAGE_RE = []
 
-BUILTIN_PAGE_SEL = ["iframe[src*='ads']", "iframe[src*='pop']", 'div.ad', 'div.ads', 'div.adbox', 'div.ad-wrap', "div[class*='advert']", "div[class*='banner']", "div[class*='popup']", "div[class*='modal-ad']", "div[class*='cnzz']", "div[id*='cnzz']", "div[class*='floating']", "div[class*='float-ads']", "img[src*='ae01.alicdn']", "img[src*='tips.gamevvip']", "script[src*='cnzz']", "script[src*='googletag']", "script[src*='doubleclick']"]
+BUILTIN_PAGE_SEL = ["iframe[src*='ads']", "iframe[src*='pop']", "script[src*='cnzz']", "img[src*='ae01.alicdn']"]
 
-BUILTIN_STREAM_RE = ['#EXTINF[^\\n]*?[/._-](?:promo|preroll|midroll|postroll|advert|popup_ad|adbreak|adpod)[/._-]', '#EXTINF:\\s*([0-4]\\.\\d+|5\\.0),.*?(ad|promo|popup|preroll)', '#EXT-X-DISCONTINUITY[^#]*#EXTINF[^#]*adjump', '#EXT-X-DISCONTINUITY[^#]*#EXTINF[^#]*p1ayer', '#EXT-X-DISCONTINUITY[^#]*#EXTINF[^#]*08646.*?\\.ts', '#EXT-X-DISCONTINUITY[^#]*#EXTINF[^#]*1171.*?\\.ts']
+BUILTIN_STREAM_RE = ['#EXT-X-DISCONTINUITY[^#]*#EXTINF[^#]*adjump', '#EXT-X-DISCONTINUITY[^#]*#EXTINF[^#]*p1ayer', '#EXTINF:\s*([0-4]\.\d+|5\.0),.*?(\/ad\/|_ad_|preroll|midroll|postroll)']
 
-BUILTIN_HEADER_HOSTS = ['doubleclick.net', 'googletagmanager.com', 'googlesyndication.com', 'cnzz.com', 'um.cavuc.com', 'ae01.alicdn.com', 'tips.gamevvip.com', 'popads.net', 'propellerads.com', 'adnxs.com', 'adsafeprotected.com']
+BUILTIN_HEADER_HOSTS = ['ae01.alicdn.com', 'tips.gamevvip.com']
 
 
 def emit_builtin():
@@ -503,8 +509,6 @@ def emit_builtin():
     for r in BUILTIN_STREAM_RE:
         lines.append('        M3u8.addGlobalRegex("%s");' % esc(r))
     for k in BUILTIN_PAGE_KW:
-        lines.append('        AdBlocker.addUrlKeyword("%s");' % esc(k))
-    for k in BUILTIN_HEADER_HOSTS:
         lines.append('        AdBlocker.addUrlKeyword("%s");' % esc(k))
     for r in BUILTIN_PAGE_RE:
         lines.append('        AdBlocker.addUrlRegex("%s");' % esc(r))
@@ -561,11 +565,15 @@ TK_ADAPTIVE = """    // 自适应：按屏幕 dp 宽 + 是否电视，调两端�
                     sum += w;
                 }
                 if (count > 0) {
-                    int gap = (dm.widthPixels - 2 * edgePx - sum) / count;
-                    int minGap = Math.round(6f * d);
-                    int maxGap = Math.round(30f * d);
+                    // 固定间距（电视 12dp / 手机 10dp），不再按剩余空间均分放大；太挤才自动压缩
+                    int gap = Math.round((tv ? 12f : 10f) * d);
+                    int fit = (dm.widthPixels - 2 * edgePx - sum) / count;
+                    if (fit < gap) gap = fit;
+                    int minGap = Math.round(2f * d);
                     if (gap < minGap) gap = minGap;
-                    if (gap > maxGap) gap = maxGap;
+                    // 剩余空档左右均分，让按钮整排居中，不偏向左侧
+                    int left = dm.widthPixels - 2 * edgePx - sum - count * gap;
+                    if (left > 0) group.setPadding(left / 2, group.getPaddingTop(), left / 2, group.getPaddingBottom());
                     for (int i = 0; i < group.getChildCount(); i++) {
                         android.view.View v = group.getChildAt(i);
                         if (v.getVisibility() != android.view.View.VISIBLE) continue;
@@ -735,11 +743,11 @@ def apply_java():
     ac = jp('app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java')
     h = read_text(ac)
 
-    # (1) 内置广告域名：55 条 → 118 条（来自 tvbox-server/tvbox.json 的 ads 字段）
+    # (1) 默认 ads 字面量：只留国内影视仓真实出现的 3 个（海外联盟对国内源无效）
     i0 = h.find('\\"ads\\":[')
     i1 = h.find(']}', i0)
     assert i0 > 0 and i1 > i0, '锚点丢失：ads 字面量'
-    ADS_LIT = r'''\"doubleclick.net\",\"googleads.g.doubleclick.net\",\"googlesyndication.com\",\"imasdk.googleapis.com\",\"securepubads.g.doubleclick.net\",\"2mdn.net\",\"moatads.com\",\"adsafeprotected.com\",\"adnxs.com\",\"pagead2.googlesyndication.com\",\"static.doubleclick.net\",\"tpc.googlesyndication.com\"'''
+    ADS_LIT = r'''\"mimg.0c1q0l.cn\",\"mc.usihnbcq.cn\",\"mg.g1mm3d.cn\"'''
     h = h[:i0] + r'\"ads\":[' + ADS_LIT + ']}' + h[i1 + 2:]
     # 订阅 ads 不再合并（统计类噪声大，只用公网视频广告规则）
     h = h.replace('        if(infoJson.has("ads")){', '        if(false && infoJson.has("ads")){', 1)
@@ -770,19 +778,17 @@ def apply_java():
 
 import android.webkit.WebResourceResponse;
 
+import com.orhanobut.hawk.Hawk;
+
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 public class AdBlocker {
 
     // 广告域名（内置 + 订阅）
     private static final List<String> AD_HOSTS = new ArrayList<>();
-    // 公网清单更新的视频广告域名（后缀匹配）
-    private static final Set<String> REMOTE_HOSTS = new HashSet<>();
     // 网页 URL 关键字
     private static final List<String> URL_KEYWORDS = new ArrayList<>();
     // 网页 URL 正则
@@ -792,14 +798,13 @@ public class AdBlocker {
 
     public static void clear() {
         AD_HOSTS.clear();
-        REMOTE_HOSTS.clear();
         URL_KEYWORDS.clear();
         URL_REGEX.clear();
         PAGE_SELECTORS.clear();
     }
 
     public static boolean isEmpty() {
-        return AD_HOSTS.isEmpty() && REMOTE_HOSTS.isEmpty();
+
     }
 
     public static void addAdHost(String host) {
@@ -831,24 +836,6 @@ public class AdBlocker {
         if (selector != null && selector.length() > 2 && !PAGE_SELECTORS.contains(selector)) PAGE_SELECTORS.add(selector);
     }
 
-    public static void addRemoteHost(String host) {
-        if (host == null) return;
-        String h = host.trim().toLowerCase();
-        if (h.length() > 3 && !REMOTE_HOSTS.contains(h)) REMOTE_HOSTS.add(h);
-    }
-
-    public static void clearRemote() {
-        REMOTE_HOSTS.clear();
-    }
-
-    public static int remoteCount() {
-        return REMOTE_HOSTS.size();
-    }
-
-    public static boolean hasRemoteHost(String host) {
-        return host != null && REMOTE_HOSTS.contains(host.trim().toLowerCase());
-    }
-
     private static String hostOf(String url) {
         String host = url;
         int scheme = host.indexOf("://");
@@ -864,18 +851,17 @@ public class AdBlocker {
         return host.toLowerCase();
     }
 
-    private static boolean hitRemote(String url) {
-        if (REMOTE_HOSTS.isEmpty()) return false;
-        String host = hostOf(url);
-        while (true) {
-            if (REMOTE_HOSTS.contains(host)) return true;
-            int dot = host.indexOf('.');
-            if (dot < 0) return false;
-            host = host.substring(dot + 1);
+    // 总开关：设置页「去广告」= 开启时才生效，关闭则完全不过滤
+    public static boolean enabled() {
+        try {
+            return Hawk.get(HawkConfig.M3U8_PURIFY, true);
+        } catch (Throwable ignored) {
+            return true;
         }
     }
 
     public static boolean isAd(String url) {
+        if (!enabled()) return false;
         if (url == null) return false;
         String lower = url.toLowerCase();
         for (String adHost : AD_HOSTS) {
@@ -890,11 +876,12 @@ public class AdBlocker {
             } catch (Throwable ignored) {
             }
         }
-        return hitRemote(url);
+        return false;
     }
 
     // 播放页（WebView 解析类源）加载完后摘除广告元素
     public static String removeElementScript() {
+        if (!enabled()) return "";
         if (PAGE_SELECTORS.isEmpty()) return "";
         StringBuilder sb = new StringBuilder();
         sb.append("(function(){try{var list=[");
@@ -915,275 +902,28 @@ public class AdBlocker {
 """
     write_text(jp('app/src/main/java/com/github/tvbox/osc/util/AdBlocker.java'), ab_java)
 
-    log('去广告/ DNS：内置视频广告域名 + 内置 DoH（不读订阅自定义字段）')
+    log('去广告/DNS：内置精简规则（无远程清单）+ 内置 DoH（不读订阅自定义字段）')
 
 
-    # ===== 打开设置页自动更新广告规则（源自 tvbox-server 的 ads 字段） =====
-    ar = r"""package com.github.tvbox.osc.util;
-
-import android.app.Activity;
-import android.content.Context;
-import android.widget.Toast;
-
-import com.orhanobut.hawk.Hawk;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
-public class AdRuleUpdater {
-
-    // 公共广告规则源（DNS 级域名清单，官方维护）
-    public static final String[] RULES_URLS = {
-            "https://anti-ad.net/domains.txt"
-    };
-    private static final long MIN_INTERVAL = 86400000L;
-    private static final String KEY_TIME = "ad_rules_update_time";
-    private static final String CACHE_FILE = "ad_rules_cache.txt";
-    private static final int MAX_HOSTS = 20000;
-    private static volatile boolean running = false;
-    private static volatile boolean cacheLoaded = false;
-
-    public static void loadCache(Context context) {
-        if (cacheLoaded || context == null) return;
-        cacheLoaded = true;
-        BufferedReader br = null;
-        try {
-            File file = new File(context.getCacheDir(), CACHE_FILE);
-            if (!file.exists()) return;
-            br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
-            String line;
-            while ((line = br.readLine()) != null) {
-                line = line.trim();
-                if (line.length() > 3) AdBlocker.addRemoteHost(line);
-            }
-        } catch (Throwable t) {
-            t.printStackTrace();
-        } finally {
-            try {
-                if (br != null) br.close();
-            } catch (Throwable ignored) {
-            }
-        }
-    }
-
-    public static void clearCache(Context context) {
-        AdBlocker.clearRemote();
-        try {
-            File file = new File(context.getCacheDir(), CACHE_FILE);
-            if (file.exists()) file.delete();
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
-    }
-
-    public static void autoUpdate(final Activity activity) {
-        if (activity == null) return;
-        loadCache(activity);
-        if (running) return;
-        long last = Hawk.get(KEY_TIME, 0L);
-        if (System.currentTimeMillis() - last < MIN_INTERVAL) return;
-        running = true;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                int added = 0;
-                boolean ok = false;
-                Set<String> hosts = new LinkedHashSet<>();
-                try {
-                    for (String rulesUrl : RULES_URLS) {
-                        String content = fetch(rulesUrl);
-                        if (content != null) parse(content, hosts);
-                        if (hosts.size() > MAX_HOSTS) break;
-                    }
-                    if (hosts.size() > 0) {
-                        ok = true;
-                        writeCache(activity, hosts);
-                        for (String host : hosts) {
-                            if (!AdBlocker.hasRemoteHost(host)) {
-                                AdBlocker.addRemoteHost(host);
-                                added++;
-                            }
-                        }
-                        Hawk.put(KEY_TIME, System.currentTimeMillis());
-                    }
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                }
-                final int n = added;
-                final boolean success = ok;
-                if (activity.isFinishing()) {
-                    running = false;
-                    return;
-                }
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        running = false;
-                        if (success) {
-                            Toast.makeText(activity, n > 0 ? "视频广告规则已更新，新增 " + n + " 条，共 " + AdBlocker.remoteCount() + " 条" : "视频广告规则已是最新，共 " + AdBlocker.remoteCount() + " 条", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(activity, "视频广告规则更新失败，沿用已有规则", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-            }
-        }).start();
-    }
-
-    private static String fetch(String url) {
-        HttpURLConnection conn = null;
-        BufferedReader br = null;
-        try {
-            conn = (HttpURLConnection) new URL(url).openConnection();
-            conn.setConnectTimeout(10000);
-            conn.setReadTimeout(15000);
-            conn.setRequestProperty("User-Agent", "Mozilla/5.0 TVBox");
-            InputStream in = conn.getInputStream();
-            br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) {
-                sb.append(line).append('\n');
-            }
-            return sb.toString();
-        } catch (Throwable t) {
-            return null;
-        } finally {
-            try {
-                if (br != null) br.close();
-            } catch (Throwable ignored) {
-            }
-            try {
-                if (conn != null) conn.disconnect();
-            } catch (Throwable ignored) {
-            }
-        }
-    }
-
-    // 视频贴片/播放器广告的主机名特征（只认独立广告子域，避免误伤）
-    private static final String[] VIDEO_AD_EXACT = {
-            "ad", "ads", "adv", "adx", "ima", "imasdk", "vast", "vmap",
-            "pubads", "gampad", "scte", "adcdn", "adunit"
-    };
-    private static final String[] VIDEO_AD_PREFIX = {
-            "advert", "adserver", "adservice", "adstream", "preroll", "midroll",
-            "postroll", "doubleclick", "googlesyndication", "moatads",
-            "adsafeprotected", "adnxs", "adform", "spotx", "teads", "inmobi",
-            "applovin", "unityads", "vungle", "chartboost", "ironsource",
-            "mintegral", "pangolin"
-    };
-
-    private static boolean isVideoAdHost(String host) {
-        String[] labels = host.split("\\.");
-        for (int i = 0; i < labels.length - 1; i++) {
-            String label = labels[i];
-            for (String token : VIDEO_AD_EXACT) {
-                if (label.equals(token)) return true;
-            }
-            for (String token : VIDEO_AD_PREFIX) {
-                if (label.startsWith(token)) return true;
-            }
-        }
-        return false;
-    }
-
-    private static void parse(String content, Set<String> out) {
-        String[] lines = content.split("\n");
-        for (String raw : lines) {
-            if (out.size() > MAX_HOSTS) return;
-            String line = raw.trim();
-            if (line.length() < 4) continue;
-            if (line.startsWith("#") || line.startsWith("!") || line.startsWith("[") || line.startsWith("@@")) continue;
-            if (line.startsWith("||")) {
-                int end = line.indexOf('^');
-                String host = end > 2 ? line.substring(2, end) : "";
-                if (isHostLike(host) && isVideoAdHost(host)) out.add(host.toLowerCase());
-                continue;
-            }
-            if (line.indexOf(' ') >= 0 || line.indexOf('/') >= 0 || line.indexOf('*') >= 0 || line.indexOf("##") >= 0) continue;
-            if (isHostLike(line) && isVideoAdHost(line)) out.add(line.toLowerCase());
-        }
-    }
-
-    private static boolean isHostLike(String host) {
-        if (host == null || host.length() < 4 || host.length() > 100) return false;
-        if (host.indexOf('.') < 0) return false;
-        for (int i = 0; i < host.length(); i++) {
-            char c = host.charAt(i);
-            boolean ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '.' || c == '-' || c == '_';
-            if (!ok) return false;
-        }
-        return true;
-    }
-
-    private static void writeCache(Context context, Set<String> hosts) {
-        FileOutputStream fos = null;
-        try {
-            File file = new File(context.getCacheDir(), CACHE_FILE);
-            fos = new FileOutputStream(file);
-            StringBuilder sb = new StringBuilder();
-            for (String host : hosts) sb.append(host).append('\n');
-            fos.write(sb.toString().getBytes("UTF-8"));
-            fos.flush();
-        } catch (Throwable t) {
-            t.printStackTrace();
-        } finally {
-            try {
-                if (fos != null) fos.close();
-            } catch (Throwable ignored) {
-            }
-        }
-    }
-}
-"""
-    write_text(jp('app/src/main/java/com/github/tvbox/osc/util/AdRuleUpdater.java'), ar)
 
     msf = jp('app/src/main/java/com/github/tvbox/osc/ui/fragment/ModelSettingFragment.java')
     mh = read_text(msf)
     a4 = 'import com.github.tvbox.osc.util.DanmuHelper;'
     assert a4 in mh, '锚点丢失：Fragment import'
-    mh = mh.replace(a4, 'import com.github.tvbox.osc.util.AdRuleUpdater;' + chr(10) + a4, 1)
     a5 = '        tvm3u8AdText.setText(Hawk.get(HawkConfig.M3U8_PURIFY, true) ? "开启" : "关闭");'
     assert a5 in mh, '锚点丢失：去广告文本初始化'
-    inject = ('        AdRuleUpdater.autoUpdate(mActivity);' + chr(10) +
-              '        findViewById(R.id.m3u8Ad).setOnLongClickListener(new View.OnLongClickListener() {' + chr(10) +
-              '            @Override' + chr(10) +
-              '            public boolean onLongClick(View v) {' + chr(10) +
-              '                AdRuleUpdater.clearCache(mActivity);' + chr(10) +
-              '                Toast.makeText(mActivity, "已清除网络广告规则，仅保留内置规则", Toast.LENGTH_SHORT).show();' + chr(10) +
-              '                return true;' + chr(10) +
-              '            }' + chr(10) +
-              '        });')
-    mh = mh.replace(a5, a5 + chr(10) + inject, 1)
+    # 开关点一下立刻生效：开 → 重新套用内置规则并加载缓存；关 → 全部过滤停用
+    a6 = ('                tvm3u8AdText.setText(!is_purify ? "开启" : "关闭");')
+    assert a6 in mh, '锚点丢失：去广告开关点击'
+    a7 = ('                tvm3u8AdText.setText(!is_purify ? "开启" : "关闭");' + chr(10) +
+          '                if (!is_purify) {' + chr(10) +
+          '                    com.github.tvbox.osc.util.BuiltinAdRules.apply();' + chr(10) +
+          '                }')
+    mh = mh.replace(a6, a7, 1)
     write_text(msf, mh)
-    log('设置页打开：后台拉取 tvbox-server 的 ads 并合并（1 小时节流）')
+    log('设置页：去广告开关即时生效（无远程清单、无长按清缓存）')
 
-    # 启动即加载本地缓存的网络广告规则（不必等到进设置页）
-    acx = jp('app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java')
-    ax = read_text(acx)
-    if 'AdRuleUpdater' not in ax:
-        ax = ax.replace('import com.github.tvbox.osc.util.AdBlocker;',
-                        'import com.github.tvbox.osc.util.AdBlocker;' + chr(10) + 'import com.github.tvbox.osc.util.AdRuleUpdater;', 1)
-        ax = ax.replace('        if(AdBlocker.isEmpty()){',
-                        '        AdRuleUpdater.loadCache(App.getInstance());' + chr(10) + '        if(AdBlocker.isEmpty()){', 1)
-        write_text(acx, ax)
 
-    # 补几个视频贴片广告常见 CDN 特征（M3u8 分片识别用）
-    m3 = jp('app/src/main/java/com/github/tvbox/osc/util/M3u8.java')
-    m3s = read_text(m3)
-    anchor_kw = '"advertising", "2mdn.net", "moatads", "scorecardresearch", "quantserve"'
-    if anchor_kw in m3s:
-        m3s = m3s.replace(anchor_kw,
-                          anchor_kw + chr(10) + '        , "imasdk", "pubads", "gampad", "adcdn", "preroll", "scte", "vast"', 1)
-        write_text(m3, m3s)
 
     # M3u8：支持全局插片广告正则（来自内置规则）
     m3f = jp('app/src/main/java/com/github/tvbox/osc/util/M3u8.java')
@@ -1213,9 +953,9 @@ public class AdRuleUpdater {
     if 'BuiltinAdRules' not in h2:
         h2 = h2.replace('import com.github.tvbox.osc.util.AdBlocker;',
                         'import com.github.tvbox.osc.util.AdBlocker;' + chr(10) + 'import com.github.tvbox.osc.util.BuiltinAdRules;', 1)
-        h2 = h2.replace(a6, a6 + chr(10) + '        BuiltinAdRules.apply();', 1)
+        h2 = h2.replace(a6, a6 + chr(10) + '        if (Hawk.get(HawkConfig.M3U8_PURIFY, true)) BuiltinAdRules.apply();', 1)
         h2 = h2.replace('            VideoParseRuler.clearRule();',
-                        '            VideoParseRuler.clearRule();' + chr(10) + '            BuiltinAdRules.apply();', 1)
+                        '            VideoParseRuler.clearRule();' + chr(10) + '            if (Hawk.get(HawkConfig.M3U8_PURIFY, true)) BuiltinAdRules.apply();', 1)
         write_text(ac2, h2)
 
     # 「推送」这个字样会出现在播放页的线路菜单里（push_agent 伪源），改名成“直链”
