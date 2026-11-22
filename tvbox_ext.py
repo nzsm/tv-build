@@ -39,7 +39,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261122-H'
+VER = 'VER-20261122-J'
 LAYOUT = 'app/src/main/res/layout/player_vod_control_view.xml'
 VOD = 'app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'
 PLAYER_HELPER = 'app/src/main/java/com/github/tvbox/osc/util/PlayerHelper.java'
@@ -75,6 +75,561 @@ BTN_ICON = {
 }
 
 
+TK_DL_DIALOG = r"""    // 底栏「下载」：弹出选集框，可多选，串行排队下载（网页源要先播放才能拿到地址）
+    public void tkShowDownloadDialog() {
+        try {
+            if (!isAdded() || mVodInfo == null || mVodInfo.seriesMap == null
+                    || TextUtils.isEmpty(mVodInfo.playFlag)) return;
+            List<VodInfo.VodSeries> eps = mVodInfo.seriesMap.get(mVodInfo.playFlag);
+            if (eps == null || eps.isEmpty()) return;
+            final int n = eps.size();
+            final boolean[] sel = new boolean[n];
+            final boolean[] direct = new boolean[n];
+            final String[] labels = new String[n];
+            final String base = TextUtils.isEmpty(mVodInfo.name) ? "下载" : mVodInfo.name;
+            int cur = Math.max(0, Math.min(mVodInfo.playIndex, n - 1));
+            for (int i = 0; i < n; i++) {
+                VodInfo.VodSeries vs = eps.get(i);
+                String u = vs == null || vs.url == null ? "" : vs.url.trim().toLowerCase();
+                direct[i] = u.startsWith("http") && (u.contains(".m3u8") || u.contains(".mp4")
+                        || u.contains(".mkv") || u.contains(".avi") || u.contains(".flv") || u.contains(".ts"));
+                String nm = (vs == null || TextUtils.isEmpty(vs.name)) ? ("第" + (i + 1) + "集") : vs.name;
+                labels[i] = nm + (direct[i] ? "" : "   （网页源，先播放这一集才能下）");
+                sel[i] = direct[i] && i == cur;
+            }
+            final Context ctx = getContext();
+            android.app.AlertDialog dlg = new android.app.AlertDialog.Builder(requireContext())
+                    .setTitle(base + "：选要下载的集（可多选）")
+                    .setMultiChoiceItems(labels, sel, new android.content.DialogInterface.OnMultiChoiceClickListener() {
+                        @Override
+                        public void onClick(android.content.DialogInterface d, int which, boolean isChecked) {
+                            sel[which] = isChecked;
+                        }
+                    })
+                    .setPositiveButton("开始下载", new android.content.DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(android.content.DialogInterface d, int which) {
+                            if (ctx == null) return;
+                            if (Build.VERSION.SDK_INT >= 23
+                                    && ctx.checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                requireActivity().requestPermissions(
+                                        new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 9527);
+                                Toast.makeText(ctx, "先允许存储权限，再点一次下载", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+                            int ok = 0;
+                            int skip = 0;
+                            for (int i = 0; i < n; i++) {
+                                if (!sel[i]) continue;
+                                if (!direct[i]) {
+                                    skip++;
+                                    continue;
+                                }
+                                VodInfo.VodSeries vs = eps.get(i);
+                                String u = vs == null || vs.url == null ? "" : vs.url.trim();
+                                String nm = (vs == null || TextUtils.isEmpty(vs.name)) ? ("第" + (i + 1) + "集") : vs.name;
+                                com.github.tvbox.osc.util.TkDownloader.enqueue(ctx, u, base + "_" + nm);
+                                ok++;
+                            }
+                            if (ok == 0) {
+                                Toast.makeText(ctx, skip > 0 ? ("选中的是网页源：" + skip + " 个，没有能直接下的") : "没选集", Toast.LENGTH_SHORT).show();
+                            } else if (skip > 0) {
+                                Toast.makeText(ctx, "已排 " + ok + " 个；另有 " + skip + " 个网页源要先播放那集再单独下", Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    })
+                    .setNegativeButton("取消", null)
+                    .create();
+            dlg.show();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+    }
+
+"""
+
+
+TK_DL_JAVA = r"""package com.github.tvbox.osc.util;
+
+import android.app.Activity;
+import android.app.DownloadManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.widget.Toast;
+
+import androidx.core.app.NotificationCompat;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+
+/**
+ * 极简下载：m3u8 把分片按顺序拼成单个 ts（fMP4 则拼成 mp4），mp4 直链交给系统下载器。
+ * 全部在后台线程，任何异常只提示不崩；退出 App 即停止（没有前台服务）。
+ */
+public class TkDownloader {
+    public static volatile String lastUrl = "";
+    public static volatile String lastTitle = "";
+
+    private static volatile Thread worker = null;
+    private static final java.util.ArrayList<Job> QUEUE = new java.util.ArrayList<Job>();
+    private static int okCount = 0;
+    private static int failCount = 0;
+    private static final String CHANNEL = "tk_download";
+    private static final int NOTI_ID = 9527;
+
+    private static final OkHttpClient CLIENT = new OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .followRedirects(true)
+            .build();
+
+    static class Job {
+        Context app;
+        String url;
+        String name;
+    }
+
+    public static void start(final Context ctx, String urlIn, String title) {
+        enqueue(ctx, urlIn, title);
+    }
+
+    public static int pending() {
+        synchronized (QUEUE) {
+            return QUEUE.size();
+        }
+    }
+
+    /**
+     * 把一个下载任务放进队列。多个任务串行执行，不会抢带宽，也不会互相覆盖文件。
+     */
+    public static void enqueue(final Context ctx, String urlIn, String title) {
+        try {
+            if (ctx == null) return;
+            final Context app = ctx.getApplicationContext();
+            String url = urlIn == null ? "" : urlIn.trim();
+            if (url.isEmpty()) url = lastUrl;
+            if (url.isEmpty()) {
+                tip(ctx, "这一集还没拿到地址，先播放一次再下");
+                return;
+            }
+            if (url.contains("127.0.0.1") || url.contains("localhost")) {
+                tip(ctx, "当前是本地代理地址，先正常播放再点下载");
+                return;
+            }
+            if (Build.VERSION.SDK_INT >= 23
+                    && ctx.checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                if (ctx instanceof Activity) {
+                    ((Activity) ctx).requestPermissions(
+                            new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 9527);
+                    tip(ctx, "先允许存储权限，再点一次下载");
+                } else {
+                    tip(ctx, "没有存储权限：请在系统设置里给本应用开存储权限，再点一次下载");
+                }
+                return;
+            }
+            if (outDir() == null) {
+                tip(ctx, "创建下载目录失败");
+                return;
+            }
+            String t = title;
+            if (t == null || t.trim().isEmpty()) t = lastTitle;
+            Job job = new Job();
+            job.app = app;
+            job.url = url;
+            job.name = safeName(t);
+            int left;
+            synchronized (QUEUE) {
+                QUEUE.add(job);
+                left = QUEUE.size() - 1;
+            }
+            startWorker();
+            tip(ctx, "已加入下载队列：" + job.name + (left > 0 ? ("（前面还有 " + left + " 个）") : ""));
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void startWorker() {
+        synchronized (QUEUE) {
+            if (worker != null && worker.isAlive()) return;
+            worker = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    loopWorker();
+                }
+            }, "tk-download");
+            okCount = 0;
+            failCount = 0;
+            worker.start();
+        }
+    }
+
+    private static void loopWorker() {
+        Context lastApp = null;
+        while (true) {
+            Job job;
+            synchronized (QUEUE) {
+                if (QUEUE.isEmpty()) {
+                    worker = null;
+                    break;
+                }
+                job = QUEUE.remove(0);
+            }
+            lastApp = job.app;
+            try {
+                File dir = outDir();
+                if (dir == null) throw new Exception("创建下载目录失败");
+                if (job.url.toLowerCase().contains(".m3u8")) downloadM3u8(job.app, job.url, dir, job.name);
+                else downloadMp4(job.app, job.url, dir, job.name);
+                okCount++;
+            } catch (Throwable e) {
+                e.printStackTrace();
+                failCount++;
+                String msg = e.getMessage();
+                done(job.app, job.name, false, msg == null ? "下载失败" : ("下载失败：" + msg));
+            }
+        }
+        if (lastApp != null && okCount + failCount > 1) {
+            tip(lastApp, "这批下完了：成功 " + okCount + " 个，失败 " + failCount + " 个");
+        }
+    }
+
+    private static File outDir() {
+        try {
+            File base = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
+            File d = new File(base, "tvbox");
+            if (!d.exists() && !d.mkdirs() && !d.exists()) return null;
+            return d;
+        } catch (Throwable e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static String safeName(String raw) {
+        String s = raw == null ? "" : raw.trim();
+        if (s.isEmpty()) s = "video";
+        s = s.replace("\\", " ").replace("/", " ").replace(":", " ")
+                .replace("*", " ").replace("?", " ").replace("\"", " ")
+                .replace("<", " ").replace(">", " ").replace("|", " ");
+        s = s.replaceAll("\\s+", " ").trim();
+        if (s.length() > 80) s = s.substring(0, 80).trim();
+        if (s.isEmpty()) s = "video";
+        return s;
+    }
+
+    // ---------------------------------------------------------------- mp4
+    private static void downloadMp4(Context ctx, String url, File dir, String name) throws Exception {
+        DownloadManager dm = (DownloadManager) ctx.getSystemService(Context.DOWNLOAD_SERVICE);
+        if (dm == null) throw new RuntimeException("系统下载服务不可用");
+        DownloadManager.Request req = new DownloadManager.Request(Uri.parse(url));
+        req.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, "tvbox/" + name + ".mp4");
+        req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        req.setTitle(name);
+        req.allowScanningByMediaScanner();
+        try {
+            req.addRequestHeader("User-Agent", "okhttp/3.12.11");
+        } catch (Throwable ignored) {
+        }
+        dm.enqueue(req);
+        done(ctx, name, true, "已交给系统下载器：Movies/tvbox/" + name + ".mp4");
+    }
+
+    // ---------------------------------------------------------------- m3u8
+    private static void downloadM3u8(Context ctx, String url, File dir, String name) throws Exception {
+        String cur = url;
+        String text = getText(cur);
+        for (int i = 0; i < 3; i++) {
+            if (text == null) throw new RuntimeException("清单读取失败");
+            String variant = pickVariant(cur, text);
+            if (variant == null) break;
+            cur = variant;
+            text = getText(cur);
+        }
+        if (text == null || !text.contains("#EXTINF")) throw new RuntimeException("这不是媒体清单（可能是网页地址）");
+
+        List<String> segs = new ArrayList<>();
+        String keyUri = null;
+        String ivHex = null;
+        boolean hasMap = false;
+        String[] lines = text.split("\\r?\\n");
+        boolean nextIsSeg = false;
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i].trim();
+            if (line.isEmpty()) continue;
+            if (line.startsWith("#EXT-X-MAP")) {
+                String m = attr(line, "URI");
+                if (m != null) {
+                    segs.add(resolve(cur, m));
+                    hasMap = true;
+                }
+                continue;
+            }
+            if (line.startsWith("#EXT-X-KEY")) {
+                String method = attr(line, "METHOD");
+                if (method != null && method.equalsIgnoreCase("AES-128")) {
+                    keyUri = attr(line, "URI");
+                    ivHex = attr(line, "IV");
+                }
+                continue;
+            }
+            if (line.startsWith("#EXTINF")) {
+                nextIsSeg = true;
+                continue;
+            }
+            if (line.startsWith("#")) continue;
+            if (nextIsSeg) {
+                segs.add(resolve(cur, line));
+                nextIsSeg = false;
+            }
+        }
+        if (segs.isEmpty()) throw new RuntimeException("清单里没有分片");
+
+        byte[] key = null;
+        if (keyUri != null) key = getBytes(resolve(cur, keyUri));
+
+        File out = new File(dir, name + (hasMap ? ".mp4" : ".ts"));
+        if (out.exists()) out.delete();
+        FileOutputStream fos = new FileOutputStream(out, true);
+        BufferedOutputStream bos = new BufferedOutputStream(fos, 16 * 1024);
+        int total = segs.size();
+        int doneCount = 0;
+        long seq = 0;
+        try {
+            for (String s : segs) {
+                byte[] data = getBytes(s);
+                if (key != null && data != null) data = decrypt(data, key, iv(ivHex, seq));
+                if (data != null && data.length > 0) bos.write(data);
+                doneCount++;
+                seq++;
+                if (doneCount % 5 == 0 || doneCount == total) progress(ctx, name, doneCount, total);
+            }
+        } finally {
+            try {
+                bos.flush();
+                bos.close();
+            } catch (Throwable ignored) {
+            }
+        }
+        if (out.length() <= 0) throw new RuntimeException("没有下到任何数据（源可能需要特定请求头或已过期）");
+        scan(ctx, out);
+        done(ctx, name, true, out.getAbsolutePath());
+    }
+
+    private static String pickVariant(String base, String text) {
+        try {
+            String[] lines = text.split("\\r?\\n");
+            long bestBand = -1;
+            String best = null;
+            long band = 0;
+            for (String raw : lines) {
+                String line = raw.trim();
+                if (line.startsWith("#EXT-X-STREAM-INF")) {
+                    String b = attr(line, "BANDWIDTH");
+                    band = b == null ? 0 : parseLong(b);
+                    continue;
+                }
+                if (line.isEmpty() || line.startsWith("#")) continue;
+                if (band >= bestBand) {
+                    bestBand = band;
+                    best = resolve(base, line);
+                }
+                band = 0;
+            }
+            return best;
+        } catch (Throwable e) {
+            return null;
+        }
+    }
+
+    private static String resolve(String base, String rel) {
+        String r = rel == null ? "" : rel.trim();
+        if (r.startsWith("http://") || r.startsWith("https://")) return r;
+        try {
+            URI b = URI.create(base);
+            URI u = b.resolve(r);
+            if (u != null) return u.toString();
+        } catch (Throwable ignored) {
+        }
+        try {
+            int q = base.indexOf('?');
+            String clean = q > 0 ? base.substring(0, q) : base;
+            int sl = clean.lastIndexOf('/');
+            if (sl > 0) return clean.substring(0, sl + 1) + r;
+        } catch (Throwable ignored) {
+        }
+        return r;
+    }
+
+    private static String getText(String url) throws Exception {
+        byte[] b = getBytes(url);
+        if (b == null) return null;
+        return new String(b, "UTF-8");
+    }
+
+    private static byte[] getBytes(String url) throws Exception {
+        Request.Builder rb = new Request.Builder().url(url).get();
+        rb.header("User-Agent", "okhttp/3.12.11");
+        Request req = rb.build();
+        Response resp = CLIENT.newCall(req).execute();
+        try {
+            ResponseBody body = resp.body();
+            if (!resp.isSuccessful() || body == null) throw new RuntimeException("HTTP " + resp.code());
+            return body.bytes();
+        } finally {
+            try {
+                resp.close();
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+    private static String attr(String line, String name) {
+        try {
+            String tag = name + "=";
+            int i = line.indexOf(tag);
+            if (i < 0) return null;
+            int start = i + tag.length();
+            if (start >= line.length()) return null;
+            char c = line.charAt(start);
+            if (c == '"') {
+                int end = line.indexOf('"', start + 1);
+                if (end > start) return line.substring(start + 1, end);
+                return null;
+            }
+            int end = start;
+            while (end < line.length()) {
+                char ch = line.charAt(end);
+                if (ch == ',' || ch == '"') break;
+                end++;
+            }
+            return line.substring(start, end).trim();
+        } catch (Throwable e) {
+            return null;
+        }
+    }
+
+    private static long parseLong(String s) {
+        try {
+            return Long.parseLong(s.trim());
+        } catch (Throwable e) {
+            return 0;
+        }
+    }
+
+    private static byte[] iv(String ivHex, long seq) {
+        byte[] out = new byte[16];
+        if (ivHex != null && ivHex.length() >= 32) {
+            try {
+                String h = ivHex.startsWith("0x") || ivHex.startsWith("0X") ? ivHex.substring(2) : ivHex;
+                if (h.length() >= 32) {
+                    for (int i = 0; i < 16; i++) {
+                        out[i] = (byte) Integer.parseInt(h.substring(i * 2, i * 2 + 2), 16);
+                    }
+                    return out;
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        for (int i = 0; i < 8; i++) {
+            out[15 - i] = (byte) ((seq >>> (8 * i)) & 0xFF);
+        }
+        return out;
+    }
+
+    private static byte[] decrypt(byte[] data, byte[] key, byte[] iv) throws Exception {
+        Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        c.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
+        return c.doFinal(data);
+    }
+
+    private static void scan(Context ctx, File f) {
+        try {
+            android.media.MediaScannerConnection.scanFile(ctx, new String[]{f.getAbsolutePath()}, null, null);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    // ---------------------------------------------------------------- 提示
+    private static void tip(final Context ctx, final String msg) {
+        try {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show();
+                    } catch (Throwable ignored) {
+                    }
+                }
+            });
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void progress(Context ctx, String name, int done, int total) {
+        try {
+            NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm == null) return;
+            if (Build.VERSION.SDK_INT >= 26) {
+                nm.createNotificationChannel(new NotificationChannel(CHANNEL, "下载", NotificationManager.IMPORTANCE_LOW));
+            }
+            NotificationCompat.Builder b = new NotificationCompat.Builder(ctx, CHANNEL)
+                    .setSmallIcon(android.R.drawable.stat_sys_download)
+                    .setContentTitle("正在下载 " + name)
+                    .setContentText(done + " / " + total + " 段")
+                    .setProgress(total, done, false)
+                    .setOngoing(true)
+                    .setOnlyAlertOnce(true);
+            nm.notify(NOTI_ID, b.build());
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void done(Context ctx, String name, boolean ok, String extra) {
+        try {
+            NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null) {
+                if (Build.VERSION.SDK_INT >= 26) {
+                    nm.createNotificationChannel(new NotificationChannel(CHANNEL, "下载", NotificationManager.IMPORTANCE_LOW));
+                }
+                NotificationCompat.Builder b = new NotificationCompat.Builder(ctx, CHANNEL)
+                        .setSmallIcon(ok ? android.R.drawable.stat_sys_download_done : android.R.drawable.stat_notify_error)
+                        .setContentTitle((ok ? "下载完成 " : "下载失败 ") + name)
+                        .setContentText(extra == null ? "Movies/tvbox" : extra)
+                        .setAutoCancel(true);
+                nm.notify(NOTI_ID, b.build());
+            }
+            tip(ctx, (ok ? "下载完成：" : "下载失败：") + name + (extra == null ? "" : ("\n" + extra)));
+        } catch (Throwable ignored) {
+        }
+    }
+}
+"""
+
+
 def log(msg):
     print('  + ' + msg)
 
@@ -94,6 +649,18 @@ def write_text(path, text):
 
 
 # ---------------------------------------------------------------- 图标
+ICONS['v_download'] = ('<vector xmlns:android="http://schemas.android.com/apk/res/android"'
+    ' android:width="26dp" android:height="26dp"'
+    ' android:viewportWidth="24" android:viewportHeight="24" android:tint="#FFFFFF">'
+    '<group android:pivotX="12.0" android:pivotY="12.0" android:scaleX="0.9545" android:scaleY="0.9545">'
+    '<path android:fillColor="@android:color/white" android:pathData="M9.5,2h5v10h-5z"/>'
+    '<path android:fillColor="@android:color/white" android:pathData="M5.5,11h13l-6.5,9.5z"/>'
+    '<path android:fillColor="@android:color/white" android:pathData="M3,20.5h18v2.5h-18z"/>'
+    '</group></vector>')
+
+BTN_ICON['play_download'] = 'v_download'
+
+
 def write_icons():
     ddir = jp('app/src/main/res/drawable')
     os.makedirs(ddir, exist_ok=True)
@@ -1438,6 +2005,112 @@ def apply_fast_start():
     log('起播放行：净化仍在，但 3.5 秒没抓完就直接播（不再等 20 秒）')
 
 
+def apply_download():
+    """底栏加「下载」按钮：点一下弹出选集框，可多选，串行排队下载（m3u8 拼 ts / mp4 走系统下载器）。"""
+    L = chr(10)
+    ET.register_namespace('android', NS)
+    path = jp(LAYOUT)
+    tree = ET.parse(path)
+    root = tree.getroot()
+    if find_id(root, 'play_download') is None:
+        cast = find_id(root, 'play_cast')
+        if cast is None:
+            sys.exit('下载按钮锚点丢失：找不到 play_cast')
+        pm = parents(root)
+        par = pm[cast]
+        idx = list(par).index(cast)
+        new_e = ET.fromstring(ET.tostring(cast))
+        new_e.set(A + 'id', '@+id/play_download')
+        new_e.set(A + 'text', '下载')
+        for k in list(new_e.attrib):
+            if k.endswith('drawableTop'):
+                del new_e.attrib[k]
+        style_button(new_e, BTN_ICON.get('play_download'))
+        par.insert(idx + 1, new_e)
+        tree.write(path, encoding='utf-8', xml_declaration=True)
+        log('播放页新增按钮：下载（紧跟投屏右侧）')
+    else:
+        log('下载按钮已存在，跳过布局')
+
+    write_text(jp('app/src/main/java/com/github/tvbox/osc/util/TkDownloader.java'), TK_DL_JAVA)
+
+    pf = jp('app/src/main/java/com/github/tvbox/osc/ui/fragment/PlayFragment.java')
+    txt = read_text(pf)
+    if 'TkDownloader.lastUrl' not in txt:
+        a = '        final String finalUrl = url;'
+        if a not in txt:
+            sys.exit('下载锚点丢失：PlayFragment 的 finalUrl')
+        b = (a + L
+             + '        try {' + L
+             + '            com.github.tvbox.osc.util.TkDownloader.lastUrl = finalUrl;' + L
+             + '            String tkName = mVodInfo == null ? "" : mVodInfo.name;' + L
+             + '            VodInfo.VodSeries tkSeries = mVodInfo == null ? null : getCurrentSeries(mVodInfo.playFlag, mVodInfo.playIndex);' + L
+             + '            com.github.tvbox.osc.util.TkDownloader.lastTitle = tkSeries == null ? tkName : (tkName + "_" + tkSeries.name);' + L
+             + '        } catch (Throwable ignored) {}')
+        txt = txt.replace(a, b, 1)
+    if 'mController.tkHost = this;' not in txt:
+        a = '        mController = new VodController(requireContext());'
+        if a not in txt:
+            sys.exit('下载锚点丢失：mController 创建')
+        txt = txt.replace(a, a + L + '        mController.tkHost = this;', 1)
+    if 'tkShowDownloadDialog()' not in txt:
+        a = '    public void playNext(boolean isProgress) {'
+        if a not in txt:
+            sys.exit('下载锚点丢失：PlayFragment playNext')
+        txt = txt.replace(a, TK_DL_DIALOG.strip(L) + L + a, 1)
+    write_text(pf, txt)
+
+    vc_path = jp(VOD)
+    vc = read_text(vc_path)
+    if 'tkShowDownloadDialog()' not in vc:
+        a = '    TextView mCastBtn;'
+        if a not in vc:
+            sys.exit('下载锚点丢失：mCastBtn 字段')
+        vc = vc.replace(a, a + L + '    TextView mTkDownloadBtn;' + L + '    public Object tkHost = null;', 1)
+        a = '        mCastBtn = findViewById(R.id.play_cast);'
+        if a not in vc:
+            sys.exit('下载锚点丢失：mCastBtn 绑定')
+        vc = vc.replace(a, a + L + '        mTkDownloadBtn = findViewById(R.id.play_download);', 1)
+        a = '        mCastBtn.setOnClickListener(new OnClickListener() {'
+        if a not in vc:
+            sys.exit('下载锚点丢失：mCastBtn 点击')
+        block = ('        if (mTkDownloadBtn != null) {' + L
+                 + '            mTkDownloadBtn.setOnClickListener(new OnClickListener() {' + L
+                 + '                @Override' + L
+                 + '                public void onClick(View v) {' + L
+                 + '                    try {' + L
+                 + '                        if (tkHost != null) {' + L
+                 + '                            ((com.github.tvbox.osc.ui.fragment.PlayFragment) tkHost).tkShowDownloadDialog();' + L
+                 + '                        } else {' + L
+                 + '                            com.github.tvbox.osc.util.TkDownloader.start(getContext(),' + L
+                 + '                                    com.github.tvbox.osc.util.TkDownloader.lastUrl,' + L
+                 + '                                    com.github.tvbox.osc.util.TkDownloader.lastTitle);' + L
+                 + '                        }' + L
+                 + '                    } catch (Throwable ignored) {' + L
+                 + '                    }' + L
+                 + '                }' + L
+                 + '            });' + L
+                 + '        }' + L)
+        vc = vc.replace(a, block + a, 1)
+    write_text(vc_path, vc)
+
+    if find_id(ET.parse(jp(LAYOUT)).getroot(), 'play_download') is None:
+        sys.exit('下载按钮没写进布局')
+    dl = read_text(jp('app/src/main/java/com/github/tvbox/osc/util/TkDownloader.java'))
+    for key in ('public static void enqueue', 'loopWorker', 'downloadM3u8', 'downloadMp4', 'AES/CBC'):
+        if key not in dl:
+            sys.exit('TkDownloader 生成异常：缺 ' + key)
+    pfx = read_text(pf)
+    for key in ('TkDownloader.lastUrl', 'mController.tkHost = this;', 'tkShowDownloadDialog()'):
+        if key not in pfx:
+            sys.exit('PlayFragment 缺 ' + key)
+    vcx = read_text(vc_path)
+    for key in ('mTkDownloadBtn', 'tkHost', 'tkShowDownloadDialog'):
+        if key not in vcx:
+            sys.exit('VodController 缺 ' + key)
+    log('下载：点按钮弹选集框（可多选）→ 串行排队；m3u8 拼 ts / mp4 走系统下载器，存 Movies/tvbox，退出即停')
+
+
 def apply_danmu_alpha():
     """弹幕透明度下限从 10% 放宽到 0%（彻底看不见，但仍算开启）"""
     h = jp('app/src/main/java/com/github/tvbox/osc/util/DanmuHelper.java')
@@ -1626,6 +2299,7 @@ def main():
     apply_app_name()
     apply_java()
     apply_fast_start()
+    apply_download()
     apply_danmu_alpha()
     apply_danmu_doubletap()
     self_check()
