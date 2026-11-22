@@ -21,9 +21,9 @@ import re
 HTVO_XML = ('<vector xmlns:android="http://schemas.android.com/apk/res/android"'
             ' android:width="23dp" android:height="23dp"'
             ' android:viewportWidth="24" android:viewportHeight="24">'
-            '<path android:pathData="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32z" android:fillColor="#FFFFFF" android:strokeColor="#FFFFFF" android:strokeWidth="0.8" android:strokeLineJoin="round"/>'
-            '<path android:pathData="M10.23 1.75c-.59-.59-1.54-.59-2.12 0L1.75 8.11c-.59.59-.59 1.54 0 2.12l12.02 12.02c.59.59 1.54.59 2.12 0l6.36-6.36c.59-.59.59-1.54 0-2.12L10.23 1.75m4.6 19.44L2.81 9.17l6.36-6.36 12.02 12.02-6.36 6.36z" android:fillColor="#FFFFFF" android:strokeColor="#FFFFFF" android:strokeWidth="0.8" android:strokeLineJoin="round"/>'
-            '<path android:pathData="M7.52 22.25C4.25 19.94 1.91 16.76 1.55 13H.05C.56 19.16 5.71 24 12 24l.66-.03-3.81-3.81-1.33 1.32z" android:fillColor="#FFFFFF" android:strokeColor="#FFFFFF" android:strokeWidth="0.8" android:strokeLineJoin="round"/>'
+            '<path android:pathData="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32z" android:fillColor="#FFFFFF" android:strokeColor="#FFFFFF" android:strokeWidth="0.6" android:strokeLineJoin="round"/>'
+            '<path android:pathData="M10.23 1.75c-.59-.59-1.54-.59-2.12 0L1.75 8.11c-.59.59-.59 1.54 0 2.12l12.02 12.02c.59.59 1.54.59 2.12 0l6.36-6.36c.59-.59.59-1.54 0-2.12L10.23 1.75m4.6 19.44L2.81 9.17l6.36-6.36 12.02 12.02-6.36 6.36z" android:fillColor="#FFFFFF" android:strokeColor="#FFFFFF" android:strokeWidth="0.6" android:strokeLineJoin="round"/>'
+            '<path android:pathData="M7.52 22.25C4.25 19.94 1.91 16.76 1.55 13H.05C.56 19.16 5.71 24 12 24l.66-.03-3.81-3.81-1.33 1.32z" android:fillColor="#FFFFFF" android:strokeColor="#FFFFFF" android:strokeWidth="0.6" android:strokeLineJoin="round"/>'
             '</vector>')
 
 ICONS = {'htov': HTVO_XML, 'v_prev': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="11.950" android:pivotY="10.575" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.050" android:translateY="1.425"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.826" android:scaleY="1.826"\n        android:translateX="-0.045" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M7,6c0.55,0 1,0.45 1,1v10c0,0.55 -0.45,1 -1,1s-1,-0.45 -1,-1L6,7c0,-0.55 0.45,-1 1,-1zM10.66,12.82l5.77,4.07c0.66,0.47 1.58,-0.01 1.58,-0.82L18.01,7.93c0,-0.81 -0.91,-1.28 -1.58,-0.82l-5.77,4.07c-0.57,0.4 -0.57,1.24 0,1.64z"/></group></group></vector>', 'v_next': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.600" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.400"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.833" android:scaleY="1.833"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M7.58,16.89l5.77,-4.07c0.56,-0.4 0.56,-1.24 0,-1.63L7.58,7.11C6.91,6.65 6,7.12 6,7.93v8.14c0,0.81 0.91,1.28 1.58,0.82zM16,7v10c0,0.55 0.45,1 1,1s1,-0.45 1,-1V7c0,-0.55 -0.45,-1 -1,-1s-1,0.45 -1,1z"/></group></group></vector>', 'v_replay': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="11.975" android:pivotY="10.575" android:scaleX="0.9929" android:scaleY="0.9929" android:translateX="0.025" android:translateY="1.425"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.136" android:scaleY="1.136"\n        android:translateX="-0.057" android:translateY="-1.123"><path android:fillColor="@android:color/white" android:pathData="M12,5V2.21c0,-0.45 -0.54,-0.67 -0.85,-0.35l-3.8,3.79c-0.2,0.2 -0.2,0.51 0,0.71l3.79,3.79c0.32,0.31 0.86,0.09 0.86,-0.36V7c3.73,0 6.68,3.42 5.86,7.29 -0.47,2.27 -2.31,4.1 -4.57,4.57 -3.57,0.75 -6.75,-1.7 -7.23,-5.01 -0.07,-0.48 -0.49,-0.85 -0.98,-0.85 -0.6,0 -1.08,0.53 -1,1.13 0.62,4.39 4.8,7.64 9.53,6.72 3.12,-0.61 5.63,-3.12 6.24,-6.24C20.84,9.48 16.94,5 12,5z"/></group></group></vector>', 'v_replay_play': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp" android:height="26dp"\n    android:viewportWidth="24" android:viewportHeight="24"\n    android:tint="#FFFFFF"><group android:pivotX="11.925" android:pivotY="10.875" android:scaleX="1.1382" android:scaleY="1.1382" android:translateX="0.075" android:translateY="1.125"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.136" android:scaleY="1.136"\n        android:translateX="-0.057" android:translateY="-1.123"><path android:strokeColor="@android:color/white" android:strokeWidth="2.2" android:fillColor="@android:color/transparent" android:pathData="M12,5 A7,7 0 1 1 11.99,5"/><path android:fillColor="@android:color/white" android:pathData="M9.85,8.4 L16.25,12.0 L9.85,15.6 Z"/></group></group></vector>', 'v_aspect': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.0" android:scaleY="1.0"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M18,12c-0.55,0 -1,0.45 -1,1v2h-2c-0.55,0 -1,0.45 -1,1s0.45,1 1,1h3c0.55,0 1,-0.45 1,-1v-3c0,-0.55 -0.45,-1 -1,-1zM7,9h2c0.55,0 1,-0.45 1,-1s-0.45,-1 -1,-1L6,7c-0.55,0 -1,0.45 -1,1v3c0,0.55 0.45,1 1,1s1,-0.45 1,-1L7,9zM21,3L3,3c-1.1,0 -2,0.9 -2,2v14c0,1.1 0.9,2 2,2h18c1.1,0 2,-0.9 2,-2L23,5c0,-1.1 -0.9,-2 -2,-2zM20,19.01L4,19.01c-0.55,0 -1,-0.45 -1,-1L3,5.99c0,-0.55 0.45,-1 1,-1h16c0.55,0 1,0.45 1,1v12.02c0,0.55 -0.45,1 -1,1z"/></group></group></vector>', 'v_ffwd': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.309" android:scaleY="1.309"\n        android:translateX="-0.523" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M5.58,16.89l5.77,-4.07c0.56,-0.4 0.56,-1.24 0,-1.63L5.58,7.11C4.91,6.65 4,7.12 4,7.93v8.14c0,0.81 0.91,1.28 1.58,0.82zM13,7.93v8.14c0,0.81 0.91,1.28 1.58,0.82l5.77,-4.07c0.56,-0.4 0.56,-1.24 0,-1.63l-5.77,-4.07c-0.67,-0.47 -1.58,0 -1.58,0.81z"/></group></group></vector>', 'v_type': '<vector android:height="26dp"\n    android:tint="#FFFFFF"\n    android:viewportHeight="24"\n    android:viewportWidth="24"\n    android:width="26dp"\n    xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.0" android:scaleY="1.0"\n        android:translateX="0.0" android:translateY="-1.833"><path\n        android:fillColor="@android:color/white"\n        android:pathData="M21,3L3,3c-1.11,0 -2,0.89 -2,2v12c0,1.1 0.89,2 2,2h5v2h8v-2h5c1.1,0 1.99,-0.9 1.99,-2L23,5c0,-1.11 -0.9,-2 -2,-2zM21,17L3,17L3,5h18v12zM16,11l-7,4L9,7z" /></group></group></vector>', 'v_subtitle': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.1" android:scaleY="1.1"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M20,4L4,4c-1.1,0 -2,0.9 -2,2v12c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2L22,6c0,-1.1 -0.9,-2 -2,-2zM4,12h4v2L4,14v-2zM14,18L4,18v-2h10v2zM20,18h-4v-2h4v2zM20,14L10,14v-2h10v2z"/></group></group></vector>', 'v_audio': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.600" android:scaleX="0.9906" android:scaleY="0.9906" android:translateX="0.000" android:translateY="1.400"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.222" android:scaleY="1.222"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M12,5v8.55c-0.94,-0.54 -2.1,-0.75 -3.33,-0.32 -1.34,0.48 -2.37,1.67 -2.61,3.07 -0.46,2.74 1.86,5.08 4.59,4.65 1.96,-0.31 3.35,-2.11 3.35,-4.1V7h2c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2h-2c-1.1,0 -2,0.9 -2,2z"/></group></group></vector>', 'v_danmu': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp"\n    android:height="26dp"\n    android:viewportWidth="436"\n    android:viewportHeight="419"><group android:pivotX="218.000" android:pivotY="185.058" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="24.442"><group android:pivotX="218.0" android:pivotY="209.5"\n        android:scaleX="0.916" android:scaleY="0.916"\n        android:translateX="0.0" android:translateY="-25.507"><path\n      android:pathData="M322.65,272.14L274.13,272.14L274.13,290.36L328.16,290.36L328.16,318.2L274.13,318.2L274.13,347.96L242.96,347.96L242.96,318.2L188.7,318.2L188.7,290.36L242.96,290.36L242.96,272.14L194.21,272.14L194.21,147.1L216.3,147.1L209.39,129.82L238.16,129.82L245.13,147.1L271.73,147.1L278.7,129.82L307.53,129.82L300.32,147.1L322.88,147.1L322.65,272.14ZM115.05,189.58L152.26,189.58L152.26,164.62L110.25,164.62L110.25,135.09L182.96,135.09L182.96,218.35L143.59,218.35L142.18,244.78L184.66,244.78L177.92,347.02L117.22,347.02L117.22,316.79L148.39,316.79L151.79,273.55L110.25,273.55L115.05,189.58ZM244.89,243.08L244.89,223.16L222.81,223.16L222.81,243.08L244.89,243.08ZM244.89,195.79L244.89,176.11L222.81,176.11L222.81,195.79L244.89,195.79ZM294.06,243.08L294.06,223.16L272.02,223.16L272.02,243.08L294.06,243.08ZM294.06,195.79L294.06,176.11L272.02,176.11L272.02,195.79L294.06,195.79Z"\n      android:fillColor="#FFFFFF"\n      android:fillType="evenOdd"/><path\n      android:pathData="M20.27,79.27Q0.5,99.04 0.5,127L0.5,351Q0.5,378.96 20.27,398.73Q40.04,418.5 68,418.5L368,418.5Q395.96,418.5 415.73,398.73Q435.5,378.96 435.5,351L435.5,127Q435.5,99.04 415.73,79.27Q395.96,59.5 368,59.5L68,59.5Q40.04,59.5 20.27,79.27ZM35.5,351L35.5,127Q35.5,113.54 45.02,104.02Q54.54,94.5 68,94.5L368,94.5Q381.46,94.5 390.98,104.02Q400.5,113.54 400.5,127L400.5,351Q400.5,364.46 390.98,373.98Q381.46,383.5 368,383.5L68,383.5Q54.54,383.5 45.02,373.98Q35.5,364.46 35.5,351Z"\n      android:strokeLineJoin="miter"\n      android:strokeWidth="35"\n      android:fillColor="#FCFCFC"\n      android:fillType="evenOdd"\n      android:strokeLineCap="butt"/><path\n      android:pathData="M208.26,55.63L128.98,0.62L109.02,29.38L188.31,84.39Q201.24,93.36 216.98,93.4Q232.71,93.44 245.69,84.53L325.91,29.42L306.09,0.57L225.87,55.68Q221.89,58.41 217.06,58.4Q212.23,58.39 208.26,55.63Z"\n      android:strokeLineJoin="miter"\n      android:strokeWidth="35"\n      android:fillColor="#FFFFFF"\n      android:fillType="evenOdd"\n      android:strokeLineCap="butt"/></group></group></vector>', 'v_back': '<vector android:autoMirrored="true" android:height="26dp"\n    android:tint="#FFFFFF" android:viewportHeight="24"\n    android:viewportWidth="24" android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.575" android:scaleX="0.9929" android:scaleY="0.9929" android:translateX="0.000" android:translateY="1.425"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.169" android:scaleY="1.169"\n        android:translateX="0.468" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M16.62,2.99c-0.49,-0.49 -1.28,-0.49 -1.77,0L6.54,11.3c-0.39,0.39 -0.39,1.02 0,1.41l8.31,8.31c0.49,0.49 1.28,0.49 1.77,0s0.49,-1.28 0,-1.77L9.38,12l7.25,-7.25c0.48,-0.48 0.48,-1.28 -0.01,-1.76z"/></group></group></vector>', 'ic_clock': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.600" android:scaleX="0.9906" android:scaleY="0.9906" android:translateX="-0.000" android:translateY="1.400"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.047" android:scaleY="1.047"\n        android:translateX="-0.262" android:translateY="-1.31"><path\n        android:fillColor="@android:color/white"\n        android:pathData="M11,8H13V14H11V8M12,20C8.13,20 5,16.87 5,13S8.13,6 12,6 19,9.13 19,13C19.7,13 20.36,13.13 21,13.35C21,13.23 21,13.12 21,13C21,10.88 20.26,8.93 19.03,7.39L20.45,5.97C20,5.46 19.55,5 19.04,4.56L17.62,6C16.07,4.74 14.12,4 12,4C7.03,4 3,8.03 3,13S7.03,22 12,22C12.59,22 13.16,21.94 13.71,21.83C13.4,21.25 13.18,20.6 13.08,19.91C12.72,19.96 12.37,20 12,20M15,1H9V3H15V1M16.5,16.5V21.5H21.5V16.5H16.5Z"/></group></group></vector>', 'play_skip': '<vector android:height="26dp" android:viewportHeight="1000"\n    android:viewportWidth="1000" android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="500.000" android:pivotY="423.958" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="76.042"><group android:pivotX="500.0" android:pivotY="500.0"\n        android:scaleX="0.932" android:scaleY="0.932"\n        android:translateX="0.0" android:translateY="-76.375"><path android:fillColor="#FFFFFFFF" android:pathData="M10,499.5c0,301.7 0.3,319.9 4.5,316.5C24,808.3 345.7,501.9 345.7,500.3c0,-0.8 -75.3,-73.4 -167.7,-161.1L10,179.6L10,499.5z"/><path android:fillColor="#FFFFFFFF" android:pathData="M414.1,498.9c0,203.1 1.1,319.9 2.6,319.4c2.6,-0.8 335.5,-316.2 335.5,-318c0,-0.5 -234,-223.5 -328.1,-312.5l-10,-9.3L414.1,498.9z"/><path android:fillColor="#FFFFFFFF" android:pathData="M820.9,500.5l0,321l84.5,-0L990,821.5L990,500.5l0,-320.9l-84.5,-0l-84.5,-0L820.9,500.5z"/></group></group></vector>', 'tk_unlock': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp"\n    android:height="26dp"\n    android:tint="#FFFFFF"\n    android:viewportWidth="24"\n    android:viewportHeight="24"><group android:pivotX="12.000" android:pivotY="10.600" android:scaleX="0.9906" android:scaleY="0.9906" android:translateX="-0.000" android:translateY="1.400"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.047" android:scaleY="1.047"\n        android:translateX="0.0" android:translateY="-1.31"><path\n        android:fillColor="@android:color/white"\n        android:pathData="M18,8h-1L17,6c0,-2.76 -2.24,-5 -5,-5S7,3.24 7,6h2c0,-1.66 1.34,-3 3,-3s3,1.34 3,3v2L6,8c-1.1,0 -2,0.9 -2,2v10c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2L20,10c0,-1.1 -0.9,-2 -2,-2zM18,20L6,20L6,10h12v10zM12,17c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2z" /></group></group></vector>', 'v_cast': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp" android:height="26dp"\n    android:viewportWidth="24" android:viewportHeight="24"\n    android:tint="#FFFFFF"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.0" android:scaleY="1.0"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M1,18v3h3c0,-1.66 -1.34,-3 -3,-3zM1,14v2c2.76,0 5,2.24 5,5h2c0,-3.87 -3.13,-7 -7,-7zM1,10v2c4.97,0 9,4.03 9,9h2c0,-6.08 -4.93,-11 -11,-11zM21,3L3,3c-1.1,0 -2,0.9 -2,2v3h2L3,5h18v14h-7v2h7c1.1,0 2,-0.9 2,-2L23,5c0,-1.1 -0.9,-2 -2,-2z"/></group></group></vector>', 'tk_space': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp" android:height="26dp"\n    android:viewportWidth="26" android:viewportHeight="26"><path android:fillColor="#00000000" android:pathData="M0,0 L26,0 L26,26 L0,26 Z" /></vector>'}
@@ -39,7 +39,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261122-Q'
+VER = 'VER-20261122-U2'
 LAYOUT = 'app/src/main/res/layout/player_vod_control_view.xml'
 VOD = 'app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'
 PLAYER_HELPER = 'app/src/main/java/com/github/tvbox/osc/util/PlayerHelper.java'
@@ -2418,6 +2418,67 @@ def apply_btn_guard():
     log('底栏守卫：层级监听已挂上（任何非法节点在添加瞬间被移除），并在 initView 先扫一遍')
 
 
+def apply_pause_keep():
+    """暂停状态不再被闲置计时器打掉面板；唤出底栏时先清掉待执行的隐藏消息，外层同步可见。
+    只碰显隐时序，不碰播放内核、不动任何按钮。"""
+    L = chr(10)
+    vp = jp(VOD)
+    vc = read_text(vp)
+    if 'tkPauseKeep' in vc:
+        log('  = 暂停保活已存在，跳过')
+        return
+
+    old1 = ('        myRunnable = new Runnable() {' + L +
+            '            @Override' + L +
+            '            public void run() {' + L +
+            '                hideBottom();' + L +
+            '            }' + L +
+            '        };')
+    new1 = ('        // tkPauseKeep：暂停时闲置计时器不收起底栏' + L +
+            '        myRunnable = new Runnable() {' + L +
+            '            @Override' + L +
+            '            public void run() {' + L +
+            '                if (videoPlayState == VideoView.STATE_PAUSED) return;' + L +
+            '                hideBottom();' + L +
+            '            }' + L +
+            '        };')
+    if vc.count(old1) != 1:
+        sys.exit('暂停保活锚点丢失：myRunnable 闲置隐藏')
+    vc = vc.replace(old1, new1, 1)
+
+    old2 = ('                        updateDanmuSearchUiBtn();' + L +
+            '                        hidePauseRoot();')
+    new2 = ('                        updateDanmuSearchUiBtn();' + L +
+            '                        if (videoPlayState == VideoView.STATE_PAUSED) showPauseRoot(); else hidePauseRoot(); // tkPauseKeep')
+    if vc.count(old2) != 1:
+        sys.exit('暂停保活锚点丢失：1002 暂停面板')
+    vc = vc.replace(old2, new2, 1)
+
+    old3 = ('    void showBottom() {' + L +
+            '        mHandler.removeMessages(1003);' + L +
+            '        mHandler.sendEmptyMessage(1002);')
+    new3 = ('    void showBottom() {' + L +
+            '        mHandler.removeMessages(1003);' + L +
+            '        setVisibility(VISIBLE); // tkPauseKeep：外层一并可见，避免"点了没反应"' + L +
+            '        mHandler.sendEmptyMessage(1002);')
+    if vc.count(old3) != 1:
+        sys.exit('暂停保活锚点丢失：showBottom')
+    vc = vc.replace(old3, new3, 1)
+
+    old4 = ('    public boolean onSingleTapConfirmed(MotionEvent e) {' + L +
+            '        myHandle.removeCallbacks(myRunnable);')
+    new4 = ('    public boolean onSingleTapConfirmed(MotionEvent e) {' + L +
+            '        myHandle.removeCallbacks(myRunnable);' + L +
+            '        mHandler.removeMessages(1003); // tkPauseKeep：清掉遗留的隐藏消息')
+    if vc.count(old4) != 1:
+        sys.exit('暂停保活锚点丢失：单击')
+    vc = vc.replace(old4, new4, 1)
+
+    write_text(vp, vc)
+    log('暂停保活：暂停时闲置计时器不再把底栏/时间面板收掉')
+    log('唤出底栏：先清掉遗留的隐藏消息，外层同步可见（不会点了没反应）')
+
+
 def apply_static_ui():
     """把底栏边距/时间字号/按钮间距全部静态化到 dimen（按屏宽与方向自动生效），
     干掉运行时 tkAdaptiveUi 重排 —— 消除"先小字后大字"的跳变与重复 requestLayout。"""
@@ -2491,6 +2552,157 @@ def apply_static_ui():
     if 'setPadding(edgePx' in read_text(vp):
         sys.exit('运行时 padding 还没去掉')
     log('去掉了起播后的运行时重排（不再先小后大）')
+
+
+def apply_slot_align():
+    """① 片头片尾「00:00」与汉字行对齐；② 旋屏图标描边 0.8 → 0.6。"""
+    L = chr(10)
+    path = jp(LAYOUT)
+    tree = ET.parse(path)
+    root = tree.getroot()
+    ref = find_id(root, 'play_time_start')
+    if ref is None:
+        sys.exit('对齐锚点丢失：play_time_start')
+    ref_end = ref.get(A + 'layout_marginEnd')
+    if ref_end is None:
+        sys.exit('对齐锚点丢失：play_time_start 没有 marginEnd')
+    changed = 0
+    for sid in ('tk_slot_start', 'tk_slot_end'):
+        v = find_id(root, sid)
+        if v is None:
+            sys.exit('对齐锚点丢失：' + sid)
+        if v.get(A + 'layout_marginEnd') != ref_end:
+            v.set(A + 'layout_marginEnd', ref_end)
+            v.set(A + 'layout_marginRight', ref_end)
+            changed += 1
+    if changed:
+        tree.write(path, encoding='utf-8', xml_declaration=True)
+    root2 = ET.parse(path).getroot()
+    for sid in ('tk_slot_start', 'tk_slot_end'):
+        v = find_id(root2, sid)
+        if v.get(A + 'layout_marginEnd') != ref_end:
+            sys.exit('对齐没生效：' + sid)
+    log('片头尾对齐：00:00 两行补齐右侧间距（%s），与汉字行同一基准居中' % ref_end)
+
+    hp = jp('app/src/main/res/drawable/htov.xml')
+    if os.path.exists(hp):
+        hx = read_text(hp)
+        if 'android:strokeWidth="0.6"' not in hx:
+            sys.exit('旋屏图标描边没改到（应为 0.6）')
+        log('旋屏图标：描边 0.6（原 0.8）')
+
+
+def apply_text_stroke():
+    """顶部 6 个文字加 1dp 半透明黑细描边：底板去掉后压在白墙上也能看清。"""
+    L = chr(10)
+    JAVA = """package com.github.tvbox.osc.ui.tv.widget;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.text.TextPaint;
+import android.util.AttributeSet;
+import android.widget.TextView;
+
+/** 带细描边的文字：先按描边画一遍，再填原色字。顶部片名/分辨率/时间/网速用。 */
+public class TkStrokeTextView extends TextView {
+
+    private int tkStrokeColor = 0x99000000;
+    private float tkStrokeDp = 1f;
+
+    public TkStrokeTextView(Context context) {
+        super(context);
+    }
+
+    public TkStrokeTextView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public TkStrokeTextView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+    }
+
+    public void tkSetStroke(int color, float dp) {
+        this.tkStrokeColor = color;
+        this.tkStrokeDp = dp;
+        invalidate();
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        try {
+            TextPaint p = getPaint();
+            int color = getCurrentTextColor();
+            float sw = tkStrokeDp * getResources().getDisplayMetrics().density;
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(sw);
+            p.setColor(tkStrokeColor);
+            super.onDraw(canvas);
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(color);
+            super.onDraw(canvas);
+            return;
+        } catch (Throwable ignored) {
+        }
+        super.onDraw(canvas);
+    }
+}
+"""
+    pkg = jp('app/src/main/java/com/github/tvbox/osc/ui/tv/widget')
+    os.makedirs(pkg, exist_ok=True)
+    fp = os.path.join(pkg, 'TkStrokeTextView.java')
+    write_text(fp, JAVA)
+    if not read_text(fp).startswith('package com.github'):
+        sys.exit('描边类写入异常')
+    cls = 'com.github.tvbox.osc.ui.tv.widget.TkStrokeTextView'
+    tree = ET.parse(jp(LAYOUT))
+    root = tree.getroot()
+    n = 0
+    for cid in ('tv_top_l_container', 'tv_top_r_container'):
+        cont = find_id(root, cid)
+        if cont is None:
+            sys.exit('描边锚点丢失：' + cid)
+        for e in cont.iter():
+            if e.tag == 'TextView':
+                e.tag = cls
+                n += 1
+    if n < 4:
+        sys.exit('描边替换数量异常：' + str(n))
+    tree.write(jp(LAYOUT), encoding='utf-8', xml_declaration=True)
+    root2 = ET.parse(jp(LAYOUT)).getroot()
+    hit = 0
+    for cid in ('tv_top_l_container', 'tv_top_r_container'):
+        for e in find_id(root2, cid).iter():
+            if e.tag == cls:
+                hit += 1
+    if hit != n:
+        sys.exit('描边没生效')
+    log('顶部文字：' + str(n) + ' 处加 1dp 半透明黑细描边（片名/分辨率/时间/网速）')
+
+
+def apply_top_transparent():
+    """左上片名/分辨率、右上时间行/网速：去掉半透明底板，只留文字。"""
+    L = chr(10)
+    ids = ['tv_info_name1', 'tv_videosize', 'tv_screen_display', 'tv_play_load_net_speed_right_top']
+    path = jp(LAYOUT)
+    tree = ET.parse(path)
+    root = tree.getroot()
+    n = 0
+    for sid in ids:
+        v = find_id(root, sid)
+        if v is None:
+            sys.exit('透明化锚点丢失：' + sid)
+        if v.get(A + 'background') != '@null':
+            v.set(A + 'background', '@null')
+            n += 1
+    if n:
+        tree.write(path, encoding='utf-8', xml_declaration=True)
+    root2 = ET.parse(path).getroot()
+    for sid in ids:
+        v = find_id(root2, sid)
+        if v.get(A + 'background') != '@null':
+            sys.exit('透明化没生效：' + sid)
+    log('顶部透明：%d 处去掉半透明底板（片名/分辨率/时间行/网速），只剩白字' % len(ids))
 
 
 def apply_top_fix():
@@ -2769,9 +2981,13 @@ def main():
     apply_download()
     apply_search_boost()
     apply_top_fix()
+    apply_top_transparent()
+    apply_text_stroke()
     apply_static_ui()
+    apply_slot_align()
     apply_btn_whitelist()
     apply_btn_guard()
+    apply_pause_keep()
     apply_danmu_alpha()
     apply_danmu_doubletap()
     self_check()
