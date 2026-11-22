@@ -39,7 +39,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261122-U4'
+VER = 'VER-20261122-U7'
 LAYOUT = 'app/src/main/res/layout/player_vod_control_view.xml'
 VOD = 'app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'
 PLAYER_HELPER = 'app/src/main/java/com/github/tvbox/osc/util/PlayerHelper.java'
@@ -2567,6 +2567,88 @@ def apply_ad_safety():
     log('广告兜底：净化代理 12 秒没画面自动回落原地址（不会黑在那儿不切）')
 
 
+def apply_ad_replay():
+    """这个源的实际结构：先给一条"广告 m3u8"（几十秒、自带 ENDLIST），播完才该重新解析出正片。
+    上游在播完时一律走 playNext —— 而网页源通常只有一集，于是直接弹"已经是最后一集了"，
+    正片就永远出不来。改成：整段时长 <= 120 秒的播完，重新解析当前集（最多两次），
+    还不行才走原来的下一集逻辑。"""
+    L = chr(10)
+    vp = jp(VOD)
+    fp = jp('app/src/main/java/com/github/tvbox/osc/ui/fragment/PlayFragment.java')
+    vc = read_text(vp)
+    pf = read_text(fp)
+    if 'tkReplayShort' in vc and 'tkReplayShort' in pf:
+        log('  = 广告段播完重解析已存在，跳过')
+        return
+
+    # 1) 接口加方法
+    a = ('    public interface VodControlListener {' + L +
+         '        void playNext(boolean rmProgress);')
+    a2 = ('    public interface VodControlListener {' + L +
+          '        void playNext(boolean rmProgress);' + L +
+          '        void tkReplayShort();')
+    if vc.count(a) != 1:
+        sys.exit('广告重解析锚点丢失：VodControlListener')
+    vc = vc.replace(a, a2, 1)
+
+    # 2) 播完分支：短时长先重解析
+    b = ('            case VideoView.STATE_PLAYBACK_COMPLETED:' + L +
+         '                listener.playNext(true);' + L +
+         '                break;')
+    b2 = ('            case VideoView.STATE_PLAYBACK_COMPLETED:' + L +
+          '                int tkDur = 0;' + L +
+          '                try { tkDur = PlayerUtils.safeTimeMs(mControlWrapper.getDuration()); } catch (Throwable ignored) {}' + L +
+          '                if (tkDur > 0 && tkDur <= 120000) {' + L +
+          '                    // 广告段播完：重新解析当前集拿正片，而不是当成"最后一集"' + L +
+          '                    listener.tkReplayShort();' + L +
+          '                } else {' + L +
+          '                    listener.playNext(true);' + L +
+          '                }' + L +
+          '                break;')
+    if vc.count(b) != 1:
+        sys.exit('广告重解析锚点丢失：播完分支')
+    vc = vc.replace(b, b2, 1)
+    write_text(vp, vc)
+
+    # 3) PlayFragment 实现 + 计数
+    c = ('            public void playNext(boolean rmProgress) {' + L +
+         '                String preProgressKey = progressKey;' + L +
+         '                PlayFragment.this.playNext(rmProgress);' + L +
+         '                if (rmProgress && preProgressKey != null)' + L +
+         '                    CacheManager.delete(MD5.string2MD5(preProgressKey), 0);' + L +
+         '            }')
+    c2 = (c + L + L +
+          '            @Override' + L +
+          '            public void tkReplayShort() {' + L +
+          '                if (tkShortRetry >= 2) {' + L +
+          '                    tkShortRetry = 0;' + L +
+          '                    playNext(true);' + L +
+          '                    return;' + L +
+          '                }' + L +
+          '                tkShortRetry++;' + L +
+          '                LOG.i("tk短时长播完，重新解析当前集 " + tkShortRetry + "/2");' + L +
+          '                reusePlayerOnSwitch = true;' + L +
+          '                play(false);' + L +
+          '            }')
+    if pf.count(c) != 1:
+        sys.exit('广告重解析锚点丢失：PlayFragment 监听实现')
+    pf = pf.replace(c, c2, 1)
+
+    d = '    public void playNext(boolean isProgress) {' + L + '        triedLineFlags.clear();'
+    d2 = '    private int tkShortRetry = 0; // 广告段播完后重解析当前集的次数' + L + L + d.replace('        triedLineFlags.clear();', '        tkShortRetry = 0;' + L + '        triedLineFlags.clear();')
+    if pf.count(d) != 1:
+        sys.exit('广告重解析锚点丢失：playNext 重置')
+    pf = pf.replace(d, d2, 1)
+
+    e = '    public void playPrevious() {' + L + '        triedLineFlags.clear();'
+    e2 = e.replace('        triedLineFlags.clear();', '        tkShortRetry = 0;' + L + '        triedLineFlags.clear();')
+    if pf.count(e) != 1:
+        sys.exit('广告重解析锚点丢失：playPrevious 重置')
+    pf = pf.replace(e, e2, 1)
+    write_text(fp, pf)
+    log('广告段播完：整段 <=120 秒就重新解析当前集（最多 2 次），不再直接判"最后一集"')
+
+
 def apply_speed_fix():
     """1) 净化结果复用：切软解/硬解/换播放器都会重走 playM3u8，原来每次都干等 3.5 秒拉清单；
        同一地址已经净化过就直接走代理起播，秒切。
@@ -2766,91 +2848,24 @@ def apply_slot_align():
 
 
 def apply_text_stroke():
-    """顶部 6 个文字加 1dp 半透明黑细描边：底板去掉后压在白墙上也能看清。"""
-    L = chr(10)
-    JAVA = """package com.github.tvbox.osc.ui.tv.widget;
-
-import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.text.TextPaint;
-import android.util.AttributeSet;
-import android.widget.TextView;
-
-/** 带细描边的文字：先按描边画一遍，再填原色字。顶部片名/分辨率/时间/网速用。 */
-public class TkStrokeTextView extends TextView {
-
-    private int tkStrokeColor = 0x99000000;
-    private float tkStrokeDp = 1f;
-
-    public TkStrokeTextView(Context context) {
-        super(context);
-    }
-
-    public TkStrokeTextView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-    }
-
-    public TkStrokeTextView(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-    }
-
-    public void tkSetStroke(int color, float dp) {
-        this.tkStrokeColor = color;
-        this.tkStrokeDp = dp;
-        invalidate();
-    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        try {
-            TextPaint p = getPaint();
-            int color = getCurrentTextColor();
-            float sw = tkStrokeDp * getResources().getDisplayMetrics().density;
-            p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(sw);
-            p.setColor(tkStrokeColor);
-            super.onDraw(canvas);
-            p.setStyle(Paint.Style.FILL);
-            p.setColor(color);
-            super.onDraw(canvas);
-            return;
-        } catch (Throwable ignored) {
-        }
-        super.onDraw(canvas);
-    }
-}
-"""
-    pkg = jp('app/src/main/java/com/github/tvbox/osc/ui/tv/widget')
-    os.makedirs(pkg, exist_ok=True)
-    fp = os.path.join(pkg, 'TkStrokeTextView.java')
-    write_text(fp, JAVA)
-    if not read_text(fp).startswith('package com.github'):
-        sys.exit('描边类写入异常')
+    """按你的要求取消：顶部文字恢复标准 TextView，不再描边，也不再需要那个自定义类。"""
     cls = 'com.github.tvbox.osc.ui.tv.widget.TkStrokeTextView'
-    tree = ET.parse(jp(LAYOUT))
-    root = tree.getroot()
+    lay = jp(LAYOUT)
+    s = read_text(lay)
     n = 0
-    for cid in ('tv_top_l_container', 'tv_top_r_container'):
-        cont = find_id(root, cid)
-        if cont is None:
-            sys.exit('描边锚点丢失：' + cid)
-        for e in cont.iter():
-            if e.tag == 'TextView':
-                e.tag = cls
-                n += 1
-    if n < 4:
-        sys.exit('描边替换数量异常：' + str(n))
-    tree.write(jp(LAYOUT), encoding='utf-8', xml_declaration=True)
-    root2 = ET.parse(jp(LAYOUT)).getroot()
-    hit = 0
-    for cid in ('tv_top_l_container', 'tv_top_r_container'):
-        for e in find_id(root2, cid).iter():
-            if e.tag == cls:
-                hit += 1
-    if hit != n:
-        sys.exit('描边没生效')
-    log('顶部文字：' + str(n) + ' 处加 1dp 半透明黑细描边（片名/分辨率/时间/网速）')
+    if cls in s:
+        n = s.count(cls)
+        s = s.replace('<' + cls, '<TextView').replace(cls, 'TextView')
+        write_text(lay, s)
+    if cls in read_text(lay):
+        sys.exit('描边类未能还原')
+    fp = jp('app/src/main/java/com/github/tvbox/osc/ui/tv/widget', 'TkStrokeTextView.java')
+    if os.path.exists(fp):
+        os.remove(fp)
+    if n:
+        log('顶部文字：描边已撤销，' + str(n) + ' 处恢复标准 TextView')
+    else:
+        log('顶部文字：保持原样，不加描边')
 
 
 def apply_top_transparent():
@@ -3108,6 +3123,142 @@ def apply_app_name():
     print('  + 应用名：%s（桌面显示 + 最近任务）' % APP_NAME)
 
 
+def apply_gradient_bg():
+    """顶部/底部整条渐变底板：靠屏幕边不透明，往画面中间逐渐透明，正中不动。
+    原来是每个小标签挂一块 @drawable 半透明方块，边角生硬、还能看出方块边界；
+    改成整行一条线性渐变，从头到尾没有边界。"""
+    L = chr(10)
+    lay = jp('app/src/main/res/layout/player_vod_control_view.xml')
+    dr = jp('app/src/main/res/drawable')
+    if not os.path.isdir(dr):
+        os.makedirs(dr)
+    t = read_text(lay)
+    if 'tk_gradient_bottom' in t and 'tk_gradient_top' in t:
+        log('  = 渐变底板已存在，跳过')
+        return
+
+    def shape(angle, sc, cc, ec):
+        return ('<?xml version="1.0" encoding="utf-8"?>' + L +
+                '<shape xmlns:android="http://schemas.android.com/apk/res/android"' + L +
+                '    android:shape="rectangle">' + L +
+                '    <gradient' + L +
+                '        android:angle="' + str(angle) + '"' + L +
+                '        android:type="linear"' + L +
+                '        android:startColor="' + sc + '"' + L +
+                '        android:centerColor="' + cc + '"' + L +
+                '        android:endColor="' + ec + '" />' + L +
+                '</shape>')
+
+    # angle 270 = 从上往下，startColor 在顶部：屏幕最上沿最深，往下渐透
+    write_text(os.path.join(dr, 'tk_gradient_top.xml'), shape(270, '#B4000000', '#76000000', '#00000000'))
+    # angle 90 = 从下往上，startColor 在底部：底栏最下沿最深，往上渐透
+    write_text(os.path.join(dr, 'tk_gradient_bottom.xml'), shape(90, '#B8000000', '#78000000', '#00000000'))
+
+    def put_bg(tag, drawable):
+        if 'android:background=' in tag:
+            import re as _re
+            return _re.sub('android:background="[^"]*"', 'android:background="' + drawable + '"', tag, count=1)
+        return tag[:-1] + L + '        android:background="' + drawable + '">'
+
+    # 1) 底部菜单整条
+    import re
+    m = re.search(r'<LinearLayout[^>]*@\+id/bottom_container[^>]*>', t)
+    if not m:
+        sys.exit('渐变底板锚点丢失：bottom_container')
+    nb = put_bg(m.group(0), '@drawable/tk_gradient_bottom')
+    t = t[:m.start()] + nb + t[m.end():]
+
+    # 2) 顶部整条（rootView 下第一个 LinearLayout，装片名/分辨率/时间/网速）
+    i = t.find('@+id/rootView')
+    if i < 0:
+        sys.exit('渐变底板锚点丢失：rootView')
+    j = t.find('>', i) + 1
+    k = t.find('<LinearLayout', j)
+    e = t.find('>', k) + 1
+    if k < 0 or e <= k:
+        sys.exit('渐变底板锚点丢失：顶部行容器')
+    nt = put_bg(t[k:e], '@drawable/tk_gradient_top')
+    # 文字位置不动，只往下补 24dp 内边距，让渐变带自然延伸，避免"渐变太短像硬边"
+    nt = nt[:-1] + L + '        android:paddingBottom="40dp">'
+    t = t[:k] + nt + t[e:]
+
+    write_text(lay, t)
+    log('顶部/底部整条渐变底板：屏幕边最深 → 往中间渐透，正中不动（方块边界取消）')
+
+
+def apply_ad_switch_final():
+    """设置页「去广告」开关 = M3U8_PURIFY，是唯一总开关。
+    之前订阅 json 带 rules 时会无条件 BuiltinAdRules.apply()，虽然 isAd() 内部还有开关判断、
+    实际不会误杀，但"关了开关却仍在装规则"这件事本身不干净。这里把它也包进开关判断。"""
+    ap = jp('app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java')
+    s = read_text(ap)
+    if 'tkAdSwitchFinal' in s:
+        log('  = 广告开关已收敛到最终判定，跳过')
+        return
+    L = chr(10)
+    old = ('            BuiltinAdRules.apply();' + L +
+           '            com.github.tvbox.osc.util.AdRuleUpdater.loadCache();')
+    new = ('            // tkAdSwitchFinal：开关是唯一总开关，关掉就一条规则都不装' + L +
+           '            if (Hawk.get(HawkConfig.M3U8_PURIFY, true)) {' + L +
+           '                BuiltinAdRules.apply();' + L +
+           '                com.github.tvbox.osc.util.AdRuleUpdater.loadCache();' + L +
+           '            }')
+    if s.count(old) != 1:
+        sys.exit('广告开关锚点丢失：ApiConfig 订阅规则分支')
+    s = s.replace(old, new, 1)
+    write_text(ap, s)
+    log('广告开关：订阅规则分支也受 M3U8_PURIFY 控制，关闭时零规则加载')
+
+
+def apply_top_time_fix():
+    """右上角"7.93KB 压在 02:28 上"的根因：上一版只把 XML 里 net_play_speed 设了 gone，
+    但 VodController 里 1003（隐藏底栏）那段还留着一句 net_play_speed.setVisibility(VISIBLE)，
+    只要设置里"屏幕显示"不是关，每次底栏自动隐藏它就会冒出来，和 tv_seek_time 挤在一行。
+    同时 1003 只隐藏了左边片名块（mTopRoot1），漏了右边时间块（mTopRoot2），
+    所以底栏都收了、右上角时间还挂在画面上。
+    这里统一成：右上角 = 当前播放时间 + 系统时间，网速控件一律不显示；显隐跟随底栏。"""
+    L = chr(10)
+    vp = jp(VOD)
+    s = read_text(vp)
+    if 'tkTopTimeFix' in s:
+        log('  = 右上角时间行已修，跳过')
+        return
+    Q = ' ' * 24
+    # 1) 1002 显示：不再放网速出来
+    a = (Q + 'mPlayLoadNetSpeedRightTop.setVisibility(VISIBLE);' + L +
+         Q + 'if(Hawk.get(HawkConfig.SCREEN_DISPLAY,GONE)==GONE){' + L +
+         Q + '    mPlayPauseTime.setVisibility(VISIBLE);' + L +
+         Q + '}else {' + L +
+         Q + '    net_play_speed.setVisibility(GONE);' + L +
+         Q + '}')
+    a2 = (Q + '// tkTopTimeFix：右上角只留播放时间与系统时间，网速控件不显示' + L +
+          Q + 'mPlayPauseTime.setVisibility(VISIBLE);' + L +
+          Q + 'net_play_speed.setVisibility(GONE);')
+    if s.count(a) != 1:
+        sys.exit('右上角锚点丢失：1002 网速分支')
+    s = s.replace(a, a2, 1)
+
+    # 2) 1003 隐藏：补上右边整块，并且不再把网速放出来
+    b = Q + 'mPlayLoadNetSpeedRightTop.setVisibility(GONE);' + L
+    b2 = Q + 'mTopRoot2.setVisibility(GONE);' + L
+    if s.count(b) != 1:
+        sys.exit('右上角锚点丢失：1003 网速 GONE')
+    s = s.replace(b, b2, 1)
+
+    c = (Q + 'if(Hawk.get(HawkConfig.SCREEN_DISPLAY,GONE)==GONE){' + L +
+         Q + '    mPlayPauseTime.setVisibility(GONE);' + L +
+         Q + '}else {' + L +
+         Q + '    net_play_speed.setVisibility(VISIBLE);' + L +
+         Q + '}')
+    c2 = (Q + 'mPlayPauseTime.setVisibility(GONE);' + L +
+          Q + 'net_play_speed.setVisibility(GONE);')
+    if s.count(c) != 1:
+        sys.exit('右上角锚点丢失：1003 时间分支')
+    s = s.replace(c, c2, 1)
+    write_text(vp, s)
+    log('右上角：网速控件不再冒出来，时间块随底栏一起收（原来只收了左边片名块）')
+
+
 def self_check():
     res = jp('app/src/main/res')
     colors = set()
@@ -3163,8 +3314,12 @@ def main():
     apply_pause_keep()
     apply_ad_safety()
     apply_speed_fix()
+    apply_ad_replay()
     apply_danmu_alpha()
     apply_danmu_doubletap()
+    apply_gradient_bg()
+    apply_ad_switch_final()
+    apply_top_time_fix()
     self_check()
     print('-' * 46)
     print('=== 完成 ===')
