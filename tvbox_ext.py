@@ -39,7 +39,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261122-J'
+VER = 'VER-20261122-K'
 LAYOUT = 'app/src/main/res/layout/player_vod_control_view.xml'
 VOD = 'app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'
 PLAYER_HELPER = 'app/src/main/java/com/github/tvbox/osc/util/PlayerHelper.java'
@@ -109,33 +109,37 @@ TK_DL_DIALOG = r"""    // 底栏「下载」：弹出选集框，可多选，串
                     .setPositiveButton("开始下载", new android.content.DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(android.content.DialogInterface d, int which) {
-                            if (ctx == null) return;
-                            if (Build.VERSION.SDK_INT >= 23
-                                    && ctx.checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                                requireActivity().requestPermissions(
-                                        new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 9527);
-                                Toast.makeText(ctx, "先允许存储权限，再点一次下载", Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-                            int ok = 0;
-                            int skip = 0;
-                            for (int i = 0; i < n; i++) {
-                                if (!sel[i]) continue;
-                                if (!direct[i]) {
-                                    skip++;
-                                    continue;
+                            try {
+                                if (ctx == null) return;
+                                if (Build.VERSION.SDK_INT >= 23
+                                        && ctx.checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                        != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                    requireActivity().requestPermissions(
+                                            new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 9527);
+                                    Toast.makeText(ctx, "先允许存储权限，再点一次下载", Toast.LENGTH_SHORT).show();
+                                    return;
                                 }
-                                VodInfo.VodSeries vs = eps.get(i);
-                                String u = vs == null || vs.url == null ? "" : vs.url.trim();
-                                String nm = (vs == null || TextUtils.isEmpty(vs.name)) ? ("第" + (i + 1) + "集") : vs.name;
-                                com.github.tvbox.osc.util.TkDownloader.enqueue(ctx, u, base + "_" + nm);
-                                ok++;
-                            }
-                            if (ok == 0) {
-                                Toast.makeText(ctx, skip > 0 ? ("选中的是网页源：" + skip + " 个，没有能直接下的") : "没选集", Toast.LENGTH_SHORT).show();
-                            } else if (skip > 0) {
-                                Toast.makeText(ctx, "已排 " + ok + " 个；另有 " + skip + " 个网页源要先播放那集再单独下", Toast.LENGTH_LONG).show();
+                                int ok = 0;
+                                int skip = 0;
+                                for (int i = 0; i < n; i++) {
+                                    if (!sel[i]) continue;
+                                    if (!direct[i]) {
+                                        skip++;
+                                        continue;
+                                    }
+                                    VodInfo.VodSeries vs = eps.get(i);
+                                    String u = vs == null || vs.url == null ? "" : vs.url.trim();
+                                    String nm = (vs == null || TextUtils.isEmpty(vs.name)) ? ("第" + (i + 1) + "集") : vs.name;
+                                    com.github.tvbox.osc.util.TkDownloader.enqueue(ctx, u, base + "_" + nm);
+                                    ok++;
+                                }
+                                if (ok == 0) {
+                                    Toast.makeText(ctx, skip > 0 ? ("选中的是网页源：" + skip + " 个，没有能直接下的") : "没选集", Toast.LENGTH_SHORT).show();
+                                } else if (skip > 0) {
+                                    Toast.makeText(ctx, "已排 " + ok + " 个；另有 " + skip + " 个网页源要先播放那集再单独下", Toast.LENGTH_LONG).show();
+                                }
+                            } catch (Throwable e) {
+                                e.printStackTrace();
                             }
                         }
                     })
@@ -145,9 +149,7 @@ TK_DL_DIALOG = r"""    // 底栏「下载」：弹出选集框，可多选，串
         } catch (Throwable e) {
             e.printStackTrace();
         }
-    }
-
-"""
+    }"""
 
 
 TK_DL_JAVA = r"""package com.github.tvbox.osc.util;
@@ -1036,7 +1038,7 @@ BUILTIN_PAGE_RE = []
 
 BUILTIN_PAGE_SEL = ["iframe[src*='ads']", "iframe[src*='pop']", "script[src*='cnzz']", "img[src*='ae01.alicdn']"]
 
-BUILTIN_STREAM_RE = ['#EXT-X-DISCONTINUITY[^#]*#EXTINF[^#]*adjump', '#EXT-X-DISCONTINUITY[^#]*#EXTINF[^#]*p1ayer', '#EXTINF:\s*([0-4]\.\d+|5\.0),.*?(\/ad\/|_ad_|preroll|midroll|postroll)']
+BUILTIN_STREAM_RE = [r'#EXT-X-DISCONTINUITY[^#]*#EXTINF[^#]*adjump', r'#EXT-X-DISCONTINUITY[^#]*#EXTINF[^#]*p1ayer', r'#EXTINF:\s*([0-4]\.\d+|5\.0),.*?(\/ad\/|_ad_|preroll|midroll|postroll)']
 
 BUILTIN_HEADER_HOSTS = ['ae01.alicdn.com', 'tips.gamevvip.com']
 
@@ -2111,6 +2113,98 @@ def apply_download():
     log('下载：点按钮弹选集框（可多选）→ 串行排队；m3u8 拼 ts / mp4 走系统下载器，存 Movies/tvbox，退出即停')
 
 
+def apply_search_boost():
+    """搜索结果偏少：源清单不自动增补、每批只 6 个源、单源 15s 超时、searchable=0 的源被排除、带书名号就搜不到。"""
+    L = chr(10)
+    Q = '"'
+
+    # ① 源清单：换过源之后把新源自动补进来（否则新源永远不参与全局搜索）
+    p = jp('app/src/main/java/com/github/tvbox/osc/util/SearchHelper.java')
+    s = read_text(p)
+    a = ('        if (mCheckSources == null || mCheckSources.isEmpty()) {' + L +
+         '            mCheckSources = getSources();' + L +
+         '        }')
+    if 'tk补源' not in s:
+        if a not in s:
+            sys.exit('搜索增强锚点丢失：getSourcesForSearch')
+        b = ('        if (mCheckSources == null || mCheckSources.isEmpty()) {' + L +
+             '            mCheckSources = getSources();' + L +
+             '        } else {' + L +
+             '            // tk补源：换过订阅/加过源之后，新源自动进搜索集合，不用再手工勾' + L +
+             '            HashMap<String, String> tkAll = getSources();' + L +
+             '            if (tkAll != null && !tkAll.isEmpty()) {' + L +
+             '                for (String tkKey : tkAll.keySet()) {' + L +
+             '                    if (!mCheckSources.containsKey(tkKey)) {' + L +
+             '                        mCheckSources.put(tkKey, "1");' + L +
+             '                    }' + L +
+             '                }' + L +
+             '            }' + L +
+             '        }')
+        s = s.replace(a, b, 1)
+
+    # ② searchable=0 的源也排队走一遍（这类源进源里能看、全局永远搜不到）
+    a2 = ('            if (!bean.isSearchable()) {' + L +
+          '                continue;' + L +
+          '            }')
+    if 'tk不限 searchable' not in s:
+        if a2 not in s:
+            sys.exit('搜索增强锚点丢失：getSources 的 searchable 判断')
+        s = s.replace(a2, '            // tk不限 searchable：不支持搜索的源也排一遍，失败按普通超时处理', 1)
+    write_text(p, s)
+
+    # ③ 并发与超时：每批 6 个 -> 10 个；批次推进 3s/2s -> 1s；单源 15s -> 18s
+    for rel, pump in (('app/src/main/java/com/github/tvbox/osc/ui/activity/FastSearchActivity.java', True),
+                      ('app/src/main/java/com/github/tvbox/osc/ui/activity/SearchActivity.java', False)):
+        t = read_text(jp(rel))
+        t = t.replace('private static final int SEARCH_THREAD_COUNT = 6;',
+                      'private static final int SEARCH_THREAD_COUNT = 10;', 1)
+        t = t.replace('private static final int SEARCH_NEXT_BATCH_SECONDS = 3;',
+                      'private static final int SEARCH_NEXT_BATCH_SECONDS = 1;', 1)
+        t = t.replace('private static final int SEARCH_SITE_TIMEOUT_SECONDS = 15;',
+                      'private static final int SEARCH_SITE_TIMEOUT_SECONDS = 18;', 1)
+        if pump:
+            t = t.replace('private static final int SEARCH_PUMP_SECONDS = 2;',
+                          'private static final int SEARCH_PUMP_SECONDS = 1;', 1)
+        write_text(jp(rel), t)
+
+    # ④ 关键词归一：《》 引号 空格 先去掉，不然源那边对不上
+    clean = ('        if (title != null) {' + L +
+             '            // tk关键词归一：去掉书名号和引号，源那边才匹配得上' + L +
+             '            title = title.replace("《", "").replace("》", "")' + L +
+             '                    .replace("“", "").replace("”", "").replace(String.valueOf((char) 34), "")' + L +
+             '                    .trim();' + L +
+             '        }')
+    pf = jp('app/src/main/java/com/github/tvbox/osc/ui/activity/FastSearchActivity.java')
+    t = read_text(pf)
+    if 'tk关键词归一' not in t:
+        a3 = '        this.searchTitle = title;'
+        if a3 not in t:
+            sys.exit('搜索增强锚点丢失：FastSearchActivity 的 searchTitle')
+        t = t.replace(a3, clean + L + '        this.searchTitle = title;', 1)
+        write_text(pf, t)
+    ps = jp('app/src/main/java/com/github/tvbox/osc/ui/activity/SearchActivity.java')
+    t = read_text(ps)
+    if 'tk关键词归一' not in t:
+        a4 = '        etSearch.setText(title);'
+        if a4 not in t:
+            sys.exit('搜索增强锚点丢失：SearchActivity 的 etSearch')
+        t = t.replace(a4, clean + L + '        etSearch.setText(title);', 1)
+        write_text(ps, t)
+
+    # ⑤ 校验
+    h = read_text(jp('app/src/main/java/com/github/tvbox/osc/util/SearchHelper.java'))
+    if 'tk补源' not in h or 'tk不限 searchable' not in h:
+        sys.exit('搜索增强没写进 SearchHelper')
+    for rel in ('app/src/main/java/com/github/tvbox/osc/ui/activity/FastSearchActivity.java',
+                'app/src/main/java/com/github/tvbox/osc/ui/activity/SearchActivity.java'):
+        t = read_text(jp(rel))
+        for key in ('SEARCH_THREAD_COUNT = 10;', 'SEARCH_NEXT_BATCH_SECONDS = 1;',
+                    'SEARCH_SITE_TIMEOUT_SECONDS = 18;', 'tk关键词归一'):
+            if key not in t:
+                sys.exit('搜索增强缺 ' + key + ' @ ' + rel)
+    log('搜索：新源自动并入 + 不限 searchable + 每批 10 个源 + 1s 推进 + 单源 18s + 关键词去书名号')
+
+
 def apply_danmu_alpha():
     """弹幕透明度下限从 10% 放宽到 0%（彻底看不见，但仍算开启）"""
     h = jp('app/src/main/java/com/github/tvbox/osc/util/DanmuHelper.java')
@@ -2300,6 +2394,7 @@ def main():
     apply_java()
     apply_fast_start()
     apply_download()
+    apply_search_boost()
     apply_danmu_alpha()
     apply_danmu_doubletap()
     self_check()
