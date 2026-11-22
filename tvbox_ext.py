@@ -39,7 +39,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261122-U7'
+VER = 'VER-20261122-U8'
 LAYOUT = 'app/src/main/res/layout/player_vod_control_view.xml'
 VOD = 'app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'
 PLAYER_HELPER = 'app/src/main/java/com/github/tvbox/osc/util/PlayerHelper.java'
@@ -2596,8 +2596,7 @@ def apply_ad_replay():
          '                listener.playNext(true);' + L +
          '                break;')
     b2 = ('            case VideoView.STATE_PLAYBACK_COMPLETED:' + L +
-          '                int tkDur = 0;' + L +
-          '                try { tkDur = PlayerUtils.safeTimeMs(mControlWrapper.getDuration()); } catch (Throwable ignored) {}' + L +
+          '                int tkDur = safeTimeMs(mControlWrapper.getDuration());' + L +
           '                if (tkDur > 0 && tkDur <= 120000) {' + L +
           '                    // 广告段播完：重新解析当前集拿正片，而不是当成"最后一集"' + L +
           '                    listener.tkReplayShort();' + L +
