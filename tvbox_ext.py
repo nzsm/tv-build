@@ -39,7 +39,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261122-K'
+VER = 'VER-20261122-Q'
 LAYOUT = 'app/src/main/res/layout/player_vod_control_view.xml'
 VOD = 'app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'
 PLAYER_HELPER = 'app/src/main/java/com/github/tvbox/osc/util/PlayerHelper.java'
@@ -2205,6 +2205,346 @@ def apply_search_boost():
     log('搜索：新源自动并入 + 不限 searchable + 每批 10 个源 + 1s 推进 + 单源 18s + 关键词去书名号')
 
 
+def apply_btn_whitelist():
+    """底栏只允许我方按钮存在：运行时被塞进来的（如 Zx推送）第一时间删掉，不再"先显示后消失"。"""
+    L = chr(10)
+    ok = ['play_label', 'play_pre', 'play_next', 'play_retry', 'play_refresh', 'play_scale',
+          'play_speed', 'play_player', 'play_ijk', 'play_time_start_end_text', 'play_time_reset',
+          'play_cast', 'play_download', 'zimu_select', 'audio_track_select', 'video_track_select',
+          'danmu_setting', 'danmu_search_ui', 'landscape_portrait', 'screen_display']
+    arr = ', '.join('"%s"' % k for k in ok)
+    method = L.join([
+        '    private static final String[] TK_BTN_OK = {%s};' % arr,
+        '',
+        '    // 白名单：底栏只留我方按钮；运行时被塞进来的（含 Zx推送 这类）当场删掉',
+        '    private void tkPurgeButtons() {',
+        '        try {',
+        '            android.view.ViewGroup g = findViewById(R.id.play_btn_group);',
+        '            if (g == null) return;',
+        '            for (int i = g.getChildCount() - 1; i >= 0; i--) {',
+        '                android.view.View c = g.getChildAt(i);',
+        '                String idn = "";',
+        '                try {',
+        '                    if (c.getId() != android.view.View.NO_ID) {',
+        '                        idn = getResources().getResourceEntryName(c.getId());',
+        '                    }',
+        '                } catch (Throwable ignored) {',
+        '                }',
+        '                if (idn.length() > 0) {',
+        '                    boolean keep = false;',
+        '                    for (String w : TK_BTN_OK) {',
+        '                        if (w.equals(idn)) { keep = true; break; }',
+        '                    }',
+        '                    if (!keep) g.removeView(c);',
+        '                    continue;',
+        '                }',
+        '                if (c.findViewById(R.id.tk_slot_start) != null || c.findViewById(R.id.tk_slot_end) != null) continue;',
+        '                g.removeView(c);',
+        '            }',
+        '        } catch (Throwable ignored) {',
+        '        }',
+        '    }'])
+    vp = jp(VOD)
+    vc = read_text(vp)
+    a = '    private int tkUiKey = 0;'
+    if a not in vc:
+        sys.exit('白名单锚点丢失：tkUiKey')
+    if 'TK_BTN_OK' not in vc:
+        vc = vc.replace(a, a + L + method, 1)
+    old = ('    private void tkAdaptiveUi() {' + L +
+           '        // tk：尺寸已全部静态化到 dimen（按屏宽/方向自动生效），不再运行时重排' + L +
+           '    }')
+    new = L.join(['    private void tkAdaptiveUi() {',
+                  '        // tk：尺寸已全部静态化到 dimen（按屏宽/方向自动生效），不再运行时重排',
+                  '        tkPurgeButtons();',
+                  '    }'])
+    if old in vc:
+        vc = vc.replace(old, new, 1)
+    elif 'tkPurgeButtons();' not in vc:
+        sys.exit('tkAdaptiveUi 锚点丢失')
+    write_text(vp, vc)
+    vcx = read_text(vp)
+    if 'TK_BTN_OK' not in vcx or 'tkPurgeButtons();' not in vcx:
+        sys.exit('白名单没写入')
+    log('底栏白名单：只保留 %d 个我方按钮，运行时塞进来的（Zx推送等）当场删除' % len(ok))
+
+
+def apply_btn_guard():
+    """底栏任何层级被塞入非法节点 → 当场移除（层级监听，赶在绘制前），彻底杜绝 Zx推送 之类闪现。"""
+    L = chr(10)
+    ids = ['bottom_container', 'curr_time', 'seekBar', 'total_time', 'play_btn_group', 'play_label',
+           'play_pre', 'play_next', 'play_retry', 'play_refresh', 'play_scale', 'play_speed', 'play_player',
+           'play_ijk', 'play_time_start_end_text', 'tk_slot_start', 'play_time_start', 'tk_slot_end',
+           'play_time_end', 'play_time_reset', 'play_cast', 'play_download', 'zimu_select',
+           'audio_track_select', 'video_track_select', 'danmu_setting', 'danmu_search_ui',
+           'landscape_portrait', 'screen_display', 'parse_root', 'mGridParseView']
+    arr = ', '.join('"%s"' % k for k in ids)
+    body = []
+    A_ = body.append
+    A_('    private static final String[] TK_BOTTOM_OK = {%s};' % arr)
+    A_('')
+    A_('    private boolean tkBottomAllowed(android.view.View v) {')
+    A_('        try {')
+    A_('            if (v.getId() != android.view.View.NO_ID) {')
+    A_('                String n = getResources().getResourceEntryName(v.getId());')
+    A_('                for (String w : TK_BOTTOM_OK) { if (w.equals(n)) return true; }')
+    A_('                return false;')
+    A_('            }')
+    A_('            if (v instanceof android.view.ViewGroup) {')
+    A_('                android.view.ViewGroup vg = (android.view.ViewGroup) v;')
+    A_('                for (int i = 0; i < vg.getChildCount(); i++) {')
+    A_('                    if (tkBottomAllowed(vg.getChildAt(i))) return true;')
+    A_('                }')
+    A_('            }')
+    A_('        } catch (Throwable ignored) {')
+    A_('        }')
+    A_('        return false;')
+    A_('    }')
+    A_('')
+    A_('    // 底栏层级监听：任何被塞进来的非法节点，在添加瞬间就移除（不等到下一帧，所以看不到闪）')
+    A_('    private void tkWatchBottom() {')
+    A_('        try {')
+    A_('            android.view.ViewGroup root = findViewById(R.id.bottom_container);')
+    A_('            if (root == null) return;')
+    A_('            tkInstallWatch(root);')
+    A_('            tkPurgeButtons();')
+    A_('            if (myHandle != null) {')
+    A_('                myHandle.postDelayed(new Runnable() {')
+    A_('                    @Override public void run() { tkPurgeButtons(); }')
+    A_('                }, 300);')
+    A_('            }')
+    A_('        } catch (Throwable ignored) {')
+    A_('        }')
+    A_('    }')
+    A_('')
+    A_('    private boolean tkIsParse(android.view.View v) {')
+    A_('        try { return v.getId() == R.id.parse_root; } catch (Throwable t) { return false; }')
+    A_('    }')
+    A_('')
+    A_('    private void tkInstallWatch(android.view.ViewGroup g) {')
+    A_('        if (g == null || tkIsParse(g)) return;')
+    A_('        g.setOnHierarchyChangeListener(new android.view.ViewGroup.OnHierarchyChangeListener() {')
+    A_('            @Override public void onChildViewAdded(android.view.View parent, final android.view.View child) {')
+    A_('                if (tkBottomAllowed(child)) {')
+    A_('                    if (child instanceof android.view.ViewGroup && !tkIsParse(child)) tkInstallWatch((android.view.ViewGroup) child);')
+    A_('                    return;')
+    A_('                }')
+    A_('                final android.view.ViewGroup pg = (android.view.ViewGroup) parent;')
+    A_('                try { pg.removeView(child); } catch (Throwable ignored) { }')
+    A_('                try {')
+    A_('                    child.post(new Runnable() {')
+    A_('                        @Override public void run() {')
+    A_('                            try { pg.removeView(child); } catch (Throwable ignored) { }')
+    A_('                        }')
+    A_('                    });')
+    A_('                } catch (Throwable ignored) { }')
+    A_('            }')
+    A_('            @Override public void onChildViewRemoved(android.view.View parent, android.view.View child) { }')
+    A_('        });')
+    A_('        for (int i = 0; i < g.getChildCount(); i++) {')
+    A_('            android.view.View c = g.getChildAt(i);')
+    A_('            if (c instanceof android.view.ViewGroup && !tkIsParse(c)) tkInstallWatch((android.view.ViewGroup) c);')
+    A_('        }')
+    A_('    }')
+    A_('')
+    A_('    // 整棵底栏扫一遍：id 不在白名单 / 文字是搜弹幕·视轨·推送·Zx 的，一律删')
+    A_('    private void tkPurgeButtons() {')
+    A_('        try {')
+    A_('            android.view.ViewGroup root = findViewById(R.id.bottom_container);')
+    A_('            if (root == null) return;')
+    A_('            tkPurgeDeep(root);')
+    A_('        } catch (Throwable ignored) { }')
+    A_('    }')
+    A_('')
+    A_('    private void tkPurgeDeep(android.view.ViewGroup g) {')
+    A_('        if (g == null || tkIsParse(g)) return;')
+    A_('        for (int i = g.getChildCount() - 1; i >= 0; i--) {')
+    A_('            android.view.View c = g.getChildAt(i);')
+    A_('            boolean drop = false;')
+    A_('            try {')
+    A_('                // 只按 id 白名单判断：布局里本来就有的一律保留（含已隐藏的视轨/搜弹幕），')
+    A_('                // 外来塞进来的（无论带不带 id、文字是什么）一律删除')
+    A_('                drop = !tkBottomAllowed(c);')
+    A_('            } catch (Throwable ignored) { }')
+    A_('            if (drop) {')
+    A_('                try { g.removeView(c); } catch (Throwable ignored) { }')
+    A_('                continue;')
+    A_('            }')
+    A_('            if (c instanceof android.view.ViewGroup && !tkIsParse(c)) tkPurgeDeep((android.view.ViewGroup) c);')
+    A_('        }')
+    A_('    }')
+    method = L.join(body)
+
+    vp = jp(VOD)
+    vc = read_text(vp)
+
+    # 清掉上一版的白名单常量与方法，换成这一套
+    import re as _re
+    vc = _re.sub(r'    private static final String\[\] TK_BTN_OK = \{[^}]*\};\n\n', '', vc, count=1)
+    a = '    private int tkUiKey = 0;'
+    if a not in vc:
+        sys.exit('守卫锚点丢失：tkUiKey')
+    # 删旧 tkPurgeButtons
+    k = vc.find('    private void tkPurgeButtons() {')
+    if k > 0:
+        j = vc.index('{', k)
+        dep = 0
+        e = j
+        while e < len(vc):
+            if vc[e] == '{':
+                dep += 1
+            elif vc[e] == '}':
+                dep -= 1
+                if dep == 0:
+                    break
+            e += 1
+        vc = vc[:k] + vc[e + 2:]
+    vc = vc.replace(a, a + L + method, 1)
+
+    # initView 里挂上监听
+    anchor = '        mBottomRoot = findViewById(R.id.bottom_container);'
+    if anchor not in vc:
+        sys.exit('initView 锚点丢失：mBottomRoot')
+    if 'tkWatchBottom();' not in vc:
+        vc = vc.replace(anchor, anchor + L + '        tkWatchBottom();', 1)
+
+    write_text(vp, vc)
+    vcx = read_text(vp)
+    for must in ('TK_BOTTOM_OK', 'tkWatchBottom();', 'tkInstallWatch', 'tkPurgeDeep'):
+        if must not in vcx:
+            sys.exit('守卫没写入：' + must)
+    if 'TK_BTN_OK' in vcx:
+        sys.exit('旧白名单没清掉')
+    log('底栏守卫：层级监听已挂上（任何非法节点在添加瞬间被移除），并在 initView 先扫一遍')
+
+
+def apply_static_ui():
+    """把底栏边距/时间字号/按钮间距全部静态化到 dimen（按屏宽与方向自动生效），
+    干掉运行时 tkAdaptiveUi 重排 —— 消除"先小字后大字"的跳变与重复 requestLayout。"""
+    L = chr(10)
+    res = jp('app/src/main/res')
+    d = os.path.join(res, 'values')
+    dim = jp('app/src/main/res/values/tk_dimens.xml')
+    base = ['<?xml version="1.0" encoding="utf-8"?>', '<resources>',
+            '    <dimen name="tk_seek_inset">0dp</dimen>',
+            '    <dimen name="tk_time_minw">0dp</dimen>',
+            '    <dimen name="tk_time_ts">14dp</dimen>',
+            '    <dimen name="tk_row_pad_lr">24dp</dimen>',
+            '    <dimen name="tk_time_gap">0.5dp</dimen>',
+            '    <dimen name="tk_btn_gap">10dp</dimen>',
+            '</resources>']
+    write_text(dim, L.join(base) + L)
+    # 电视/大屏（小米 X65 等：最小宽度 >= 720dp）
+    tv = os.path.join(res, 'values-sw720dp')
+    os.makedirs(tv, exist_ok=True)
+    write_text(os.path.join(tv, 'tk_dimens.xml'), L.join([
+        '<?xml version="1.0" encoding="utf-8"?>', '<resources>',
+        '    <dimen name="tk_time_ts">24dp</dimen>',
+        '    <dimen name="tk_row_pad_lr">60dp</dimen>',
+        '    <dimen name="tk_btn_gap">12dp</dimen>',
+        '</resources>']) + L)
+    # 手机竖屏：底栏左右贴边
+    pt = os.path.join(res, 'values-port')
+    os.makedirs(pt, exist_ok=True)
+    write_text(os.path.join(pt, 'tk_dimens.xml'), L.join([
+        '<?xml version="1.0" encoding="utf-8"?>', '<resources>',
+        '    <dimen name="tk_time_ts">10dp</dimen>',
+        '    <dimen name="tk_row_pad_lr">5dp</dimen>',
+        '    <dimen name="tk_btn_gap">10dp</dimen>',
+        '</resources>']) + L)
+    log('底栏尺寸：已静态化（手机竖屏贴边 / 手机横屏 24dp / 电视 60dp，inflate 即最终形态，不再起播后突变）')
+
+    lp = jp(LAYOUT)
+    x = read_text(lp)
+    n = x.count('android:layout_marginEnd="@dimen/vs_5"')
+    x = x.replace('android:layout_marginEnd="@dimen/vs_5"', 'android:layout_marginEnd="@dimen/tk_btn_gap"')
+    x = x.replace('android:layout_marginRight="@dimen/vs_5"', 'android:layout_marginRight="@dimen/tk_btn_gap"')
+    if n < 10:
+        sys.exit('按钮间距锚点异常：只找到 %d 处' % n)
+    write_text(lp, x)
+    log('按钮间距：%d 处改为 @dimen/tk_btn_gap（静态）' % n)
+
+    vp = jp(VOD)
+    vc = read_text(vp)
+    key = 'private void tkAdaptiveUi() {'
+    i = vc.find(key)
+    if i < 0:
+        sys.exit('tkAdaptiveUi 锚点丢失')
+    j = vc.index('{', i)
+    depth = 0
+    k = j
+    while k < len(vc):
+        if vc[k] == '{':
+            depth += 1
+        elif vc[k] == '}':
+            depth -= 1
+            if depth == 0:
+                break
+        k += 1
+    if depth != 0:
+        sys.exit('tkAdaptiveUi 括号没闭合')
+    body_new = ('private void tkAdaptiveUi() {' + L +
+                '        // tk：尺寸已全部静态化到 dimen（按屏宽/方向自动生效），不再运行时重排' + L +
+                '    }')
+    vc = vc[:i] + body_new + vc[k + 1:]
+    write_text(vp, vc)
+    if 'setPadding(edgePx' in read_text(vp):
+        sys.exit('运行时 padding 还没去掉')
+    log('去掉了起播后的运行时重排（不再先小后大）')
+
+
+def apply_top_fix():
+    """顶部网速与时间挤在 1/4 宽的右侧容器里会重叠：网速只在缓冲时出现；自适应 UI 只在尺寸变化时重排。"""
+    L = chr(10)
+    ET.register_namespace('android', NS)
+    path = jp(LAYOUT)
+    tree = ET.parse(path)
+    root = tree.getroot()
+    sp = find_id(root, 'net_play_speed')
+    if sp is None:
+        sys.exit('顶部修复锚点丢失：net_play_speed')
+    if sp.get(A + 'visibility') != 'gone':
+        sp.set(A + 'visibility', 'gone')
+        tree.write(path, encoding='utf-8', xml_declaration=True)
+        log('顶部：网速默认不常显，只在缓冲时出现（不再压住播放时间/系统时间）')
+
+    vc_path = jp(VOD)
+    vc = read_text(vc_path)
+    if 'net_play_speed.setVisibility(disPlay);' in vc:
+        vc = vc.replace('        net_play_speed.setVisibility(disPlay);' + L, '', 1)
+        vc = vc.replace('                net_play_speed.setVisibility(disPlay);' + L, '', 1)
+        write_text(vc_path, vc)
+        log('顶部：屏显开关不再强制打开网速')
+
+    vc = read_text(vc_path)
+    if 'tkUiKey' not in vc:
+        a = '    private boolean tkPlayed = false;'
+        if a not in vc:
+            sys.exit('顶部修复锚点丢失：tkPlayed 字段')
+        vc = vc.replace(a, a + L + '    private int tkUiKey = 0;', 1)
+        a2 = '            if (mActivity == null) return;'
+        if a2 not in vc:
+            sys.exit('顶部修复锚点丢失：tkAdaptiveUi 开头')
+        b2 = ('            if (mActivity == null) return;' + L +
+              '            // tk：尺寸没变就别再重排一次，避免每次刷新配置都 requestLayout' + L +
+              '            int tkKey = getWidth() * 31 + getHeight();' + L +
+              '            if (tkKey > 0 && tkKey == tkUiKey) return;' + L +
+              '            if (tkKey > 0) tkUiKey = tkKey;')
+        vc = vc.replace(a2, b2, 1)
+        write_text(vc_path, vc)
+        log('自适应 UI：尺寸不变不再重排（减卡顿）')
+
+    root2 = ET.parse(path).getroot()
+    sp2 = find_id(root2, 'net_play_speed')
+    if sp2.get(A + 'visibility') != 'gone':
+        sys.exit('顶部修复没生效')
+    vcx = read_text(vc_path)
+    if 'net_play_speed.setVisibility(disPlay);' in vcx:
+        sys.exit('屏显开关还在强制显网速')
+    if 'tkUiKey' not in vcx:
+        sys.exit('自适应 UI 节流没写入')
+
+
 def apply_danmu_alpha():
     """弹幕透明度下限从 10% 放宽到 0%（彻底看不见，但仍算开启）"""
     h = jp('app/src/main/java/com/github/tvbox/osc/util/DanmuHelper.java')
@@ -2326,6 +2666,38 @@ def lint_java_literals():
     log('字面量检查通过：无多字符 char')
 
 
+def apply_single_layout():
+    """播放页只留一份控制布局：box_vod_control_view（上游死文件，全工程零引用）及其专属背景一并删除。"""
+    L = chr(10)
+    root = jp('app/src/main/res')
+    box = os.path.join(root, 'layout', 'box_vod_control_view.xml')
+    bg = os.path.join(root, 'drawable', 'box_controller_top_bg.xml')
+    # 删之前先确认真的没人引用，避免误删
+    for dirpath, _, files in os.walk(jp('app/src/main')):
+        for fn in files:
+            if not fn.endswith(('.java', '.kt', '.xml')):
+                continue
+            f = os.path.join(dirpath, fn)
+            if f == box:
+                continue
+            try:
+                t = read_text(f)
+            except Exception:
+                continue
+            if 'box_vod_control_view' in t:
+                sys.exit('box 布局仍被引用，不能删：' + f)
+    if os.path.exists(box):
+        os.remove(box)
+        log('删除重复布局：box_vod_control_view.xml（零引用的上游死文件）')
+    if os.path.exists(bg):
+        os.remove(bg)
+        log('删除其专属背景：box_controller_top_bg.xml')
+    left = [f for f in os.listdir(os.path.join(root, 'layout')) if 'vod_control' in f]
+    if left != ['player_vod_control_view.xml']:
+        sys.exit('播放控制布局没有合成一份：%s' % left)
+    log('播放控制布局现在只有一份：player_vod_control_view.xml')
+
+
 def apply_app_name():
     """把 APP_NAME 写进 values/strings.xml 的 app_name（桌面图标名 + 任务列表名）。"""
     p = jp(SRC, 'app/src/main/res/values/strings.xml')
@@ -2390,11 +2762,16 @@ def main():
     print('源码：', SRC)
     write_icons()
     apply_layout()
+    apply_single_layout()
     apply_app_name()
     apply_java()
     apply_fast_start()
     apply_download()
     apply_search_boost()
+    apply_top_fix()
+    apply_static_ui()
+    apply_btn_whitelist()
+    apply_btn_guard()
     apply_danmu_alpha()
     apply_danmu_doubletap()
     self_check()
