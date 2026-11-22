@@ -39,7 +39,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261122-U2'
+VER = 'VER-20261122-U4'
 LAYOUT = 'app/src/main/res/layout/player_vod_control_view.xml'
 VOD = 'app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'
 PLAYER_HELPER = 'app/src/main/java/com/github/tvbox/osc/util/PlayerHelper.java'
@@ -1251,7 +1251,16 @@ def emit_builtin():
         lines.append('        AdBlocker.addAdHost("%s");' % esc(a))
     for b in BUILTIN_BLK:
         adsRe = [r for r in b['regex'] if ('#EXTINF' in r or '#EXT-X-DISCONTINUITY' in r)]
-        plain = [r for r in b['regex'] if r not in adsRe]
+        # 剔除"0-5 秒短分片一律当广告"这类通杀规则：它会把正片开头/低码率短切片一起删掉，
+        # 表现就是广告放完、正片没了、不切换。只有带明确广告特征的才留。
+        KEY_AD = ('adjump', 'p1ayer', 'preroll', 'midroll', 'postroll', '/ad/', '_ad_')
+        keep = []
+        for r in adsRe:
+            if '[0-4]' in r and not any(k in r for k in KEY_AD):
+                continue
+            keep.append(r)
+        adsRe = keep
+        plain = [r for r in b['regex'] if not ('#EXTINF' in r or '#EXT-X-DISCONTINUITY' in r)]
         for host in b['hosts']:
             if adsRe:
                 lines.append('        VideoParseRuler.addHostRegex("%s", %s);' % (esc(host), lit(adsRe)))
@@ -2479,6 +2488,170 @@ def apply_pause_keep():
     log('唤出底栏：先清掉遗留的隐藏消息，外层同步可见（不会点了没反应）')
 
 
+def apply_ad_safety():
+    """广告过滤的两个真实缺陷：
+    1) playM3u8 的 3.5s 超时放行是"裸"排队的：切集后旧地址的超时仍会抢到起播权，
+       把播放拉回上一集（上一集往往正是那段广告）→ 表现为广告放完又回到广告、不切正片。
+    2) 走净化代理起播后没有任何回落：代理清单一旦不可播，只会一直黑着。
+    """
+    L = chr(10)
+    vp = jp(VOD)
+    vc = read_text(vp)
+    if 'tkWatchProxy' in vc:
+        log('  = 广告过滤兜底已存在，跳过')
+        return
+
+    # 1) 序列号：切集后旧超时作废
+    a = '    private boolean tkTakeOver() {'
+    if vc.count(a) != 1:
+        sys.exit('广告兜底锚点丢失：tkTakeOver')
+    vc = vc.replace(a, '    private long tkPlaySeq = 0L; // 每次起播递增，旧超时/旧看门狗自动作废' + L + L + a, 1)
+
+    b = ('        tkPlayed = false;' + L +
+         '        try {' + L +
+         '            final android.os.Handler tkHandler = new android.os.Handler(android.os.Looper.getMainLooper());')
+    b2 = ('        tkPlayed = false;' + L +
+          '        final long tkSeqNow = ++tkPlaySeq;' + L +
+          '        try {' + L +
+          '            final android.os.Handler tkHandler = new android.os.Handler(android.os.Looper.getMainLooper());')
+    if vc.count(b) != 1:
+        sys.exit('广告兜底锚点丢失：playM3u8 超时块')
+    vc = vc.replace(b, b2, 1)
+
+    c = ('                public void run() {' + L +
+         '                    if (!tkTakeOver()) return;' + L +
+         '                    LOG.i("echo-m3u8起播超时放行: " + url);')
+    c2 = ('                public void run() {' + L +
+          '                    if (tkSeqNow != tkPlaySeq) return; // 已切到别的集，这次超时作废' + L +
+          '                    if (!tkTakeOver()) return;' + L +
+          '                    LOG.i("echo-m3u8起播超时放行: " + url);')
+    if vc.count(c) != 1:
+        sys.exit('广告兜底锚点丢失：超时 runnable')
+    vc = vc.replace(c, c2, 1)
+
+    # 2) 代理播放看门狗：12 秒还没进播放态就回落原地址
+    d = ('            listener.onM3u8ProxyUrl(proxyUrl, url);' + L +
+         '            listener.startPlayUrl(proxyUrl, headers);')
+    d2 = ('            listener.onM3u8ProxyUrl(proxyUrl, url);' + L +
+          '            listener.startPlayUrl(proxyUrl, headers);' + L +
+          '            tkWatchProxy(url, headers); // 净化代理不认账时回落原地址')
+    if vc.count(d) != 1:
+        sys.exit('广告兜底锚点丢失：代理起播')
+    vc = vc.replace(d, d2, 1)
+
+    e = '    private void processM3u8Content(String url, String content, HashMap<String, String> headers) {'
+    if vc.count(e) != 1:
+        sys.exit('广告兜底锚点丢失：processM3u8Content')
+    watch = (
+        '    // 净化代理看门狗：起播后 12 秒仍未进入播放态，说明代理清单不可播，直接回落原地址' + L +
+        '    private void tkWatchProxy(final String origUrl, final HashMap<String, String> headers) {' + L +
+        '        final long seq = tkPlaySeq;' + L +
+        '        try {' + L +
+        '            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() {' + L +
+        '                @Override public void run() {' + L +
+        '                    try {' + L +
+        '                        if (seq != tkPlaySeq) return;' + L +
+        '                        if (videoPlayState == VideoView.STATE_PLAYING || videoPlayState == VideoView.STATE_PAUSED) return;' + L +
+        '                        tkPlayed = false;' + L +
+        '                        LOG.e("tk净化代理无画面，回落原地址");' + L +
+        '                        listener.startPlayUrl(origUrl, headers);' + L +
+        '                    } catch (Throwable ignored) {}' + L +
+        '                }' + L +
+        '            }, 12000);' + L +
+        '        } catch (Throwable ignored) {}' + L +
+        '    }' + L + L)
+    vc = vc.replace(e, watch + e, 1)
+
+    write_text(vp, vc)
+    log('广告兜底：切集后旧的 3.5s 超时作废（不会再被拉回上一集的广告）')
+    log('广告兜底：净化代理 12 秒没画面自动回落原地址（不会黑在那儿不切）')
+
+
+def apply_speed_fix():
+    """1) 净化结果复用：切软解/硬解/换播放器都会重走 playM3u8，原来每次都干等 3.5 秒拉清单；
+       同一地址已经净化过就直接走代理起播，秒切。
+       2) seekBar 高度原本写死 30mm（手机约 66dp，把底栏顶得很高、进度条看着悬在中间），
+       改成按屏型分级的静态 dp，底栏收回来贴底。"""
+    L = chr(10)
+    vp = jp(VOD)
+    vc = read_text(vp)
+    lay = jp(LAYOUT)
+    xt = read_text(lay)
+    acted = []
+
+    # ---- 1) 净化缓存 ----
+    if 'tkLastPurifyUrl' not in vc:
+        a = '    private long tkPlaySeq = 0L; // 每次起播递增，旧超时/旧看门狗自动作废'
+        if vc.count(a) != 1:
+            sys.exit('净化缓存锚点丢失：tkPlaySeq')
+        vc = vc.replace(a, a + L + '    private String tkLastPurifyUrl = null; // 上次净化成功的主清单地址', 1)
+
+        b = ('        tkPlayed = false;' + L +
+             '        final long tkSeqNow = ++tkPlaySeq;')
+        b2 = ('        tkPlayed = false;' + L +
+              '        final long tkSeqNow = ++tkPlaySeq;' + L +
+              '        // 同一地址已净化过：直接走代理起播，不再等 3.5 秒（切解码/换播放器秒切）' + L +
+              '        if (tkLastPurifyUrl != null && tkLastPurifyUrl.equals(url)' + L +
+              '                && RemoteServer.m3u8Content != null && M3u8.currentAdCount > 0) {' + L +
+              '            try {' + L +
+              '                String cProxy = ControlManager.get().getAddress(true) + "proxyM3u8";' + L +
+              '                listener.onM3u8ProxyUrl(cProxy, url);' + L +
+              '                listener.startPlayUrl(cProxy, headers);' + L +
+              '                tkWatchProxy(url, headers);' + L +
+              '                return;' + L +
+              '            } catch (Throwable ignored) {}' + L +
+              '        }')
+        if vc.count(b) != 1:
+            sys.exit('净化缓存锚点丢失：playM3u8 入口')
+        vc = vc.replace(b, b2, 1)
+
+        c = ('            listener.onM3u8ProxyUrl(proxyUrl, url);' + L +
+             '            listener.startPlayUrl(proxyUrl, headers);' + L +
+             '            tkWatchProxy(url, headers); // 净化代理不认账时回落原地址')
+        c2 = ('            listener.onM3u8ProxyUrl(proxyUrl, url);' + L +
+              '            tkLastPurifyUrl = url; // 记住这份净化结果，切解码时复用' + L +
+              '            listener.startPlayUrl(proxyUrl, headers);' + L +
+              '            tkWatchProxy(url, headers); // 净化代理不认账时回落原地址')
+        if vc.count(c) != 1:
+            sys.exit('净化缓存锚点丢失：记录净化地址')
+        vc = vc.replace(c, c2, 1)
+        write_text(vp, vc)
+        acted.append('净化缓存：同一地址切软解/硬解/换播放器不再等 3.5 秒')
+
+    # ---- 2) seekBar 高度静态化 ----
+    if 'tk_seek_h' not in xt:
+        key = 'android:id="@+id/seekBar"'
+        if xt.count(key) != 1:
+            sys.exit('seekBar 锚点丢失')
+        i = xt.find(key)
+        old = 'android:layout_height="@dimen/vs_30"'
+        j = xt.find(old, i)
+        if j < 0 or j - i > 700:
+            sys.exit('seekBar 高度锚点丢失')
+        xt = xt[:j] + 'android:layout_height="@dimen/tk_seek_h"' + xt[j + len(old):]
+        write_text(lay, xt)
+        acted.append('seekBar 高度：30mm → @dimen/tk_seek_h')
+
+    dims = {'values': '24dp', 'values-port': '20dp', 'values-sw720dp': '28dp'}
+    for d in dims:
+        p = jp('app/src/main/res', d, 'tk_dimens.xml')
+        if not os.path.exists(p):
+            sys.exit('tk_dimens.xml 缺失：' + d)
+
+    for d in dims:
+        p = jp('app/src/main/res', d, 'tk_dimens.xml')
+        s = read_text(p)
+        if 'tk_seek_h' in s:
+            continue
+        v = dims[d]
+        s = s.replace('</resources>', '<dimen name="tk_seek_h">%s</dimen>' % v + L + '</resources>', 1)
+        write_text(p, s)
+
+    for x in acted:
+        log(x)
+    log('底栏进度条行高：手机 24dp / 竖屏 20dp / 电视 28dp（静态，不再受 30mm 影响）')
+
+
 def apply_static_ui():
     """把底栏边距/时间字号/按钮间距全部静态化到 dimen（按屏宽与方向自动生效），
     干掉运行时 tkAdaptiveUi 重排 —— 消除"先小字后大字"的跳变与重复 requestLayout。"""
@@ -2988,6 +3161,8 @@ def main():
     apply_btn_whitelist()
     apply_btn_guard()
     apply_pause_keep()
+    apply_ad_safety()
+    apply_speed_fix()
     apply_danmu_alpha()
     apply_danmu_doubletap()
     self_check()
