@@ -39,7 +39,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261123-U30'
+VER = 'VER-20261123-U31'
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -855,15 +855,19 @@ def apply_layout():
     log('按钮统一样式 %d 个（图标 %s、汉字 %s、无底、左右居中）' % (styled, ICON_SIZE, TEXT_SIZE))
 
     # ⓪ 进度条收边 / 时间框宽度：竖屏单独覆盖（条尽量长、贴两边）
-    for rel, inset, minw, rowpad in (('values', '0dp', '0dp', '35dp'), ('values-port', '0dp', '0dp', '5dp')):
+    # 注意：这里写出的 tk_time_ts / tk_row_pad_lr 必须与 apply_static_ui 的最终值保持一致
+    #       （14dp / 24dp）。以前写的是 16dp / 35dp，靠 static_ui 后跑覆盖掉才没出事，
+    #       一旦 static_ui 因幂等跳过，第二次跑就会把字号和边距悄悄放大。
+    for rel, inset, minw, rowpad in (('values', '0dp', '0dp', '24dp'), ('values-port', '0dp', '0dp', '5dp')):
         d = os.path.join(SRC, 'app/src/main/res', rel)
         os.makedirs(d, exist_ok=True)
         xml = ('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
                + '    <dimen name="tk_seek_inset">' + inset + '</dimen>\n'
                + '    <dimen name="tk_time_minw">' + minw + '</dimen>\n'
-               + '    <dimen name="tk_time_ts">' + ('16dp' if rel == 'values' else '10dp') + '</dimen>\n'
+               + '    <dimen name="tk_time_ts">' + ('14dp' if rel == 'values' else '10dp') + '</dimen>\n'
                + '    <dimen name="tk_row_pad_lr">' + rowpad + '</dimen>\n'
                + '    <dimen name="tk_time_gap">' + ('0.5dp' if rel == 'values' else '0.6dp') + '</dimen>\n'
+               + '    <dimen name="tk_btn_gap">10dp</dimen>\n'
                + '</resources>\n')
         open(os.path.join(d, 'tk_dimens.xml'), 'w', encoding='utf-8').write(xml)
     log('进度条收边：横屏边 35dp / 竖屏边 5dp；条与时间 横屏0.5dp / 竖屏0.6dp')
@@ -913,6 +917,10 @@ def apply_layout():
     # ⑧ 片头 / 片尾：上格 26dp 时间（当图标位）+ 下格 10dp 汉字
     for rid, slot_id, text in (('play_time_start', 'tk_slot_start', '片头'),
                                ('play_time_end', 'tk_slot_end', '片尾')):
+        # 幂等：时间格已经生成过就直接过，否则第二次跑会把 play_time_start 再包一层，
+        # 结果是同一个 id 出现两份、布局结构错乱。
+        if find_id(root, slot_id) is not None:
+            continue
         node = find_id(root, rid)
         if node is None or node.tag != 'TextView':
             continue
@@ -1383,6 +1391,11 @@ TK_ADAPTIVE = """    // 自适应：按屏幕 dp 宽 + 是否电视，调两端�
 def apply_java():
     NL = chr(10)
     t = read_text(jp(VOD))
+    # 幂等：这一套替换（片头尾时间标签、整块可点、旋屏文字）是一次性的，改过就整体跳过，
+    # 否则第二次在同一棵树上跑会拿"已经替换后的文本"去找旧锚点，直接 sys.exit。
+    if 'buildTimeLabel(' in t and 'tkRefreshCfgView' in t and '旋屏");' in t:
+        log('  = 按钮文字 / 片头尾 / 旋屏文字已改好，跳过')
+        return
 
     for old, new in TIME_PATCH:
         if old not in t:
@@ -2800,6 +2813,12 @@ def apply_static_ui():
     干掉运行时 tkAdaptiveUi 重排 —— 消除"先小字后大字"的跳变与重复 requestLayout。"""
     L = chr(10)
     res = jp('app/src/main/res')
+    # 幂等：间距已经全换成 tk_btn_gap、且找不到旧的 vs_5 锚点，说明这一趟已经做过了。
+    # 不跳过的话第二次跑会在"锚点 0 处"上 sys.exit，还会把 tk_dimens 覆盖回半成品。
+    _x = read_text(jp(LAYOUT))
+    if '@dimen/tk_btn_gap' in _x and 'android:layout_marginEnd="@dimen/vs_5"' not in _x:
+        log('  = 底栏尺寸已静态化，跳过')
+        return
     d = os.path.join(res, 'values')
     dim = jp('app/src/main/res/values/tk_dimens.xml')
     base = ['<?xml version="1.0" encoding="utf-8"?>', '<resources>',
@@ -2825,8 +2844,11 @@ def apply_static_ui():
     os.makedirs(pt, exist_ok=True)
     write_text(os.path.join(pt, 'tk_dimens.xml'), L.join([
         '<?xml version="1.0" encoding="utf-8"?>', '<resources>',
+        '    <dimen name="tk_seek_inset">0dp</dimen>',
+        '    <dimen name="tk_time_minw">0dp</dimen>',
         '    <dimen name="tk_time_ts">10dp</dimen>',
         '    <dimen name="tk_row_pad_lr">5dp</dimen>',
+        '    <dimen name="tk_time_gap">0.6dp</dimen>',
         '    <dimen name="tk_btn_gap">10dp</dimen>',
         '</resources>']) + L)
     log('底栏尺寸：已静态化（手机竖屏贴边 / 手机横屏 24dp / 电视 60dp，inflate 即最终形态，不再起播后突变）')
@@ -2986,28 +3008,40 @@ def apply_danmu_alpha():
     if not os.path.isfile(h):
         sys.exit('找不到 DanmuHelper.java')
     t = read_text(h)
+    changed = False
     old = 'Hawk.put(HawkConfig.DANMU_ALPHA, Math.max(0.1f, Math.min(alpha, 1.0f)));'
-    if old not in t:
+    if old in t:
+        t = t.replace(old, 'Hawk.put(HawkConfig.DANMU_ALPHA, Math.max(0f, Math.min(alpha, 1.0f)));', 1)
+        write_text(h, t)
+        changed = True
+    elif 'Math.max(0f,' not in t:
         sys.exit('锚点丢失：DanmuHelper.setAlpha')
-    t = t.replace(old, 'Hawk.put(HawkConfig.DANMU_ALPHA, Math.max(0f, Math.min(alpha, 1.0f)));', 1)
-    write_text(h, t)
 
     d = jp('app/src/main/java/com/github/tvbox/osc/ui/dialog/DanmuSettingDialog.java')
     if not os.path.isfile(d):
         sys.exit('找不到 DanmuSettingDialog.java')
     dt = read_text(d)
     old2 = '            if (alpha.get() <= 10) return;'
-    if old2 not in dt:
+    if old2 in dt:
+        dt = dt.replace(old2, '            if (alpha.get() <= 0) return;', 1)
+        write_text(d, dt)
+        changed = True
+    elif 'alpha.get() <= 0)' not in dt:
         sys.exit('锚点丢失：透明度减档下限')
-    dt = dt.replace(old2, '            if (alpha.get() <= 0) return;', 1)
-    write_text(d, dt)
-    log('弹幕透明度：下限 10% -> 0%（0% 时彻底不可见）')
+    if changed:
+        log('弹幕透明度：下限 10% -> 0%（0% 时彻底不可见）')
+    else:
+        log('  = 弹幕透明度下限已放宽，跳过')
 
 
 def apply_danmu_doubletap():
     """弹幕按钮：双击 = 持久关闭；开启时图标左下角带小对号"""
     NL = chr(10)
     v = read_text(jp(VOD))
+    # 幂等：字段 метода 都已写过就整体跳过（否则第二次跑会拿旧锚点去找不到）
+    if 'tkDanmuClickTs' in v and 'updateDanmuBtn' in v and 'tkDanmuSingleClick' in v:
+        log('  = 弹幕双击已装好，跳过')
+        return
 
     field = ("    private long tkDanmuClickTs = 0L;" + NL + NL +
              "    private final Runnable tkDanmuSingleClick = new Runnable() {" + NL +
@@ -3294,7 +3328,7 @@ def apply_push_button():
         '            a = ControlManager.get().getAddress(true);' + L +
         '        } catch (Throwable ignored) {}' + L +
         '        if (a == null || a.isEmpty()) {' + L +
-        '            android.widget.Toast.makeText(mActivity, "推送服务没起来，退出重进一次", android.widget.Toast.LENGTH_SHORT).show();' + L +
+        '            try { android.widget.Toast.makeText(mActivity, "推送服务没起来，退出重进一次", android.widget.Toast.LENGTH_SHORT).show(); } catch (Throwable ignored) {}' + L +
         '            return;' + L +
         '        }' + L +
         '        if (!a.endsWith("/")) a = a + "/";' + L +
@@ -3335,7 +3369,9 @@ def apply_scrim_bg():
     if not os.path.isdir(dr):
         os.makedirs(dr)
     t = read_text(lay)
-    if 'tk_scrim' in t:
+    # 幂等要按"两处都指向 tk_scrim"来判断：只查"出现过 tk_scrim"是不够的，
+    # apply_layout 每趟都会把 bottom_container 的底板清成 @null，只判出现就会漏掉底部。
+    if t.count('@drawable/tk_scrim') >= 2:
         log('  = 半透明底板已存在，跳过')
         return
 
