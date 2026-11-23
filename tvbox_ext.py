@@ -39,15 +39,48 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261123-U9'
+VER = 'VER-20261123-U30'
 
 # ============ 可裁剪开关 ============
-# False = 这一组"播放流程改造"整组不生效，源码回到 q215613905 上游原样。
-# 组内包含：起播只允许一次(tkTakeOver) / 切集旧超时作废(tkPlaySeq) /
-#          净化代理 12 秒看门狗(tkWatchProxy) / 净化结果复用(tkLastPurifyUrl) /
-#          广告段播完重解析(tkReplayShort)。
-# 界面定制（布局、图标、渐变、时间显隐）不受此开关影响。
-FEAT_PLAY_PATCHES = False
+# 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
+#   FEAT_FAST_START   3.5 秒还没拉到 m3u8 清单就直接起播（治"播放页加载慢"）
+#   FEAT_PURIFY_CACHE 同一地址净化过就直接走代理（治"切软解/硬解/换播放器慢"）
+#   FEAT_SEQ_GUARD    切集后旧的超时回调作废（正确性，正常播放时无感）
+#   FEAT_PROXY_WATCHDOG 净化代理 12 秒没画面回落原地址（会打断，先关）
+#   FEAT_AD_REPLAY    广告段播完重解析（去广告已关，用不上）
+FEAT_FAST_START = False
+FEAT_PURIFY_CACHE = False
+FEAT_SEQ_GUARD = False
+FEAT_PROXY_WATCHDOG = False
+FEAT_AD_REPLAY = False
+
+# ============ 改动清单开关（2026-11-23）============
+# 这里每一项对应一处"我在上游基础上做的改动"，True=生效，False=不生效（等于回到 q215613905 原样）。
+# 底座三项没有开关，因为别的改动都挂在它们生成的结构上：apply_layout / apply_fast_start(空壳) / self_check。
+# 01 底栏图标替换：底座，无开关（关掉会缺 drawable，资源编译直接失败）
+OPT_BTN_TEXT = True           # 02 按钮文字：上集/下集/旋屏/EXO；播放器名缩短；线路名"直链"；投屏去门槛；摘除搜弹幕/视轨
+OPT_SINGLE_LAYOUT = True      # 03 删掉第二份播放控制布局，只留 player_vod_control_view
+OPT_APP_NAME = True           # 04 应用名改成 NZ
+OPT_TOPBAR_TRANSPARENT = True # 05 顶部四块半透明底板去掉（只留白字）
+OPT_TEXT_STROKE = True        # 06 描边撤销（True=保持无描边原样，False=不做处理，结果一样）
+OPT_STATIC_UI = True          # 07 尺寸静态化（手机竖屏/横屏/电视三套 dimen，不再起播后跳变）
+OPT_SLOT_ALIGN = True         # 08 片头/片尾 00:00 两行右侧对齐
+OPT_BTN_WHITELIST = True      # 09 底栏按钮白名单（只留 20 个我方按钮）
+OPT_BTN_GUARD = False         # 10 底栏层级守卫（已按要求撤回）
+OPT_PAUSE_KEEP = False        # 11 暂停保活 + 底栏直接置可见 + 清遗留消息（已按要求撤回上游）
+OPT_GRADIENT_BG = False       # 12 顶部/底部渐变背板（已按要求撤回，改用 OPT_SCRIM_BG 整块半透明）
+OPT_SCRIM_BG = True           # 12b 顶部/底部整块半透明底板（不渐变）
+OPT_SCREEN_ON = True          # 12c 屏显默认开：右上角网速/播放时间/系统时间默认显示
+OPT_DOWNLOAD = True           # 13 下载按钮 + 选集弹窗 + 串行队列
+OPT_SEARCH_BOOST = True       # 14 搜索增强（新源并入/每批 10 源）
+OPT_DANMU_ALPHA = True        # 15 弹幕透明度下限 10% → 0%
+OPT_DANMU_DOUBLE = True       # 16 弹幕按钮双击=关闭，单击=设置
+OPT_AD_SWITCH = True          # 17 去广告开关真正生效（关闭时零规则加载）
+OPT_DNS_DEFAULT = True        # 18 DNS 默认值改成腾讯 DoH
+OPT_TOP_TIME_FIX = False      # 19 右上角时间/网速显隐（已回上游，本项关闭）
+OPT_MERGE_SOURCE_ADS = True   # 21 合并源里的 ads 名单进过滤表（= 上游行为）
+OPT_PUSH_BTN = True           # 20 播放页「投屏」按钮 → 汉字改「推送」、点击显示局域网推送地址
+OPT_RENDER_FIX = True         # 22 画面比例：修「填充」档拿 MeasureSpec 原值 + 补回像素宽高比（治拉扁）
 LAYOUT = 'app/src/main/res/layout/player_vod_control_view.xml'
 VOD = 'app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'
 PLAYER_HELPER = 'app/src/main/java/com/github/tvbox/osc/util/PlayerHelper.java'
@@ -896,10 +929,13 @@ def apply_layout():
         box.set(A + 'paddingBottom', PAD_TB)
         slot = ET.SubElement(box, 'TextView')
         slot.set(A + 'id', '@+id/' + slot_id)
-        slot.set(A + 'layout_width', 'wrap_content')
+        # 56dp：12dp 字号下 "00:00" 实测约 33–36dp，48dp 在部分机器上仍会把第一个 0 裁掉一角，
+        # 这里留到 56dp（宽出约 20dp 余量）；高度和 paddingTop 一律不动，保证纵向位置和整排对齐不漂。
+        slot.set(A + 'layout_width', '56dp')
         slot.set(A + 'layout_height', ICON_SIZE)
         slot.set(A + 'gravity', 'top|center_horizontal')
-        slot.set(A + 'paddingTop', '8dp')
+        slot.set(A + 'minWidth', '56dp')
+        slot.set(A + 'paddingTop', '5dp')
         slot.set(A + 'textSize', '12dp')
         slot.set(A + 'fontFamily', 'sans-serif-light')
         slot.set(A + 'includeFontPadding', 'false')
@@ -937,39 +973,11 @@ TIME_PATCH = [
     ('mPlayerTimeSkipBtn.setText(end == 0 ? "片尾" : stringForTime(end * 1000));',
      'mPlayerTimeSkipBtn.setText(buildTimeLabel(end == 0 ? "00:00" : stringForTime(end * 1000), "片尾"));'),
 
-    ('mCurrentTime.setText(stringForTime(safeTimeMs(newPosition)));',
-     'mCurrentTime.setText(tkSeekTime(safeTimeMs(newPosition)));'),
-    ('mCurrentTime.setText(stringForTime(position));',
-     'mCurrentTime.setText(tkSeekTime(position));'),
-    ('mTotalTime.setText(stringForTime(duration));',
-     'mTotalTime.setText(tkSeekTime(duration));'),
     ('Toast.makeText(getContext(), "已移除视频广告 "+M3u8.currentAdCount+" 条", Toast.LENGTH_SHORT).show();',
      '// 静默：不再弹出广告过滤条数提示'),
 ]
 
 HELPERS = '''
-    // 竖屏只到分钟：00:17（横屏保持 hh:mm:ss）
-    private String tkSeekTime(long timeMs) {
-        int w = getWidth(), h = getHeight();
-        if (w > 0 && h > w) {
-            if (timeMs < 0) timeMs = 0;
-            long total = timeMs / 1000;
-            long m = total / 60;
-            long sec = total % 60;
-            return String.format("%02d:%02d", m, sec);
-        }
-        return formatHMS(timeMs);
-    }
-
-    private String formatHMS(long timeMs) {
-        if (timeMs < 0) timeMs = 0;
-        long total = timeMs / 1000;
-        long h = total / 3600;
-        long m = (total % 3600) / 60;
-        long sec = total % 60;
-        return String.format("%02d:%02d:%02d", h, m, sec);
-    }
-
     private CharSequence buildTimeLabel(String time, String label) {
         int sid = "片头".equals(label) ? R.id.tk_slot_start : R.id.tk_slot_end;
         android.widget.TextView slot = null;
@@ -981,23 +989,6 @@ HELPERS = '''
         if (slot == null) slot = findViewById(sid);
         if (slot != null) slot.setText(time);
         return label;
-    }
-
-    private void purgeSearchViews(android.view.View v) {
-        if (!(v instanceof android.view.ViewGroup)) return;
-        android.view.ViewGroup g = (android.view.ViewGroup) v;
-        for (int i = g.getChildCount() - 1; i >= 0; i--) {
-            android.view.View c = g.getChildAt(i);
-            if (c instanceof android.widget.TextView) {
-                CharSequence cs = ((android.widget.TextView) c).getText();
-                String s = cs == null ? "" : cs.toString();
-                if (s.contains("搜") || s.contains("视轨") || s.contains("推送") || s.contains("Zx") || s.contains("ZX")) {
-                    g.removeView(c);
-                    continue;
-                }
-            }
-            purgeSearchViews(c);
-        }
     }
 
     // 切播放器/切解码后会 replay 重建 player，标签可能被刷回旧值 → 延迟再同步一次
@@ -1017,14 +1008,6 @@ HELPERS = '''
 
 '''
 
-PURGE_CALL = '''        purgeSearchViews(mBottomRoot);
-        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() {
-            public void run() { purgeSearchViews(mBottomRoot); }
-        }, 1500);
-        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() {
-            public void run() { purgeSearchViews(mBottomRoot); }
-        }, 5000);
-'''
 
 SHORT_NAMES = [('"EXO播放器"', '"EXO"'), ('"IJK播放器"', '"IJK"'), ('"MX播放器"', '"MX"'),
                ('"Reex播放器"', '"Reex"'), ('"Kodi播放器"', '"Kodi"'), ('"VLC播放器"', '"VLC"'), ('"附近TVBox"', '"TVBox"')]
@@ -1203,8 +1186,43 @@ def emit_adrules():
     at = read_text(ap)
     anchor_app = '        FileUtils.cleanPlayerCache();'
     assert anchor_app in at, '锚点丢失：App cleanPlayerCache'
-    at = at.replace(anchor_app,
-                    anchor_app + chr(10) + '        com.github.tvbox.osc.util.AdRuleUpdater.autoUpdate();', 1)
+    if 'tkWipeOnNewBuild' not in at:
+        wipe = (
+            '    // tk：换包（versionName 变化）自动清上一版的显示/播放配置，避免残留和新代码打架' + chr(10)
+            + '    private void tkWipeOnNewBuild() {' + chr(10)
+            + '        try {' + chr(10)
+            + '            String now = "";' + chr(10)
+            + '            try {' + chr(10)
+            + '                now = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;' + chr(10)
+            + '            } catch (Throwable ignored) {' + chr(10)
+            + '            }' + chr(10)
+            + '            if (now == null) now = "";' + chr(10)
+            + '            String last = Hawk.get("tkBuildTag", "");' + chr(10)
+            + '            if (last != null && last.equals(now)) return;' + chr(10)
+            + '            String[] keys = {"doh_url", "doh_json", "m3u8_purify",' + chr(10)
+            + '                    "show_preview", "parse_webview", "parse_default", "auto_switch_line",' + chr(10)
+            + '                    "subtitle_text_size", "subtitle_time_delay", "subtitle_exo_scale",' + chr(10)
+            + '                    "subtitle_exo_position", "danmu_open", "danmu_max_line", "danmu_speed",' + chr(10)
+            + '                    "danmu_alpha", "danmu_size_scale", "danmu_random_color", "danmu_api",' + chr(10)
+            + '                    "live_show_net_speed", "live_show_resolution", "live_show_time"};' + chr(10)
+            + '            for (String k : keys) {' + chr(10)
+            + '                try { Hawk.delete(k); } catch (Throwable ignored) {}' + chr(10)
+            + '            }' + chr(10)
+            + '            Hawk.put("tkBuildTag", now);' + chr(10)
+            + '        } catch (Throwable ignored) {' + chr(10)
+            + '        }' + chr(10)
+            + '    }' + chr(10) + chr(10))
+        at = at.replace('    private void initParams() {', wipe + '    private void initParams() {', 1)
+        hawk_init = '        Hawk.init(this).build();'
+        assert hawk_init in at, '锚点丢失：Hawk.init'
+        at = at.replace(hawk_init,
+                        hawk_init + chr(10) + '        tkWipeOnNewBuild();', 1)
+        at = at.replace(anchor_app,
+                        anchor_app + chr(10) + '        com.github.tvbox.osc.util.AdRuleUpdater.autoUpdate();', 1)
+        log('换包清零：只清 DNS/去广告/显示/字幕/弹幕，播放器与画面比例设置保留')
+    else:
+        at = at.replace(anchor_app,
+                        anchor_app + chr(10) + '        com.github.tvbox.osc.util.AdRuleUpdater.autoUpdate();', 1)
     write_text(ap, at)
 
     ac = jp('app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java')
@@ -1363,6 +1381,7 @@ TK_ADAPTIVE = """    // 自适应：按屏幕 dp 宽 + 是否电视，调两端�
 
 
 def apply_java():
+    NL = chr(10)
     t = read_text(jp(VOD))
 
     for old, new in TIME_PATCH:
@@ -1381,19 +1400,13 @@ def apply_java():
     a1 = ('                    if (current > duration / 2) return;\n'
           '                    mPlayerConfig.put("st",current/1000);')
     b1 = ('                    if (current > duration / 2) return;\n'
-          '                    mPlayerConfig.put("st",current/1000);\n'
-          '                    Toast.makeText(getContext(), "片头已设为 " + stringForTime(current), Toast.LENGTH_SHORT).show();')
-    if a1 not in t:
-        sys.exit('锚点丢失：片头点击')
+          '                    mPlayerConfig.put("st",current/1000);')
     t = t.replace(a1, b1, 1)
 
     a2 = ('                    if (current < duration / 2) return;\n'
           '                    mPlayerConfig.put("et", (duration - current)/1000);')
     b2 = ('                    if (current < duration / 2) return;\n'
-          '                    mPlayerConfig.put("et", (duration - current)/1000);\n'
-          '                    Toast.makeText(getContext(), "片尾已设为 距结束 " + stringForTime(duration - current), Toast.LENGTH_SHORT).show();')
-    if a2 not in t:
-        sys.exit('锚点丢失：片尾点击')
+          '                    mPlayerConfig.put("et", (duration - current)/1000);')
     t = t.replace(a2, b2, 1)
 
     a3 = '        mPlayerTimeResetBtn = findViewById(R.id.play_time_reset);'
@@ -1432,8 +1445,6 @@ def apply_java():
     for o1, n1 in (
         ('mLandscapePortraitBtn.setText("竖屏");', 'mLandscapePortraitBtn.setText("旋屏");'),
         ('mLandscapePortraitBtn.setText("横屏");', 'mLandscapePortraitBtn.setText("旋屏");'),
-        ('mPlayerIJKBtn.setVisibility(playerType == 1 ? VISIBLE : GONE);',
-         'mPlayerIJKBtn.setVisibility(playerType == 1 && getResources().getConfiguration().orientation != Configuration.ORIENTATION_PORTRAIT ? VISIBLE : GONE);'),
     ):
         if o1 not in t:
             sys.exit('锚点丢失：' + o1)
@@ -1445,34 +1456,6 @@ def apply_java():
                       'mController.mLandscapePortraitBtn.setText("旋屏");')
         write_text(pf, h)
     log('旋屏文字固定为“旋屏”、硬解常显')
-
-    # 竖屏别再偷偷把进度条两端时间藏掉
-    for o6, n6 in (
-        ('if (mCurrentTime != null) mCurrentTime.setVisibility(isPortrait ? GONE : VISIBLE);',
-         'if (mCurrentTime != null) mCurrentTime.setVisibility(VISIBLE);'),
-        ('if (mTotalTime != null) mTotalTime.setVisibility(isPortrait ? GONE : VISIBLE);',
-         'if (mTotalTime != null) mTotalTime.setVisibility(VISIBLE);'),
-    ):
-        if o6 not in t:
-            sys.exit('锚点丢失：' + o6)
-        t = t.replace(o6, n6, 1)
-
-    # 竖屏分支里片头/片尾/重置也被藏掉了 —— 全部保留可点（用硬解那行做锚，避免误伤直播分支）
-    NL = chr(10)
-    pblock = ("            mPlayerIJKBtn.setVisibility(GONE);" + NL
-              + "            mPlayerTimeStartEndText.setVisibility(GONE);" + NL
-              + "            mPlayerTimeStartBtn.setVisibility(GONE);" + NL
-              + "            mPlayerTimeSkipBtn.setVisibility(GONE);" + NL
-              + "            mPlayerTimeResetBtn.setVisibility(GONE);" + NL)
-    nblock = ("            mPlayerIJKBtn.setVisibility(GONE);" + NL
-              + "            mPlayerTimeStartEndText.setVisibility(GONE);" + NL
-              + "            mPlayerTimeStartBtn.setVisibility(VISIBLE);" + NL
-              + "            mPlayerTimeSkipBtn.setVisibility(VISIBLE);" + NL
-              + "            mPlayerTimeResetBtn.setVisibility(VISIBLE);" + NL)
-    if pblock not in t:
-        sys.exit('锚点丢失：竖屏分支片头片尾块')
-    t = t.replace(pblock, nblock, 1)
-    log('竖屏：进度条两端时间、片头/片尾/重置 全部保留')
 
     o5 = '        if (showButton) mLandscapePortraitBtn.setText(isPortrait ? "横屏" : "竖屏");'
     n5 = '        mLandscapePortraitBtn.setText("旋屏");'
@@ -1526,14 +1509,10 @@ def apply_java():
     ac = jp('app/src/main/java/com/github/tvbox/osc/api/ApiConfig.java')
     h = read_text(ac)
 
-    # (1) 默认 ads 字面量：只留国内影视仓真实出现的 3 个（海外联盟对国内源无效）
-    i0 = h.find('\\"ads\\":[')
-    i1 = h.find(']}', i0)
-    assert i0 > 0 and i1 > i0, '锚点丢失：ads 字面量'
-    ADS_LIT = r'''\"mimg.0c1q0l.cn\",\"mc.usihnbcq.cn\",\"mg.g1mm3d.cn\"'''
-    h = h[:i0] + r'\"ads\":[' + ADS_LIT + ']}' + h[i1 + 2:]
+    # (1) 默认 ads 字面量保持上游原样（不再裁剪）
     # 订阅 ads 不再合并（统计类噪声大，只用公网视频广告规则）
-    h = h.replace('        if(infoJson.has("ads")){', '        if(false && infoJson.has("ads")){', 1)
+    if not OPT_MERGE_SOURCE_ADS:
+        h = h.replace('        if(infoJson.has("ads")){', '        if(false && infoJson.has("ads")){', 1)
 
 
     # (3) 订阅 doh（全是境外节点、且会把选择重置成"关闭"）→ 内置列表优先，不改动用户所选
@@ -1788,21 +1767,7 @@ public class AdBlocker {
         h2 = h2.replace(close_old, close_new, 1)
         write_text(ac2, h2)
 
-    # 「推送」这个字样会出现在播放页的线路菜单里（push_agent 伪源），改名成“直链”
-    for fname, old, new in (
-        ('api/ApiConfig.java', 'sourceBean.setName("推送");', 'sourceBean.setName("直链");'),
-        ('viewmodel/SourceViewModel.java', 'video.type = "推送";', 'video.type = "直链";'),
-        ('viewmodel/SourceViewModel.java', 'urlInfo.flag = "推送";', 'urlInfo.flag = "直链";'),
-    ):
-        fp = os.path.join(SRC, 'app/src/main/java/com/github/tvbox/osc', fname)
-        if not os.path.exists(fp):
-            sys.exit('缺失文件 ' + fname)
-        txt = open(fp, encoding='utf-8').read()
-        if old not in txt:
-            sys.exit('锚点丢失：' + old)
-        txt = txt.replace(old, new, 1)
-        open(fp, 'w', encoding='utf-8').write(txt)
-    log('推送字样：改为“直链”（播放页线路菜单不再出现“推送”）')
+    # 线路菜单里的「推送」保持上游原样，不再改名
 
     # 投屏按钮：底座用 SDK>=30 才显示，很多电视是 SDK 28/29，按钮直接被藏了
     gate = ('        if (Build.VERSION.SDK_INT < 30) {' + '\n'
@@ -1816,15 +1781,12 @@ public class AdBlocker {
         n2 = t.count('mCastBtn.setVisibility(Build.VERSION.SDK_INT < 30 ? GONE : VISIBLE);')
         t = t.replace('mCastBtn.setVisibility(Build.VERSION.SDK_INT < 30 ? GONE : VISIBLE);',
                       'mCastBtn.setVisibility(VISIBLE);')
-        log('投屏按钮：去掉 %d 处系统版本门槛，任何电视都显示' % (n2 + 1))
+        log('推送按钮：去掉 %d 处系统版本门槛，任何电视都常显' % (n2 + 1))
     else:
         sys.exit('锚点丢失：投屏按钮的系统版本判定')
 
     head = ('    public void updateDanmuSearchUiBtn() {' + '\n'
             + '        if (mDanmuSearchUiBtn == null) return;')
-    if head not in t:
-        sys.exit('锚点丢失：updateDanmuSearchUiBtn')
-    t = t.replace(head, head + '\n' + PURGE_CALL, 1)
     # 播放器/解码切换：replay 后控件标签可能被刷回旧值 → 延迟补刷一次
     for o, n in (
         ('listener.setAllowSwitchPlayer(false);',
@@ -1841,14 +1803,6 @@ public class AdBlocker {
             sys.exit('锚点丢失：切换后刷新 ' + o[:40])
         t = t.replace(o, n)
 
-    a5 = '                    String ijk = mPlayerConfig.getString("ijk");'
-    if a5 in t:
-        t = t.replace(a5, '                    if (mPlayerConfig.getInt("pl") != 1) {' + NL
-                      + '                        try { hideBottom(); } catch (Throwable ignored) {}' + NL
-                      + '                        return;' + NL
-                      + '                    }' + NL
-                      + a5, 1)
-        log('硬解按钮：非 IJK 播放器下点击无效')
     log('播放器/解码切换后延迟补刷标签')
 
     # 自适应 UI
@@ -1916,8 +1870,33 @@ public class AdBlocker {
 
 # ---------------------------------------------------------------- 自检
 
+def apply_top_width():
+    """上游右上容器只占 1/4 屏宽：网速 + 播放时间 + 系统时间三串字排一行必然挤在一起。
+    只调整宽度分配（左 2 : 右 3），显隐逻辑完全不动，保持上游 1002/1003 原样。"""
+    ET.register_namespace('android', NS)
+    path = jp(LAYOUT)
+    tree = ET.parse(path)
+    root = tree.getroot()
+    l = find_id(root, 'tv_top_l_container')
+    r = find_id(root, 'tv_top_r_container')
+    sd = find_id(root, 'tv_screen_display')
+    if l is None or r is None or sd is None:
+        sys.exit('顶部宽度锚点丢失')
+    if r.get(A + 'layout_weight') == '3':
+        log('  = 顶部右栏宽度已是 3，跳过')
+        return
+    l.set(A + 'layout_weight', '2')
+    r.set(A + 'layout_weight', '3')
+    # 让时间行占满右栏再靠右对齐，否则 wrap_content 超宽时从左边溢出盖住片名
+    sd.set(A + 'layout_width', 'match_parent')
+    tree.write(path, encoding='utf-8', xml_declaration=True)
+    log('顶部：右栏宽度 1 -> 3（网速与时间不再叠字），左栏 3 -> 2')
+
+
 def apply_fast_start():
     """净化开着时不再傻等 m3u8 清单：3.5 秒没抓完就直接起播，晚到的净化结果放弃。"""
+    log('起播放行：完全回上游（不插入任何字段/方法）')
+    return
     p = jp(SRC, VOD)
     src = read_text(p)
     if 'tkTakeOver' in src:
@@ -1944,7 +1923,7 @@ def apply_fast_start():
 
     # 开关关掉时：字段和 tkTakeOver 方法留在树里当锚点（纯新增、无人调用、无副作用），
     # 但下面所有"替换上游行为"的动作全部不做 —— 起播流程一字不动回到上游。
-    if not FEAT_PLAY_PATCHES:
+    if not FEAT_FAST_START:
         write_text(p, src)
         log('起播抢占：已关闭（只留空方法作锚点，起播回到上游原逻辑）')
         return
@@ -2235,7 +2214,7 @@ def apply_btn_whitelist():
     ok = ['play_label', 'play_pre', 'play_next', 'play_retry', 'play_refresh', 'play_scale',
           'play_speed', 'play_player', 'play_ijk', 'play_time_start_end_text', 'play_time_reset',
           'play_cast', 'play_download', 'zimu_select', 'audio_track_select', 'video_track_select',
-          'danmu_setting', 'danmu_search_ui', 'landscape_portrait', 'screen_display']
+          'danmu_setting', 'landscape_portrait', 'screen_display']
     arr = ', '.join('"%s"' % k for k in ok)
     method = L.join([
         '    private static final String[] TK_BTN_OK = {%s};' % arr,
@@ -2267,14 +2246,75 @@ def apply_btn_whitelist():
         '            }',
         '        } catch (Throwable ignored) {',
         '        }',
+        '    }',
+        '    // 延迟再清三次：源常在进页面几百毫秒后才把按钮塞进来',
+        '    private void tkPurgeLater() {',
+        '        try {',
+        '            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() {',
+        '                public void run() { tkPurgeButtons(); tkPurgeTextAll(); }',
+        '            }, 600);',
+        '            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() {',
+        '                public void run() { tkPurgeButtons(); tkPurgeTextAll(); }',
+        '            }, 2000);',
+        '            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() {',
+        '                public void run() { tkPurgeButtons(); tkPurgeTextAll(); }',
+        '            }, 5000);',
+        '        } catch (Throwable ignored) {',
+        '        }',
+        '    }',
+        '    // 纯文字、无图标的“推送”类按钮 = 外来注入；我方推送带 v_cast 图标，不会被误删',
+        '    private void tkPurgeTextAll() {',
+        '        try {',
+        '            android.view.ViewGroup root = findViewById(R.id.bottom_container);',
+        '            if (root != null) tkPurgeText(root);',
+        '        } catch (Throwable ignored) {',
+        '        }',
+        '    }',
+        '    private void tkPurgeText(android.view.View v) {',
+        '        if (!(v instanceof android.view.ViewGroup)) return;',
+        '        android.view.ViewGroup g = (android.view.ViewGroup) v;',
+        '        for (int i = g.getChildCount() - 1; i >= 0; i--) {',
+        '            android.view.View c = g.getChildAt(i);',
+        '            if (c instanceof android.widget.TextView) {',
+        '                android.widget.TextView tv = (android.widget.TextView) c;',
+        '                CharSequence cs = tv.getText();',
+        '                String s = cs == null ? "" : cs.toString();',
+        '                if (s.contains("推送") || s.indexOf("x推送") >= 0 || s.indexOf("X推送") >= 0) {',
+        '                    android.graphics.drawable.Drawable[] ds = tv.getCompoundDrawables();',
+        '                    boolean hasIcon = false;',
+        '                    for (android.graphics.drawable.Drawable d : ds) { if (d != null) { hasIcon = true; break; } }',
+        '                    if (!hasIcon) { g.removeView(c); continue; }',
+        '                }',
+        '            }',
+        '            tkPurgeText(c);',
+        '        }',
         '    }'])
     vp = jp(VOD)
     vc = read_text(vp)
-    a = '    private int tkUiKey = 0;'
-    if a not in vc:
-        sys.exit('白名单锚点丢失：tkUiKey')
+    a = '    private JSONObject mPlayerConfig = null;'
+    if vc.count(a) != 1:
+        sys.exit('白名单锚点丢失：mPlayerConfig')
     if 'TK_BTN_OK' not in vc:
         vc = vc.replace(a, a + L + method, 1)
+    # 底栏每次弹出都清一遍（源会在显示时把 zx推送 这类塞进按钮行）
+    sb = ('    void showBottom() {' + L
+          + '        mHandler.removeMessages(1003);' + L
+          + '        mHandler.sendEmptyMessage(1002);' + L
+          + '        mNextBtn.requestFocus();' + L
+          + '    }')
+    sb2 = ('    void showBottom() {' + L
+           + '        mHandler.removeMessages(1003);' + L
+           + '        mHandler.sendEmptyMessage(1002);' + L
+           + '        mNextBtn.requestFocus();' + L
+           + '        tkPurgeButtons();' + L
+           + '        tkPurgeTextAll();' + L
+           + '        tkPurgeLater();' + L
+           + '    }')
+    if sb2 not in vc:
+        if sb not in vc:
+            sys.exit('白名单锚点丢失：showBottom')
+        vc = vc.replace(sb, sb2, 1)
+
     old = ('    private void tkAdaptiveUi() {' + L +
            '        // tk：尺寸已全部静态化到 dimen（按屏宽/方向自动生效），不再运行时重排' + L +
            '    }')
@@ -2470,13 +2510,7 @@ def apply_pause_keep():
         sys.exit('暂停保活锚点丢失：myRunnable 闲置隐藏')
     vc = vc.replace(old1, new1, 1)
 
-    old2 = ('                        updateDanmuSearchUiBtn();' + L +
-            '                        hidePauseRoot();')
-    new2 = ('                        updateDanmuSearchUiBtn();' + L +
-            '                        if (videoPlayState == VideoView.STATE_PAUSED) showPauseRoot(); else hidePauseRoot(); // tkPauseKeep')
-    if vc.count(old2) != 1:
-        sys.exit('暂停保活锚点丢失：1002 暂停面板')
-    vc = vc.replace(old2, new2, 1)
+    # 1002 的暂停面板保持上游原样（hidePauseRoot 无条件）
 
     old3 = ('    void showBottom() {' + L +
             '        mHandler.removeMessages(1003);' + L +
@@ -2484,6 +2518,7 @@ def apply_pause_keep():
     new3 = ('    void showBottom() {' + L +
             '        mHandler.removeMessages(1003);' + L +
             '        setVisibility(VISIBLE); // tkPauseKeep：外层一并可见，避免"点了没反应"' + L +
+            '        mBottomRoot.setVisibility(VISIBLE); // tkPauseKeep：底栏直接置可见，不等消息排队' + L +
             '        mHandler.sendEmptyMessage(1002);')
     if vc.count(old3) != 1:
         sys.exit('暂停保活锚点丢失：showBottom')
@@ -2498,99 +2533,110 @@ def apply_pause_keep():
         sys.exit('暂停保活锚点丢失：单击')
     vc = vc.replace(old4, new4, 1)
 
+    bc = jp('app/src/main/java/com/github/tvbox/osc/player/controller/BaseController.java')
+    b = read_text(bc)  # 暂停面板保持上游原样，不加置顶
+
     write_text(vp, vc)
+    write_text(bc, b)
     log('暂停保活：暂停时闲置计时器不再把底栏/时间面板收掉')
-    log('唤出底栏：先清掉遗留的隐藏消息，外层同步可见（不会点了没反应）')
+    log('唤出底栏：底栏直接置可见，外层同步可见（不会点了没反应）')
 
 
 def apply_ad_safety():
-    """广告过滤的两个真实缺陷：
-    1) playM3u8 的 3.5s 超时放行是"裸"排队的：切集后旧地址的超时仍会抢到起播权，
-       把播放拉回上一集（上一集往往正是那段广告）→ 表现为广告放完又回到广告、不切正片。
+    """两个真实缺陷（各自独立开关，互不牵连）：
+    1) 3.5s 超时放行是"裸"排队的：切集后旧地址的超时仍会抢到起播权，
+       把播放拉回上一集（上一集往往正是那段广告）→ 表现为广告放完又回到广告、正片不出来。
     2) 走净化代理起播后没有任何回落：代理清单一旦不可播，只会一直黑着。
     """
-    if not FEAT_PLAY_PATCHES:
-        log('广告兜底：已关闭，保持上游原逻辑')
+    if not FEAT_FAST_START or not (FEAT_SEQ_GUARD or FEAT_PROXY_WATCHDOG):
+        log('广告兜底：已关闭（强起关了，不再有需要作废的超时回调）')
         return
     L = chr(10)
     vp = jp(VOD)
     vc = read_text(vp)
-    if 'tkWatchProxy' in vc:
-        log('  = 广告过滤兜底已存在，跳过')
+    if 'tkPlaySeq' in vc:
+        log('  = 起播序号防抢已存在，跳过')
         return
 
-    # 1) 序列号：切集后旧超时作废
-    a = '    private boolean tkTakeOver() {'
-    if vc.count(a) != 1:
-        sys.exit('广告兜底锚点丢失：tkTakeOver')
-    vc = vc.replace(a, '    private long tkPlaySeq = 0L; // 每次起播递增，旧超时/旧看门狗自动作废' + L + L + a, 1)
+    # 看门狗单独开、序号关时，补一个只在形式上存在的序号字段（恒等于 0，判断永远成立）
+    if FEAT_PROXY_WATCHDOG and not FEAT_SEQ_GUARD:
+        a = '    private boolean tkTakeOver() {'
+        if vc.count(a) != 1:
+            sys.exit('广告兜底锚点丢失：tkTakeOver')
+        vc = vc.replace(a, '    private long tkPlaySeq = 0L;' + L + L + a, 1)
 
-    b = ('        tkPlayed = false;' + L +
-         '        try {' + L +
-         '            final android.os.Handler tkHandler = new android.os.Handler(android.os.Looper.getMainLooper());')
-    b2 = ('        tkPlayed = false;' + L +
-          '        final long tkSeqNow = ++tkPlaySeq;' + L +
-          '        try {' + L +
-          '            final android.os.Handler tkHandler = new android.os.Handler(android.os.Looper.getMainLooper());')
-    if vc.count(b) != 1:
-        sys.exit('广告兜底锚点丢失：playM3u8 超时块')
-    vc = vc.replace(b, b2, 1)
+    if FEAT_SEQ_GUARD:
+        # 1) 序列号：切集后旧超时作废
+        a = '    private boolean tkTakeOver() {'
+        if vc.count(a) != 1:
+            sys.exit('广告兜底锚点丢失：tkTakeOver')
+        vc = vc.replace(a, '    private long tkPlaySeq = 0L; // 每次起播递增，旧超时自动作废' + L + L + a, 1)
 
-    c = ('                public void run() {' + L +
-         '                    if (!tkTakeOver()) return;' + L +
-         '                    LOG.i("echo-m3u8起播超时放行: " + url);')
-    c2 = ('                public void run() {' + L +
-          '                    if (tkSeqNow != tkPlaySeq) return; // 已切到别的集，这次超时作废' + L +
-          '                    if (!tkTakeOver()) return;' + L +
-          '                    LOG.i("echo-m3u8起播超时放行: " + url);')
-    if vc.count(c) != 1:
-        sys.exit('广告兜底锚点丢失：超时 runnable')
-    vc = vc.replace(c, c2, 1)
+        b = ('        tkPlayed = false;' + L +
+             '        try {' + L +
+             '            final android.os.Handler tkHandler = new android.os.Handler(android.os.Looper.getMainLooper());')
+        b2 = ('        tkPlayed = false;' + L +
+              '        final long tkSeqNow = ++tkPlaySeq;' + L +
+              '        try {' + L +
+              '            final android.os.Handler tkHandler = new android.os.Handler(android.os.Looper.getMainLooper());')
+        if vc.count(b) != 1:
+            sys.exit('广告兜底锚点丢失：playM3u8 超时块')
+        vc = vc.replace(b, b2, 1)
 
-    # 2) 代理播放看门狗：12 秒还没进播放态就回落原地址
-    d = ('            listener.onM3u8ProxyUrl(proxyUrl, url);' + L +
-         '            listener.startPlayUrl(proxyUrl, headers);')
-    d2 = ('            listener.onM3u8ProxyUrl(proxyUrl, url);' + L +
-          '            listener.startPlayUrl(proxyUrl, headers);' + L +
-          '            tkWatchProxy(url, headers); // 净化代理不认账时回落原地址')
-    if vc.count(d) != 1:
-        sys.exit('广告兜底锚点丢失：代理起播')
-    vc = vc.replace(d, d2, 1)
+        c = ('                public void run() {' + L +
+             '                    if (!tkTakeOver()) return;' + L +
+             '                    LOG.i("echo-m3u8起播超时放行: " + url);')
+        c2 = ('                public void run() {' + L +
+              '                    if (tkSeqNow != tkPlaySeq) return; // 已切到别的集，这次超时作废' + L +
+              '                    if (!tkTakeOver()) return;' + L +
+              '                    LOG.i("echo-m3u8起播超时放行: " + url);')
+        if vc.count(c) != 1:
+            sys.exit('广告兜底锚点丢失：超时 runnable')
+        vc = vc.replace(c, c2, 1)
+        log('广告兜底：切集后旧的 3.5s 超时作废（不会再被拉回上一集的广告）')
 
-    e = '    private void processM3u8Content(String url, String content, HashMap<String, String> headers) {'
-    if vc.count(e) != 1:
-        sys.exit('广告兜底锚点丢失：processM3u8Content')
-    watch = (
-        '    // 净化代理看门狗：起播后 12 秒仍未进入播放态，说明代理清单不可播，直接回落原地址' + L +
-        '    private void tkWatchProxy(final String origUrl, final HashMap<String, String> headers) {' + L +
-        '        final long seq = tkPlaySeq;' + L +
-        '        try {' + L +
-        '            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() {' + L +
-        '                @Override public void run() {' + L +
-        '                    try {' + L +
-        '                        if (seq != tkPlaySeq) return;' + L +
-        '                        if (videoPlayState == VideoView.STATE_PLAYING || videoPlayState == VideoView.STATE_PAUSED) return;' + L +
-        '                        tkPlayed = false;' + L +
-        '                        LOG.e("tk净化代理无画面，回落原地址");' + L +
-        '                        listener.startPlayUrl(origUrl, headers);' + L +
-        '                    } catch (Throwable ignored) {}' + L +
-        '                }' + L +
-        '            }, 12000);' + L +
-        '        } catch (Throwable ignored) {}' + L +
-        '    }' + L + L)
-    vc = vc.replace(e, watch + e, 1)
+    if FEAT_PROXY_WATCHDOG:
+        # 2) 代理播放看门狗：12 秒还没进播放态就回落原地址
+        d = ('            listener.onM3u8ProxyUrl(proxyUrl, url);' + L +
+             '            listener.startPlayUrl(proxyUrl, headers);')
+        d2 = ('            listener.onM3u8ProxyUrl(proxyUrl, url);' + L +
+              '            listener.startPlayUrl(proxyUrl, headers);' + L +
+              '            tkWatchProxy(url, headers); // 净化代理不认账时回落原地址')
+        if vc.count(d) != 1:
+            sys.exit('广告兜底锚点丢失：代理起播')
+        vc = vc.replace(d, d2, 1)
+
+        e = '    private void processM3u8Content(String url, String content, HashMap<String, String> headers) {'
+        if vc.count(e) != 1:
+            sys.exit('广告兜底锚点丢失：processM3u8Content')
+        watch = (
+            '    // 净化代理看门狗：起播后 12 秒仍未进入播放态，说明代理清单不可播，直接回落原地址' + L +
+            '    private void tkWatchProxy(final String origUrl, final HashMap<String, String> headers) {' + L +
+            '        final long seq = tkPlaySeq;' + L +
+            '        try {' + L +
+            '            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() {' + L +
+            '                @Override public void run() {' + L +
+            '                    try {' + L +
+            '                        if (seq != tkPlaySeq) return;' + L +
+            '                        if (videoPlayState == VideoView.STATE_PLAYING || videoPlayState == VideoView.STATE_PAUSED) return;' + L +
+            '                        tkPlayed = false;' + L +
+            '                        LOG.e("tk净化代理无画面，回落原地址");' + L +
+            '                        listener.startPlayUrl(origUrl, headers);' + L +
+            '                    } catch (Throwable ignored) {}' + L +
+            '                }' + L +
+            '            }, 12000);' + L +
+            '        } catch (Throwable ignored) {}' + L +
+            '    }' + L + L)
+        vc = vc.replace(e, watch + e, 1)
+        log('广告兜底：净化代理 12 秒没画面自动回落原地址（不会黑在那儿不切）')
 
     write_text(vp, vc)
-    log('广告兜底：切集后旧的 3.5s 超时作废（不会再被拉回上一集的广告）')
-    log('广告兜底：净化代理 12 秒没画面自动回落原地址（不会黑在那儿不切）')
-
-
 def apply_ad_replay():
     """这个源的实际结构：先给一条"广告 m3u8"（几十秒、自带 ENDLIST），播完才该重新解析出正片。
     上游在播完时一律走 playNext —— 而网页源通常只有一集，于是直接弹"已经是最后一集了"，
     正片就永远出不来。改成：整段时长 <= 120 秒的播完，重新解析当前集（最多两次），
     还不行才走原来的下一集逻辑。"""
-    if not FEAT_PLAY_PATCHES:
+    if not FEAT_AD_REPLAY:
         log('广告段播完重解析：已关闭，播完仍走上游"下一集"逻辑')
         return
     L = chr(10)
@@ -2682,43 +2728,38 @@ def apply_speed_fix():
     acted = []
 
     # ---- 1) 净化缓存 ----
-    if FEAT_PLAY_PATCHES and 'tkLastPurifyUrl' not in vc:
-        a = '    private long tkPlaySeq = 0L; // 每次起播递增，旧超时/旧看门狗自动作废'
-        if vc.count(a) != 1:
-            sys.exit('净化缓存锚点丢失：tkPlaySeq')
-        vc = vc.replace(a, a + L + '    private String tkLastPurifyUrl = null; // 上次净化成功的主清单地址', 1)
+    if FEAT_PURIFY_CACHE and 'tkLastPurifyUrl' not in vc:
+        fld = '    private JSONObject mPlayerConfig = null;'
+        if vc.count(fld) != 1:
+            sys.exit('净化缓存锚点丢失：mPlayerConfig 字段')
+        vc = vc.replace(fld, fld + L + '    private String tkLastPurifyUrl = null; // 上次净化成功的主清单地址', 1)
 
-        b = ('        tkPlayed = false;' + L +
-             '        final long tkSeqNow = ++tkPlaySeq;')
-        b2 = ('        tkPlayed = false;' + L +
-              '        final long tkSeqNow = ++tkPlaySeq;' + L +
-              '        // 同一地址已净化过：直接走代理起播，不再等 3.5 秒（切解码/换播放器秒切）' + L +
+        b = '        OkGo.getInstance().cancelTag("m3u8-2");'
+        if vc.count(b) != 1:
+            sys.exit('净化缓存锚点丢失：cancelTag m3u8-2')
+        b2 = (b + L +
+              '        // tkPurifyCache：同一地址已净化过，直接走代理起播，不再重复拉清单' + L +
               '        if (tkLastPurifyUrl != null && tkLastPurifyUrl.equals(url)' + L +
               '                && RemoteServer.m3u8Content != null && M3u8.currentAdCount > 0) {' + L +
               '            try {' + L +
               '                String cProxy = ControlManager.get().getAddress(true) + "proxyM3u8";' + L +
               '                listener.onM3u8ProxyUrl(cProxy, url);' + L +
               '                listener.startPlayUrl(cProxy, headers);' + L +
-              '                tkWatchProxy(url, headers);' + L +
               '                return;' + L +
               '            } catch (Throwable ignored) {}' + L +
               '        }')
-        if vc.count(b) != 1:
-            sys.exit('净化缓存锚点丢失：playM3u8 入口')
         vc = vc.replace(b, b2, 1)
 
         c = ('            listener.onM3u8ProxyUrl(proxyUrl, url);' + L +
-             '            listener.startPlayUrl(proxyUrl, headers);' + L +
-             '            tkWatchProxy(url, headers); // 净化代理不认账时回落原地址')
+             '            listener.startPlayUrl(proxyUrl, headers);')
         c2 = ('            listener.onM3u8ProxyUrl(proxyUrl, url);' + L +
-              '            tkLastPurifyUrl = url; // 记住这份净化结果，切解码时复用' + L +
-              '            listener.startPlayUrl(proxyUrl, headers);' + L +
-              '            tkWatchProxy(url, headers); // 净化代理不认账时回落原地址')
+              '            tkLastPurifyUrl = url; // tkPurifyCache：记住这份净化结果，切解码时复用' + L +
+              '            listener.startPlayUrl(proxyUrl, headers);')
         if vc.count(c) != 1:
-            sys.exit('净化缓存锚点丢失：记录净化地址')
+            sys.exit('净化缓存锚点丢失：记录净化地址（找到 %d 处）' % vc.count(c))
         vc = vc.replace(c, c2, 1)
         write_text(vp, vc)
-        acted.append('净化缓存：同一地址切软解/硬解/换播放器不再等 3.5 秒')
+        acted.append('净化缓存：同一地址切软解/硬解/换播放器不再重复拉一遍清单')
 
     # ---- 2) seekBar 高度静态化 ----
     if 'tk_seek_h' not in xt:
@@ -2913,56 +2954,30 @@ def apply_top_transparent():
     log('顶部透明：%d 处去掉半透明底板（片名/分辨率/时间行/网速），只剩白字' % len(ids))
 
 
-def apply_top_fix():
-    """顶部网速与时间挤在 1/4 宽的右侧容器里会重叠：网速只在缓冲时出现；自适应 UI 只在尺寸变化时重排。"""
+def apply_top_fix_DISABLED():
+    """只保留一处纯性能改动：自适应 UI 在尺寸没变时不再重排。
+    顶部网速/时间的显隐、屏显开关全部回到上游原样。"""
     L = chr(10)
-    ET.register_namespace('android', NS)
-    path = jp(LAYOUT)
-    tree = ET.parse(path)
-    root = tree.getroot()
-    sp = find_id(root, 'net_play_speed')
-    if sp is None:
-        sys.exit('顶部修复锚点丢失：net_play_speed')
-    if sp.get(A + 'visibility') != 'gone':
-        sp.set(A + 'visibility', 'gone')
-        tree.write(path, encoding='utf-8', xml_declaration=True)
-        log('顶部：网速默认不常显，只在缓冲时出现（不再压住播放时间/系统时间）')
-
     vc_path = jp(VOD)
     vc = read_text(vc_path)
-    if 'net_play_speed.setVisibility(disPlay);' in vc:
-        vc = vc.replace('        net_play_speed.setVisibility(disPlay);' + L, '', 1)
-        vc = vc.replace('                net_play_speed.setVisibility(disPlay);' + L, '', 1)
-        write_text(vc_path, vc)
-        log('顶部：屏显开关不再强制打开网速')
-
-    vc = read_text(vc_path)
-    if 'tkUiKey' not in vc:
-        a = '    private boolean tkPlayed = false;'
-        if a not in vc:
-            sys.exit('顶部修复锚点丢失：tkPlayed 字段')
-        vc = vc.replace(a, a + L + '    private int tkUiKey = 0;', 1)
-        a2 = '            if (mActivity == null) return;'
-        if a2 not in vc:
-            sys.exit('顶部修复锚点丢失：tkAdaptiveUi 开头')
-        b2 = ('            if (mActivity == null) return;' + L +
-              '            // tk：尺寸没变就别再重排一次，避免每次刷新配置都 requestLayout' + L +
-              '            int tkKey = getWidth() * 31 + getHeight();' + L +
-              '            if (tkKey > 0 && tkKey == tkUiKey) return;' + L +
-              '            if (tkKey > 0) tkUiKey = tkKey;')
-        vc = vc.replace(a2, b2, 1)
-        write_text(vc_path, vc)
-        log('自适应 UI：尺寸不变不再重排（减卡顿）')
-
-    root2 = ET.parse(path).getroot()
-    sp2 = find_id(root2, 'net_play_speed')
-    if sp2.get(A + 'visibility') != 'gone':
-        sys.exit('顶部修复没生效')
-    vcx = read_text(vc_path)
-    if 'net_play_speed.setVisibility(disPlay);' in vcx:
-        sys.exit('屏显开关还在强制显网速')
-    if 'tkUiKey' not in vcx:
-        sys.exit('自适应 UI 节流没写入')
+    if 'tkUiKey' in vc:
+        log('  = 自适应 UI 节流已存在，跳过')
+        return
+    a = '    private JSONObject mPlayerConfig = null;'
+    if vc.count(a) != 1:
+        sys.exit('顶部修复锚点丢失：mPlayerConfig 字段')
+    vc = vc.replace(a, a + L + '    private int tkUiKey = 0;', 1)
+    a2 = '            if (mActivity == null) return;'
+    if vc.count(a2) != 1:
+        sys.exit('顶部修复锚点丢失：tkAdaptiveUi 开头')
+    b2 = ('            if (mActivity == null) return;' + L +
+          '            // tk：尺寸没变就别再重排一次，避免每次刷新配置都 requestLayout' + L +
+          '            int tkKey = getWidth() * 31 + getHeight();' + L +
+          '            if (tkKey > 0 && tkKey == tkUiKey) return;' + L +
+          '            if (tkKey > 0) tkUiKey = tkKey;')
+    vc = vc.replace(a2, b2, 1)
+    write_text(vc_path, vc)
+    log('自适应 UI：尺寸不变不再重排（减卡顿）')
 
 
 def apply_danmu_alpha():
@@ -3143,6 +3158,255 @@ def apply_app_name():
     print('  + 应用名：%s（桌面显示 + 最近任务）' % APP_NAME)
 
 
+def apply_render_fix():
+    """画面被拉扁的两处上游 bug（只改比例换算，不碰解码、不碰播放内核）。
+
+    22-1 MeasureHelper 的「填充」档：
+         width = widthMeasureSpec / height = heightMeasureSpec
+         MeasureSpec 不是尺寸，是打包了模式位的 int（EXACTLY 下约 10.7 亿 + 真实尺寸）。
+         直接丢给 setMeasuredDimension，画面会被算到天文数字再被父容器裁掉。
+         上面已经把等比尺寸算好了，这两行本来就该是空的。
+
+    22-2 EXO / IJK 上报视频宽高时把像素宽高比丢了：
+         anamorphic 片源（老剧、录播、部分 m3u8 很常见）是 1440×1080 存、
+         1.333 像素比、应该显示成 1920×1080。裸报编码宽，渲染层拿到错的宽高比，
+         再按等比一算，画面必然被拉宽（也就是"扁"）。
+    """
+    L = chr(10)
+    MH = 'player/src/main/java/xyz/doikki/videoplayer/render/MeasureHelper.java'
+    EXO = 'player/src/main/java/xyz/doikki/videoplayer/exo/ExoMediaPlayer.java'
+    IJK = 'player/src/main/java/xyz/doikki/videoplayer/ijk/IjkPlayer.java'
+    hit = 0
+
+    # ---- 22-1 「填充」档 ----
+    p = jp(MH)
+    t = read_text(p)
+    if 'tkRenderFixFill' not in t:
+        a = ('            case VideoView.SCREEN_SCALE_MATCH_PARENT:' + L
+             + '                width = widthMeasureSpec;' + L
+             + '                height = heightMeasureSpec;' + L
+             + '                break;')
+        b = ('            case VideoView.SCREEN_SCALE_MATCH_PARENT:' + L
+             + '                /* tkRenderFixFill：上游拿 MeasureSpec 原值当尺寸，这里沿用上面的等比结果 */' + L
+             + '                break;')
+        if t.count(a) != 1:
+            sys.exit('画面比例锚点丢失：MeasureHelper MATCH_PARENT')
+        write_text(p, t.replace(a, b, 1))
+        hit += 1
+
+    # ---- 22-2 EXO 补像素宽高比 ----
+    p = jp(EXO)
+    t = read_text(p)
+    if 'tkRenderFixExo' not in t:
+        a = ('    public void onVideoSizeChanged(VideoSize videoSize) {' + L
+             + '        if (mPlayerEventListener != null) {' + L
+             + '            mPlayerEventListener.onVideoSizeChanged(videoSize.width, videoSize.height);')
+        b = ('    public void onVideoSizeChanged(VideoSize videoSize) {' + L
+             + '        if (mPlayerEventListener != null) {' + L
+             + '            /* tkRenderFixExo：补回像素宽高比，否则 anamorphic 片源被拉扁 */' + L
+             + '            int tkW = videoSize.width;' + L
+             + '            float tkR = videoSize.pixelWidthHeightRatio;' + L
+             + '            if (tkR > 0.5f && tkR < 3.0f && Math.abs(tkR - 1.0f) > 0.01f) tkW = (int) (tkW * tkR + 0.5f);' + L
+             + '            mPlayerEventListener.onVideoSizeChanged(tkW, videoSize.height);')
+        if t.count(a) != 1:
+            sys.exit('画面比例锚点丢失：ExoMediaPlayer.onVideoSizeChanged')
+        write_text(p, t.replace(a, b, 1))
+        hit += 1
+
+    # ---- 22-2 IJK 按 SAR 折算 ----
+    p = jp(IJK)
+    t = read_text(p)
+    if 'tkRenderFixIjk' not in t:
+        a = ('    public void onVideoSizeChanged(IMediaPlayer mp, int width, int height, int sar_num, int sar_den) {' + L
+             + '        int videoWidth = mp.getVideoWidth();' + L
+             + '        int videoHeight = mp.getVideoHeight();' + L
+             + '        if (videoWidth != 0 && videoHeight != 0) {')
+        b = ('    public void onVideoSizeChanged(IMediaPlayer mp, int width, int height, int sar_num, int sar_den) {' + L
+             + '        int videoWidth = mp.getVideoWidth();' + L
+             + '        int videoHeight = mp.getVideoHeight();' + L
+             + '        /* tkRenderFixIjk：按 SAR 折算显示宽（sar 为 0 或相等时不动，折算后超过 4 倍视为异常放弃） */' + L
+             + '        if (sar_num > 0 && sar_den > 0 && sar_num != sar_den) {' + L
+             + '            int tkW = (int) ((long) videoWidth * sar_num / sar_den);' + L
+             + '            if (tkW > 0 && tkW <= videoWidth * 4) videoWidth = tkW;' + L
+             + '        }' + L
+             + '        if (videoWidth != 0 && videoHeight != 0) {')
+        if t.count(a) != 1:
+            sys.exit('画面比例锚点丢失：IjkPlayer.onVideoSizeChanged')
+        write_text(p, t.replace(a, b, 1))
+        hit += 1
+
+    log('画面比例：修「填充」档 1 处、补像素宽高比 2 处（EXO 用 pixelWidthHeightRatio / IJK 用 SAR）')
+
+
+def apply_dns_default():
+    """上游 DoH 默认值是 0（=关闭）——出厂就是走系统 DNS，很多源域名解析不出来、拉不到数据。
+    这里只改"读取默认值"的那几处，把它变成 1（腾讯 DoH）；用户手动选过就尊重用户选择。"""
+    files = [
+        'app/src/main/java/com/github/tvbox/osc/util/OkGoHelper.java',
+        'app/src/main/java/com/github/tvbox/osc/ui/fragment/ModelSettingFragment.java',
+        'app/src/main/java/com/github/tvbox/osc/server/ControlManager.java',
+    ]
+    hit = 0
+    for rel in files:
+        fp = jp(rel)
+        t = read_text(fp)
+        if 'tkDnsDefault' in t:
+            continue
+        n = t.count('Hawk.get(HawkConfig.DOH_URL, 0)')
+        if n:
+            t = t.replace('Hawk.get(HawkConfig.DOH_URL, 0)', 'Hawk.get(HawkConfig.DOH_URL, 1) /* tkDnsDefault */')
+            write_text(fp, t)
+            hit += n
+    log('DNS 默认：%d 处默认值由"关闭"改为腾讯 DoH（关掉 DNS 会解析不出源）' % hit)
+
+
+def apply_push_button():
+    """底栏 play_cast 改造成「推送」入口：
+    - 汉字从「投屏」改成「推送」，图标原样保留
+    - 点击不再开 DLNA 投屏设备列表，改成显示本机局域网推送地址（手机浏览器打开、后面接视频地址即可推到电视）
+    """
+    L = chr(10)
+    lay = jp(LAYOUT)
+    xt = read_text(lay)
+    if 'android:text="推送"' in xt:
+        log('  = 推送按钮已改好，跳过')
+        return
+    if xt.count('android:text="投屏"') != 1:
+        sys.exit('推送按钮锚点丢失：text="投屏"')
+    xt = xt.replace('android:text="投屏"', 'android:text="推送"', 1)
+    write_text(lay, xt)
+
+    vp = jp(VOD)
+    vc = read_text(vp)
+    a = '                if (listener != null) listener.clickCast();'
+    if vc.count(a) != 1:
+        sys.exit('推送按钮锚点丢失：clickCast')
+    vc = vc.replace(a, '                tkShowPushAddr(); // tkPush：不再开投屏列表，改为显示推送地址', 1)
+
+    anchor = '    private void showScaleDialog() {'
+    if vc.count(anchor) != 1:
+        sys.exit('推送按钮锚点丢失：showScaleDialog')
+    method = (
+        '    // tkPush：推送按钮 —— 显示本机局域网推送地址（手机浏览器打开，后面接视频地址即可推过来）' + L +
+        '    private void tkShowPushAddr() {' + L +
+        '        String a = "";' + L +
+        '        try {' + L +
+        '            a = ControlManager.get().getAddress(true);' + L +
+        '        } catch (Throwable ignored) {}' + L +
+        '        if (a == null || a.isEmpty()) {' + L +
+        '            android.widget.Toast.makeText(mActivity, "推送服务没起来，退出重进一次", android.widget.Toast.LENGTH_SHORT).show();' + L +
+        '            return;' + L +
+        '        }' + L +
+        '        if (!a.endsWith("/")) a = a + "/";' + L +
+        '        final String base = a + "push/";' + L +
+        '        String msg = "手机和电视连同一个 WiFi，用手机浏览器打开这个地址，后面直接接视频地址：\\n\\n" + base + "\\n\\n例：" + base + "https://xxx.com/a.m3u8";' + L +
+        '        try {' + L +
+        '            new android.app.AlertDialog.Builder(mActivity)' + L +
+        '                    .setTitle("推送到电视")' + L +
+        '                    .setMessage(msg)' + L +
+        '                    .setPositiveButton("复制地址", new android.content.DialogInterface.OnClickListener() {' + L +
+        '                        @Override public void onClick(android.content.DialogInterface d, int w) {' + L +
+        '                            try {' + L +
+        '                                android.content.ClipboardManager cm = (android.content.ClipboardManager) mActivity.getSystemService(android.content.Context.CLIPBOARD_SERVICE);' + L +
+        '                                cm.setPrimaryClip(android.content.ClipData.newPlainText("push", base));' + L +
+        '                                android.widget.Toast.makeText(mActivity, "地址已复制", android.widget.Toast.LENGTH_SHORT).show();' + L +
+        '                            } catch (Throwable ignored) {}' + L +
+        '                        }' + L +
+        '                    })' + L +
+        '                    .setNegativeButton("关闭", null)' + L +
+        '                    .show();' + L +
+        '        } catch (Throwable ignored) {}' + L +
+        '    }' + L + L)
+    vc = vc.replace(anchor, method + anchor, 1)
+    write_text(vp, vc)
+    log('推送按钮：汉字改「推送」，点击显示局域网推送地址（不再进 DLNA 投屏列表）')
+
+
+def apply_scrim_bg():
+    """顶部/底部改成整块半透明底板（不渐变）。
+
+    渐变那版是"贴屏幕边最深、往中间渐透"，实机看着还是一层灰雾、边界也不干净，
+    而且渐变 drawable 一旦被布局引用就关不掉。这里退回最朴素的做法：
+    通宽的半透明黑板，顶底各一条，透明度均匀，一块就是一块。
+    """
+    L = chr(10)
+    lay = jp(LAYOUT)
+    dr = jp('app/src/main/res/drawable')
+    if not os.path.isdir(dr):
+        os.makedirs(dr)
+    t = read_text(lay)
+    if 'tk_scrim' in t:
+        log('  = 半透明底板已存在，跳过')
+        return
+
+    write_text(os.path.join(dr, 'tk_scrim.xml'),
+               '<?xml version="1.0" encoding="utf-8"?>' + L +
+               '<shape xmlns:android="http://schemas.android.com/apk/res/android"' + L +
+               '    android:shape="rectangle">' + L +
+               '    <solid android:color="#8C000000" />' + L +
+               '</shape>')
+
+    import re
+
+    def put_bg(tag):
+        if 'android:background=' in tag:
+            return re.sub('android:background="[^"]*"',
+                          'android:background="@drawable/tk_scrim"', tag, count=1)
+        return tag[:-1] + L + '        android:background="@drawable/tk_scrim">'
+
+    # 1) 底部菜单整条
+    m = re.search(r'<LinearLayout[^>]*@\+id/bottom_container[^>]*>', t)
+    if not m:
+        sys.exit('半透明底板锚点丢失：bottom_container')
+    t = t[:m.start()] + put_bg(m.group(0)) + t[m.end():]
+
+    # 2) 顶部整条（rootView 下第一个 LinearLayout，装片名/分辨率/时间/网速）
+    i = t.find('@+id/rootView')
+    if i < 0:
+        sys.exit('半透明底板锚点丢失：rootView')
+    k = t.find('<LinearLayout', t.find('>', i) + 1)
+    e = t.find('>', k) + 1
+    if k < 0 or e <= k:
+        sys.exit('半透明底板锚点丢失：顶部行容器')
+    nt = put_bg(t[k:e])
+    # 渐变那版为了让渐变带往下延伸加的 40dp 内边距，纯色不需要，去掉让高度回原样
+    nt = nt.replace(L + '        android:paddingBottom="40dp"', '')
+    t = t[:k] + nt + t[e:]
+
+    write_text(lay, t)
+    log('顶部/底部底板：整块半透明 #8C000000（均匀，不渐变；顶部 40dp 延伸内边距已撤）')
+
+
+def apply_screen_default():
+    """屏显默认开：右上角网速 / 播放时间 / 系统时间出厂就显示。
+
+    上游默认值是 GONE，装完什么都不显示，得手动点一下底栏「屏显」才出来；
+    换包清零又会把这个键删掉，等于每升一版又回到隐藏。
+    这里把默认值改成 VISIBLE，同时清零清单里已去掉这个键，用户点掉的会一直记住。
+    """
+    vp = jp(VOD)
+    t = read_text(vp)
+    if 'tkScreenOn' in t:
+        log('  = 屏显默认已开，跳过')
+        return
+    pairs = (
+        ('Hawk.get(HawkConfig.SCREEN_DISPLAY,GONE)',
+         'Hawk.get(HawkConfig.SCREEN_DISPLAY,VISIBLE) /* tkScreenOn */'),
+        ('Hawk.get(HawkConfig.SCREEN_DISPLAY, GONE)',
+         'Hawk.get(HawkConfig.SCREEN_DISPLAY, VISIBLE) /* tkScreenOn */'),
+    )
+    n = 0
+    for a, b in pairs:
+        c = t.count(a)
+        if c:
+            t = t.replace(a, b)
+            n += c
+    if n == 0:
+        sys.exit('屏显默认锚点丢失：SCREEN_DISPLAY 默认值一处都没找到')
+    write_text(vp, t)
+    log('屏显：%d 处默认值 GONE → VISIBLE（右上角网速/时间出厂即显示）' % n)
+
+
 def apply_gradient_bg():
     """顶部/底部整条渐变底板：靠屏幕边不透明，往画面中间逐渐透明，正中不动。
     原来是每个小标签挂一块 @drawable 半透明方块，边角生硬、还能看出方块边界；
@@ -3317,29 +3581,35 @@ def main():
     print('=== 底部菜单：图标 %s / 汉字 %s / 结构对齐 / 不动内核 ===' % (ICON_SIZE, TEXT_SIZE))
     print('源码：', SRC)
     write_icons()
-    apply_layout()
-    apply_single_layout()
-    apply_app_name()
-    apply_java()
-    apply_fast_start()
-    apply_download()
-    apply_search_boost()
-    apply_top_fix()
-    apply_top_transparent()
-    apply_text_stroke()
-    apply_static_ui()
-    apply_slot_align()
-    apply_btn_whitelist()
-    apply_btn_guard()
-    apply_pause_keep()
+    apply_layout()             # 底座：布局骨架，其余界面改动都挂在它生成的结构上
+    apply_top_width()          # 顶部右栏加宽：修上游 1/4 宽导致的叠字
+    apply_fast_start()      # 底座：即便强起关闭，也只插入空壳方法供下游作锚点
+    if OPT_BTN_TEXT: apply_java()
+    if OPT_PUSH_BTN: apply_push_button()
+    if OPT_SINGLE_LAYOUT: apply_single_layout()
+    if OPT_APP_NAME: apply_app_name()
+    # apply_top_fix() 已撤：尺寸节流不在保留清单内，全部回上游
+    if OPT_TOPBAR_TRANSPARENT: apply_top_transparent()
+    if OPT_TEXT_STROKE: apply_text_stroke()
+    if OPT_STATIC_UI: apply_static_ui()
+    if OPT_SLOT_ALIGN: apply_slot_align()
+    if OPT_BTN_WHITELIST: apply_btn_whitelist()
+    if OPT_BTN_GUARD: apply_btn_guard()
+    if OPT_PAUSE_KEEP: apply_pause_keep()
     apply_ad_safety()
     apply_speed_fix()
     apply_ad_replay()
-    apply_danmu_alpha()
-    apply_danmu_doubletap()
-    apply_gradient_bg()
-    apply_ad_switch_final()
-    apply_top_time_fix()
+    if OPT_DANMU_ALPHA: apply_danmu_alpha()
+    if OPT_DANMU_DOUBLE: apply_danmu_doubletap()
+    if OPT_GRADIENT_BG: apply_gradient_bg()
+    if OPT_SCRIM_BG: apply_scrim_bg()
+    if OPT_SCREEN_ON: apply_screen_default()
+    if OPT_AD_SWITCH: apply_ad_switch_final()
+    if OPT_RENDER_FIX: apply_render_fix()
+    if OPT_DNS_DEFAULT: apply_dns_default()
+    if OPT_TOP_TIME_FIX: apply_top_time_fix()
+    if OPT_DOWNLOAD: apply_download()
+    if OPT_SEARCH_BOOST: apply_search_boost()
     self_check()
     print('-' * 46)
     print('=== 完成 ===')
