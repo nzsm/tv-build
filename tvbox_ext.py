@@ -39,7 +39,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261123-U37'
+VER = 'VER-20261123-U44'
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -868,7 +868,7 @@ def apply_layout():
                + '    <dimen name="tk_time_ts">' + ('14dp' if rel == 'values' else '10dp') + '</dimen>\n'
                + '    <dimen name="tk_row_pad_lr">' + rowpad + '</dimen>\n'
                + '    <dimen name="tk_time_gap">' + ('0.5dp' if rel == 'values' else '0.6dp') + '</dimen>\n'
-               + '    <dimen name="tk_btn_gap">5dp</dimen>\n'
+               + '    <dimen name="tk_btn_gap">3dp</dimen>\n'
                + '</resources>\n')
         open(os.path.join(d, 'tk_dimens.xml'), 'w', encoding='utf-8').write(xml)
     log('进度条收边：横屏边 35dp / 竖屏边 5dp；条与时间 横屏0.5dp / 竖屏0.6dp')
@@ -938,18 +938,21 @@ def apply_layout():
         box.set(A + 'paddingBottom', PAD_TB)
         slot = ET.SubElement(box, 'TextView')
         slot.set(A + 'id', '@+id/' + slot_id)
-        # 56dp：12dp 字号下 "00:00" 实测约 33–36dp，48dp 在部分机器上仍会把第一个 0 裁掉一角，
-        # 这里留到 56dp（宽出约 20dp 余量），保证 5 个字符完整不被裁。
-        slot.set(A + 'layout_width', '56dp')
+        # 格子宽一律等于图标位（23dp）：按钮总宽 23+6+6=35dp，与其它按钮完全一致，
+        # 片头/片尾之间、片尾↔重置的空白自然就等于普通按钮之间的 20.8dp，不再有例外。
+        # "00:00" 12dp 自然宽约 26–28dp，放不进 23dp → 用 textScaleX 左右压扁（不动字高）。
+        slot.set(A + 'layout_width', ICON_SIZE)
         slot.set(A + 'layout_height', ICON_SIZE)
-        slot.set(A + 'minWidth', '56dp')
+        slot.set(A + 'minWidth', ICON_SIZE)
+        slot.set(A + 'textScaleX', '0.82')
         # 垂直居中：和其它按钮的图标（23dp 高）在同一个 23dp 槽里居中，顶端和基线都对得上，
         # 不再用 top+paddingTop 那种"看起来低半格"的摆法。
         slot.set(A + 'gravity', 'center_vertical|center_horizontal')
         # 12dp 原字号、不加描边：片头尾只是陪衬，不能比按钮更抢眼。
         slot.set(A + 'textSize', '12dp')
         slot.set(A + 'fontFamily', 'sans-serif-light')
-        slot.set(A + 'includeFontPadding', 'false')
+        # 字体自带留白参与居中：数字没有下伸部，关掉 padding 会让 00:00 看着比图标偏高
+        slot.set(A + 'includeFontPadding', 'true')
         slot.set(A + 'singleLine', 'true')
         slot.set(A + 'textColor', '@android:color/white')
         slot.set(A + 'text', '00:00')
@@ -2791,7 +2794,7 @@ def apply_speed_fix():
         write_text(lay, xt)
         acted.append('seekBar 高度：30mm → @dimen/tk_seek_h')
 
-    dims = {'values': '24dp', 'values-port': '20dp', 'values-sw720dp': '28dp'}
+    dims = {'values': '16dp', 'values-port': '14dp', 'values-sw720dp': '20dp'}
     for d in dims:
         p = jp('app/src/main/res', d, 'tk_dimens.xml')
         if not os.path.exists(p):
@@ -2808,7 +2811,7 @@ def apply_speed_fix():
 
     for x in acted:
         log(x)
-    log('底栏进度条行高：手机 24dp / 竖屏 20dp / 电视 28dp（静态，不再受 30mm 影响）')
+    log('底栏进度条行高：手机 16dp / 竖屏 14dp / 电视 20dp（静态，不再受 30mm 影响）')
 
 
 def apply_static_ui():
@@ -2830,7 +2833,7 @@ def apply_static_ui():
             '    <dimen name="tk_time_ts">14dp</dimen>',
             '    <dimen name="tk_row_pad_lr">24dp</dimen>',
             '    <dimen name="tk_time_gap">0.5dp</dimen>',
-            '    <dimen name="tk_btn_gap">5dp</dimen>',
+            '    <dimen name="tk_btn_gap">3dp</dimen>',
             '</resources>']
     write_text(dim, L.join(base) + L)
     # 电视/大屏（小米 X65 等：最小宽度 >= 720dp）
@@ -2840,7 +2843,7 @@ def apply_static_ui():
         '<?xml version="1.0" encoding="utf-8"?>', '<resources>',
         '    <dimen name="tk_time_ts">24dp</dimen>',
         '    <dimen name="tk_row_pad_lr">60dp</dimen>',
-        '    <dimen name="tk_btn_gap">5dp</dimen>',
+        '    <dimen name="tk_btn_gap">3dp</dimen>',
         '</resources>']) + L)
     # 手机竖屏：底栏左右贴边
     pt = os.path.join(res, 'values-port')
@@ -2852,7 +2855,7 @@ def apply_static_ui():
         '    <dimen name="tk_time_ts">10dp</dimen>',
         '    <dimen name="tk_row_pad_lr">5dp</dimen>',
         '    <dimen name="tk_time_gap">0.6dp</dimen>',
-        '    <dimen name="tk_btn_gap">5dp</dimen>',
+        '    <dimen name="tk_btn_gap">3dp</dimen>',
         '</resources>']) + L)
     log('底栏尺寸：已静态化（手机竖屏贴边 / 手机横屏 24dp / 电视 60dp，inflate 即最终形态，不再起播后突变）')
 
@@ -2899,7 +2902,7 @@ def apply_spacing():
     """
     行距与贴边。上游这批尺寸走的是 mm 副单位（vs_5≈14dp、vs_20≈57dp），
     在电视上会把顶部两行之间撑到能再塞一整行字。这里统一换成固定 dp：
-      片名与分辨率缝隙 6dp（3+3）；进度条线到按钮图标 16dp；按钮汉字到底边 10dp。
+      片名与分辨率缝隙 4dp（2+2）；进度条线到按钮图标 16dp；按钮汉字到底边 10dp。
     固定值天然幂等，重复跑不会变。
     """
     path = jp('app/src/main/res/layout/player_vod_control_view.xml')
@@ -2923,16 +2926,19 @@ def apply_spacing():
 
     n = 0
     # 左上两行：片名 / 分辨率
-    n += put(by_id('tv_info_name1'), 'paddingBottom', '3dp')
-    n += put(by_id('tv_videosize'), 'layout_marginTop', '3dp')
+    n += put(by_id('tv_info_name1'), 'paddingBottom', '2dp')
+    n += put(by_id('tv_videosize'), 'layout_marginTop', '2dp')
     n += put(by_id('tv_videosize'), 'paddingTop', '0dp')
     # 右上两行：时间 / 网速
-    n += put(by_id('tv_screen_display'), 'paddingBottom', '3dp')
-    n += put(by_id('tv_play_load_net_speed_right_top'), 'layout_marginTop', '3dp')
+    for tid in ('tv_info_name1', 'tv_videosize', 'tv_screen_display',
+                'tv_play_load_net_speed_right_top'):
+        n += put(by_id(tid), 'includeFontPadding', 'false')
+    n += put(by_id('tv_screen_display'), 'paddingBottom', '2dp')
+    n += put(by_id('tv_play_load_net_speed_right_top'), 'layout_marginTop', '2dp')
     n += put(by_id('tv_play_load_net_speed_right_top'), 'paddingTop', '0dp')
     # 底栏上下留白
     n += put(by_id('bottom_container'), 'paddingTop', '12dp')
-    n += put(by_id('bottom_container'), 'paddingBottom', '10dp')
+    n += put(by_id('bottom_container'), 'paddingBottom', '4dp')
     # 进度条行 → 按钮行
     bc = by_id('bottom_container')
     seek_row = None
@@ -2948,6 +2954,12 @@ def apply_spacing():
         for c in list(group):
             if c.get(A + 'paddingTop') is not None:
                 n += put(c, 'paddingTop', '4dp')
+                # 片头尾容器原先没有右边距，会和邻居贴得过近，统一补上
+                if c.get(A + 'layout_marginEnd') is None:
+                    n += put(c, 'layout_marginEnd', '@dimen/tk_btn_gap')
+                # 按钮自身底部留白清零，汉字到屏幕底边只由容器的 4dp 决定
+                if c.get(A + 'paddingBottom') is not None:
+                    n += put(c, 'paddingBottom', '0dp')
     if n:
         tree.write(path, encoding='utf-8', xml_declaration=True)
         log('行距收紧：顶部两行 4dp、进度条到按钮 16dp、按钮行贴边 12dp（改 %d 处）' % n)
