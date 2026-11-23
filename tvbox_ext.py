@@ -39,7 +39,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261123-U31'
+VER = 'VER-20261123-U37'
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -66,6 +66,7 @@ OPT_TEXT_STROKE = True        # 06 描边撤销（True=保持无描边原样，F
 OPT_STATIC_UI = True          # 07 尺寸静态化（手机竖屏/横屏/电视三套 dimen，不再起播后跳变）
 OPT_SLOT_ALIGN = True         # 08 片头/片尾 00:00 两行右侧对齐
 OPT_BTN_WHITELIST = True      # 09 底栏按钮白名单（只留 20 个我方按钮）
+OPT_SPACING = True            # 行距/贴边：顶部两行 6dp、进度条→按钮 16dp、按钮行贴边 10dp
 OPT_BTN_GUARD = False         # 10 底栏层级守卫（已按要求撤回）
 OPT_PAUSE_KEEP = False        # 11 暂停保活 + 底栏直接置可见 + 清遗留消息（已按要求撤回上游）
 OPT_GRADIENT_BG = False       # 12 顶部/底部渐变背板（已按要求撤回，改用 OPT_SCRIM_BG 整块半透明）
@@ -79,7 +80,7 @@ OPT_AD_SWITCH = True          # 17 去广告开关真正生效（关闭时零规
 OPT_DNS_DEFAULT = True        # 18 DNS 默认值改成腾讯 DoH
 OPT_TOP_TIME_FIX = False      # 19 右上角时间/网速显隐（已回上游，本项关闭）
 OPT_MERGE_SOURCE_ADS = True   # 21 合并源里的 ads 名单进过滤表（= 上游行为）
-OPT_PUSH_BTN = True           # 20 播放页「投屏」按钮 → 汉字改「推送」、点击显示局域网推送地址
+OPT_PUSH_BTN = False          # 20 播放页「投屏」保持上游原样（汉字「投屏」+ DLNA 设备列表，不改「推送」）
 OPT_RENDER_FIX = True         # 22 画面比例：修「填充」档拿 MeasureSpec 原值 + 补回像素宽高比（治拉扁）
 LAYOUT = 'app/src/main/res/layout/player_vod_control_view.xml'
 VOD = 'app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'
@@ -867,7 +868,7 @@ def apply_layout():
                + '    <dimen name="tk_time_ts">' + ('14dp' if rel == 'values' else '10dp') + '</dimen>\n'
                + '    <dimen name="tk_row_pad_lr">' + rowpad + '</dimen>\n'
                + '    <dimen name="tk_time_gap">' + ('0.5dp' if rel == 'values' else '0.6dp') + '</dimen>\n'
-               + '    <dimen name="tk_btn_gap">10dp</dimen>\n'
+               + '    <dimen name="tk_btn_gap">5dp</dimen>\n'
                + '</resources>\n')
         open(os.path.join(d, 'tk_dimens.xml'), 'w', encoding='utf-8').write(xml)
     log('进度条收边：横屏边 35dp / 竖屏边 5dp；条与时间 横屏0.5dp / 竖屏0.6dp')
@@ -938,12 +939,14 @@ def apply_layout():
         slot = ET.SubElement(box, 'TextView')
         slot.set(A + 'id', '@+id/' + slot_id)
         # 56dp：12dp 字号下 "00:00" 实测约 33–36dp，48dp 在部分机器上仍会把第一个 0 裁掉一角，
-        # 这里留到 56dp（宽出约 20dp 余量）；高度和 paddingTop 一律不动，保证纵向位置和整排对齐不漂。
+        # 这里留到 56dp（宽出约 20dp 余量），保证 5 个字符完整不被裁。
         slot.set(A + 'layout_width', '56dp')
         slot.set(A + 'layout_height', ICON_SIZE)
-        slot.set(A + 'gravity', 'top|center_horizontal')
         slot.set(A + 'minWidth', '56dp')
-        slot.set(A + 'paddingTop', '5dp')
+        # 垂直居中：和其它按钮的图标（23dp 高）在同一个 23dp 槽里居中，顶端和基线都对得上，
+        # 不再用 top+paddingTop 那种"看起来低半格"的摆法。
+        slot.set(A + 'gravity', 'center_vertical|center_horizontal')
+        # 12dp 原字号、不加描边：片头尾只是陪衬，不能比按钮更抢眼。
         slot.set(A + 'textSize', '12dp')
         slot.set(A + 'fontFamily', 'sans-serif-light')
         slot.set(A + 'includeFontPadding', 'false')
@@ -2827,7 +2830,7 @@ def apply_static_ui():
             '    <dimen name="tk_time_ts">14dp</dimen>',
             '    <dimen name="tk_row_pad_lr">24dp</dimen>',
             '    <dimen name="tk_time_gap">0.5dp</dimen>',
-            '    <dimen name="tk_btn_gap">10dp</dimen>',
+            '    <dimen name="tk_btn_gap">5dp</dimen>',
             '</resources>']
     write_text(dim, L.join(base) + L)
     # 电视/大屏（小米 X65 等：最小宽度 >= 720dp）
@@ -2837,7 +2840,7 @@ def apply_static_ui():
         '<?xml version="1.0" encoding="utf-8"?>', '<resources>',
         '    <dimen name="tk_time_ts">24dp</dimen>',
         '    <dimen name="tk_row_pad_lr">60dp</dimen>',
-        '    <dimen name="tk_btn_gap">12dp</dimen>',
+        '    <dimen name="tk_btn_gap">5dp</dimen>',
         '</resources>']) + L)
     # 手机竖屏：底栏左右贴边
     pt = os.path.join(res, 'values-port')
@@ -2849,7 +2852,7 @@ def apply_static_ui():
         '    <dimen name="tk_time_ts">10dp</dimen>',
         '    <dimen name="tk_row_pad_lr">5dp</dimen>',
         '    <dimen name="tk_time_gap">0.6dp</dimen>',
-        '    <dimen name="tk_btn_gap">10dp</dimen>',
+        '    <dimen name="tk_btn_gap">5dp</dimen>',
         '</resources>']) + L)
     log('底栏尺寸：已静态化（手机竖屏贴边 / 手机横屏 24dp / 电视 60dp，inflate 即最终形态，不再起播后突变）')
 
@@ -2890,6 +2893,66 @@ def apply_static_ui():
     if 'setPadding(edgePx' in read_text(vp):
         sys.exit('运行时 padding 还没去掉')
     log('去掉了起播后的运行时重排（不再先小后大）')
+
+
+def apply_spacing():
+    """
+    行距与贴边。上游这批尺寸走的是 mm 副单位（vs_5≈14dp、vs_20≈57dp），
+    在电视上会把顶部两行之间撑到能再塞一整行字。这里统一换成固定 dp：
+      片名与分辨率缝隙 6dp（3+3）；进度条线到按钮图标 16dp；按钮汉字到底边 10dp。
+    固定值天然幂等，重复跑不会变。
+    """
+    path = jp('app/src/main/res/layout/player_vod_control_view.xml')
+    if not os.path.isfile(path):
+        return
+    tree = ET.parse(path)
+    root = tree.getroot()
+    A = '{http://schemas.android.com/apk/res/android}'
+
+    def by_id(name):
+        for e in root.iter():
+            if e.get(A + 'id') == '@+id/' + name:
+                return e
+        return None
+
+    def put(e, k, v):
+        if e is not None and e.get(A + k) != v:
+            e.set(A + k, v)
+            return 1
+        return 0
+
+    n = 0
+    # 左上两行：片名 / 分辨率
+    n += put(by_id('tv_info_name1'), 'paddingBottom', '3dp')
+    n += put(by_id('tv_videosize'), 'layout_marginTop', '3dp')
+    n += put(by_id('tv_videosize'), 'paddingTop', '0dp')
+    # 右上两行：时间 / 网速
+    n += put(by_id('tv_screen_display'), 'paddingBottom', '3dp')
+    n += put(by_id('tv_play_load_net_speed_right_top'), 'layout_marginTop', '3dp')
+    n += put(by_id('tv_play_load_net_speed_right_top'), 'paddingTop', '0dp')
+    # 底栏上下留白
+    n += put(by_id('bottom_container'), 'paddingTop', '12dp')
+    n += put(by_id('bottom_container'), 'paddingBottom', '10dp')
+    # 进度条行 → 按钮行
+    bc = by_id('bottom_container')
+    seek_row = None
+    if bc is not None:
+        for c in list(bc):
+            if c.tag == 'LinearLayout':
+                seek_row = c
+                break
+    n += put(seek_row, 'layout_marginBottom', '0dp')
+    # 每个按钮的图标距行顶 4dp（原 10dp）
+    group = by_id('play_btn_group')
+    if group is not None:
+        for c in list(group):
+            if c.get(A + 'paddingTop') is not None:
+                n += put(c, 'paddingTop', '4dp')
+    if n:
+        tree.write(path, encoding='utf-8', xml_declaration=True)
+        log('行距收紧：顶部两行 4dp、进度条到按钮 16dp、按钮行贴边 12dp（改 %d 处）' % n)
+    else:
+        log('行距收紧：已是目标值，跳过')
 
 
 def apply_slot_align():
@@ -3646,6 +3709,7 @@ def main():
     if OPT_TOP_TIME_FIX: apply_top_time_fix()
     if OPT_DOWNLOAD: apply_download()
     if OPT_SEARCH_BOOST: apply_search_boost()
+    if OPT_SPACING: apply_spacing()
     self_check()
     print('-' * 46)
     print('=== 完成 ===')
