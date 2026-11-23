@@ -39,7 +39,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261123-U45'
+VER = 'VER-20261123-U47'
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -117,82 +117,198 @@ BTN_ICON = {
 }
 
 
-TK_DL_DIALOG = r"""    // 底栏「下载」：弹出选集框，可多选，串行排队下载（网页源要先播放才能拿到地址）
+TK_DL_DIALOG = r"""    // 底栏「下载」：复用 TkDownloadPicker 选集框（详情页「下载」按钮同一套）
     public void tkShowDownloadDialog() {
         try {
-            if (!isAdded() || mVodInfo == null || mVodInfo.seriesMap == null
-                    || TextUtils.isEmpty(mVodInfo.playFlag)) return;
-            List<VodInfo.VodSeries> eps = mVodInfo.seriesMap.get(mVodInfo.playFlag);
-            if (eps == null || eps.isEmpty()) return;
-            final int n = eps.size();
-            final boolean[] sel = new boolean[n];
-            final boolean[] direct = new boolean[n];
-            final String[] labels = new String[n];
-            final String base = TextUtils.isEmpty(mVodInfo.name) ? "下载" : mVodInfo.name;
-            int cur = Math.max(0, Math.min(mVodInfo.playIndex, n - 1));
-            for (int i = 0; i < n; i++) {
-                VodInfo.VodSeries vs = eps.get(i);
-                String u = vs == null || vs.url == null ? "" : vs.url.trim().toLowerCase();
-                direct[i] = u.startsWith("http") && (u.contains(".m3u8") || u.contains(".mp4")
-                        || u.contains(".mkv") || u.contains(".avi") || u.contains(".flv") || u.contains(".ts"));
-                String nm = (vs == null || TextUtils.isEmpty(vs.name)) ? ("第" + (i + 1) + "集") : vs.name;
-                labels[i] = nm + (direct[i] ? "" : "   （网页源，先播放这一集才能下）");
-                sel[i] = direct[i] && i == cur;
-            }
-            final Context ctx = getContext();
-            android.app.AlertDialog dlg = new android.app.AlertDialog.Builder(requireContext())
-                    .setTitle(base + "：选要下载的集（可多选）")
-                    .setMultiChoiceItems(labels, sel, new android.content.DialogInterface.OnMultiChoiceClickListener() {
-                        @Override
-                        public void onClick(android.content.DialogInterface d, int which, boolean isChecked) {
-                            sel[which] = isChecked;
-                        }
-                    })
-                    .setPositiveButton("开始下载", new android.content.DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(android.content.DialogInterface d, int which) {
-                            try {
-                                if (ctx == null) return;
-                                if (Build.VERSION.SDK_INT >= 23
-                                        && ctx.checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                                        != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                                    requireActivity().requestPermissions(
-                                            new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 9527);
-                                    Toast.makeText(ctx, "先允许存储权限，再点一次下载", Toast.LENGTH_SHORT).show();
-                                    return;
-                                }
-                                int ok = 0;
-                                int skip = 0;
-                                for (int i = 0; i < n; i++) {
-                                    if (!sel[i]) continue;
-                                    if (!direct[i]) {
-                                        skip++;
-                                        continue;
-                                    }
-                                    VodInfo.VodSeries vs = eps.get(i);
-                                    String u = vs == null || vs.url == null ? "" : vs.url.trim();
-                                    String nm = (vs == null || TextUtils.isEmpty(vs.name)) ? ("第" + (i + 1) + "集") : vs.name;
-                                    com.github.tvbox.osc.util.TkDownloader.enqueue(ctx, u, base + "_" + nm);
-                                    ok++;
-                                }
-                                if (ok == 0) {
-                                    Toast.makeText(ctx, skip > 0 ? ("选中的是网页源：" + skip + " 个，没有能直接下的") : "没选集", Toast.LENGTH_SHORT).show();
-                                } else if (skip > 0) {
-                                    Toast.makeText(ctx, "已排 " + ok + " 个；另有 " + skip + " 个网页源要先播放那集再单独下", Toast.LENGTH_LONG).show();
-                                }
-                            } catch (Throwable e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    })
-                    .setNegativeButton("取消", null)
-                    .create();
-            dlg.show();
-        } catch (Throwable e) {
-            e.printStackTrace();
+            com.github.tvbox.osc.util.TkDownloadPicker.show(requireContext(), mVodInfo);
+        } catch (Throwable ignored) {
         }
-    }"""
+    }
+"""
 
+
+TK_URL_MEMO_JAVA = r'''package com.github.tvbox.osc.util;
+
+import com.github.tvbox.osc.bean.VodInfo;
+import com.orhanobut.hawk.Hawk;
+
+import java.security.MessageDigest;
+import java.util.List;
+
+/**
+ * 记住每一集的真实播放地址。
+ * 播放页每次拿到真正的 m3u8/mp4（直链，或网页源嗅探出来的那条）就存一笔，
+ * 之后在详情页选下载时直接拿来用，不必为了下这一集专门去播放一遍。
+ */
+public class TkUrlMemo {
+
+    private static final String TAG = "tkum_";
+
+    private static String md5(String s) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] b = md.digest(s.getBytes("UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < b.length; i++) {
+                sb.append(String.format("%02x", b[i]));
+            }
+            return sb.toString();
+        } catch (Throwable t) {
+            return String.valueOf(s.hashCode());
+        }
+    }
+
+    private static String epName(VodInfo v, int idx) {
+        try {
+            List<VodInfo.VodSeries> eps = v.seriesMap == null ? null : v.seriesMap.get(v.playFlag);
+            if (eps != null && idx >= 0 && idx < eps.size() && eps.get(idx) != null) {
+                return eps.get(idx).name == null ? "" : eps.get(idx).name;
+            }
+        } catch (Throwable ignored) {
+        }
+        return "";
+    }
+
+    private static String key(VodInfo v, int idx) {
+        if (v == null) return null;
+        return TAG + md5(v.id + "|" + v.playFlag + "|" + epName(v, idx));
+    }
+
+    /** 播放页拿到地址时调用：按当前集写一笔。 */
+    public static void remember(VodInfo v, String url) {
+        try {
+            if (v == null || url == null || url.length() < 10) return;
+            if (!url.startsWith("http")) return;
+            if (url.contains("127.0.0.1") || url.contains("localhost")) return;
+            String k = key(v, v.playIndex);
+            if (k != null) Hawk.put(k, url);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** 详情页按集号取。 */
+    public static String get(VodInfo v, int idx) {
+        try {
+            String k = key(v, idx);
+            if (k == null) return "";
+            String r = Hawk.get(k, "");
+            return r == null ? "" : r;
+        } catch (Throwable t) {
+            return "";
+        }
+    }
+}
+'''
+
+TK_DL_PICKER_JAVA = r'''package com.github.tvbox.osc.util;
+
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.text.TextUtils;
+import android.widget.Toast;
+
+import com.github.tvbox.osc.bean.VodInfo;
+
+import java.util.List;
+
+/**
+ * 选集下载框：播放页底栏「下载」和详情页「下载」按钮共用。
+ * 直链直接可下；网页源只要之前播放过一集（TkUrlMemo 记下了真实地址）也能下。
+ */
+public class TkDownloadPicker {
+
+    public static boolean isDirect(String u) {
+        if (TextUtils.isEmpty(u)) return false;
+        String s = u.trim().toLowerCase();
+        if (!s.startsWith("http")) return false;
+        return s.contains(".m3u8") || s.contains(".mp4") || s.contains(".mkv")
+                || s.contains(".avi") || s.contains(".flv") || s.contains(".ts")
+                || s.contains(".m4v") || s.contains(".mov") || s.contains(".wmv")
+                || s.contains(".mp3");
+    }
+
+    public static void show(final Context ctx, final VodInfo v) {
+        if (ctx == null || v == null) return;
+        if (v.seriesMap == null || TextUtils.isEmpty(v.playFlag)) {
+            Toast.makeText(ctx, "先选一条线路（等详情加载完）再下载", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final List<VodInfo.VodSeries> eps;
+        try {
+            eps = v.seriesMap.get(v.playFlag);
+        } catch (Throwable t) {
+            return;
+        }
+        if (eps == null || eps.isEmpty()) {
+            Toast.makeText(ctx, "这条线路没有集数", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final int n = eps.size();
+        final boolean[] ok = new boolean[n];
+        final String[] real = new String[n];
+        final boolean[] sel = new boolean[n];
+        final String[] labels = new String[n];
+        final String base = TextUtils.isEmpty(v.name) ? "下载" : v.name;
+        int cur = v.playIndex;
+        if (cur < 0) cur = 0;
+        if (cur >= n) cur = n - 1;
+        for (int i = 0; i < n; i++) {
+            VodInfo.VodSeries vs = eps.get(i);
+            String name = (vs == null || TextUtils.isEmpty(vs.name)) ? ("第" + (i + 1) + "集") : vs.name;
+            String u = vs == null || vs.url == null ? "" : vs.url.trim();
+            if (isDirect(u)) {
+                ok[i] = true;
+                real[i] = u;
+                labels[i] = name;
+            } else {
+                String memo = TkUrlMemo.get(v, i);
+                if (!TextUtils.isEmpty(memo)) {
+                    ok[i] = true;
+                    real[i] = memo;
+                    labels[i] = name + "   （用记住的地址）";
+                } else {
+                    labels[i] = name + "   （网页源，先点开这集再回来下）";
+                }
+            }
+            sel[i] = ok[i] && i == cur;
+        }
+        new AlertDialog.Builder(ctx)
+                .setTitle(base + "：选要下载的集（可多选）")
+                .setMultiChoiceItems(labels, sel, new DialogInterface.OnMultiChoiceClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int which, boolean isChecked) {
+                        sel[which] = isChecked;
+                    }
+                })
+                .setPositiveButton("开始下载", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int which) {
+                        int added = 0;
+                        int skip = 0;
+                        for (int i = 0; i < n; i++) {
+                            if (!sel[i]) continue;
+                            if (!ok[i] || TextUtils.isEmpty(real[i])) {
+                                skip++;
+                                continue;
+                            }
+                            VodInfo.VodSeries vs = eps.get(i);
+                            String nm = (vs == null || TextUtils.isEmpty(vs.name)) ? ("第" + (i + 1) + "集") : vs.name;
+                            TkDownloader.enqueue(ctx, real[i], base + "_" + nm);
+                            added++;
+                        }
+                        if (added > 0) {
+                            Toast.makeText(ctx, "已排 " + added + " 个" + (skip > 0 ? "，另有 " + skip + " 个要先进播放页" : ""), Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(ctx, "选中的都下不了：网页源要先点开那一集", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+}
+'''
 
 TK_DL_JAVA = r"""package com.github.tvbox.osc.util;
 
@@ -534,9 +650,26 @@ public class TkDownloader {
         return new String(b, "UTF-8");
     }
 
+    private static final String TK_UA = "Mozilla/5.0 (Linux; Android 9; TV) AppleWebKit/537.36 "
+            + "(KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36";
+
+    private static String refererOf(String url) {
+        try {
+            int i = url.indexOf("://");
+            if (i < 0) return null;
+            int j = url.indexOf('/', i + 3);
+            if (j < 0) return null;
+            return url.substring(0, j + 1);
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
     private static byte[] getBytes(String url) throws Exception {
         Request.Builder rb = new Request.Builder().url(url).get();
-        rb.header("User-Agent", "okhttp/3.12.11");
+        rb.header("User-Agent", TK_UA);
+        String tkRef = refererOf(url);
+        if (tkRef != null) rb.header("Referer", tkRef);
         Request req = rb.build();
         Response resp = CLIENT.newCall(req).execute();
         try {
@@ -2041,25 +2174,14 @@ def apply_download():
     path = jp(LAYOUT)
     tree = ET.parse(path)
     root = tree.getroot()
-    if find_id(root, 'play_download') is None:
-        cast = find_id(root, 'play_cast')
-        if cast is None:
-            sys.exit('下载按钮锚点丢失：找不到 play_cast')
-        pm = parents(root)
-        par = pm[cast]
-        idx = list(par).index(cast)
-        new_e = ET.fromstring(ET.tostring(cast))
-        new_e.set(A + 'id', '@+id/play_download')
-        new_e.set(A + 'text', '下载')
-        for k in list(new_e.attrib):
-            if k.endswith('drawableTop'):
-                del new_e.attrib[k]
-        style_button(new_e, BTN_ICON.get('play_download'))
-        par.insert(idx + 1, new_e)
+    # 底栏不再放「下载」按钮：下载入口统一走详情页（U47 定稿）
+    dl_old = find_id(root, 'play_download')
+    if dl_old is not None:
+        parents(root)[dl_old].remove(dl_old)
         tree.write(path, encoding='utf-8', xml_declaration=True)
-        log('播放页新增按钮：下载（紧跟投屏右侧）')
+        log('底栏下载按钮：已移除（下载入口只留详情页）')
     else:
-        log('下载按钮已存在，跳过布局')
+        log('底栏不放下载按钮（入口在详情页）')
 
     write_text(jp('app/src/main/java/com/github/tvbox/osc/util/TkDownloader.java'), TK_DL_JAVA)
 
@@ -2091,40 +2213,25 @@ def apply_download():
 
     vc_path = jp(VOD)
     vc = read_text(vc_path)
-    if 'tkShowDownloadDialog()' not in vc:
+    # 底栏没有下载按钮了，只需要留着 tkHost 这个挂点（PlayFragment 会赋值）
+    if 'public Object tkHost' not in vc:
         a = '    TextView mCastBtn;'
         if a not in vc:
             sys.exit('下载锚点丢失：mCastBtn 字段')
-        vc = vc.replace(a, a + L + '    TextView mTkDownloadBtn;' + L + '    public Object tkHost = null;', 1)
-        a = '        mCastBtn = findViewById(R.id.play_cast);'
-        if a not in vc:
-            sys.exit('下载锚点丢失：mCastBtn 绑定')
-        vc = vc.replace(a, a + L + '        mTkDownloadBtn = findViewById(R.id.play_download);', 1)
-        a = '        mCastBtn.setOnClickListener(new OnClickListener() {'
-        if a not in vc:
-            sys.exit('下载锚点丢失：mCastBtn 点击')
-        block = ('        if (mTkDownloadBtn != null) {' + L
-                 + '            mTkDownloadBtn.setOnClickListener(new OnClickListener() {' + L
-                 + '                @Override' + L
-                 + '                public void onClick(View v) {' + L
-                 + '                    try {' + L
-                 + '                        if (tkHost != null) {' + L
-                 + '                            ((com.github.tvbox.osc.ui.fragment.PlayFragment) tkHost).tkShowDownloadDialog();' + L
-                 + '                        } else {' + L
-                 + '                            com.github.tvbox.osc.util.TkDownloader.start(getContext(),' + L
-                 + '                                    com.github.tvbox.osc.util.TkDownloader.lastUrl,' + L
-                 + '                                    com.github.tvbox.osc.util.TkDownloader.lastTitle);' + L
-                 + '                        }' + L
-                 + '                    } catch (Throwable ignored) {' + L
-                 + '                    }' + L
-                 + '                }' + L
-                 + '            });' + L
-                 + '        }' + L)
-        vc = vc.replace(a, block + a, 1)
+        vc = vc.replace(a, a + L + '    public Object tkHost = null;', 1)
+    # 老版本残留的下载按钮字段/绑定/点击块，一并清掉（否则 R.id.play_download 不存在）
+    k = vc.find('        if (mTkDownloadBtn != null) {')
+    if k >= 0:
+        e = vc.find(L + '        }' + L, k)
+        if e > k:
+            vc = vc[:k] + vc[e + len(L + '        }' + L):]
+    for dead in ('        mTkDownloadBtn = findViewById(R.id.play_download);' + L,
+                 '    TextView mTkDownloadBtn;' + L):
+        vc = vc.replace(dead, '', 1)
     write_text(vc_path, vc)
 
-    if find_id(ET.parse(jp(LAYOUT)).getroot(), 'play_download') is None:
-        sys.exit('下载按钮没写进布局')
+    if find_id(ET.parse(jp(LAYOUT)).getroot(), 'play_download') is not None:
+        sys.exit('底栏下载按钮没删干净')
     dl = read_text(jp('app/src/main/java/com/github/tvbox/osc/util/TkDownloader.java'))
     for key in ('public static void enqueue', 'loopWorker', 'downloadM3u8', 'downloadMp4', 'AES/CBC'):
         if key not in dl:
@@ -2134,7 +2241,7 @@ def apply_download():
         if key not in pfx:
             sys.exit('PlayFragment 缺 ' + key)
     vcx = read_text(vc_path)
-    for key in ('mTkDownloadBtn', 'tkHost', 'tkShowDownloadDialog'):
+    for key in ('tkHost',):
         if key not in vcx:
             sys.exit('VodController 缺 ' + key)
     log('下载：点按钮弹选集框（可多选）→ 串行排队；m3u8 拼 ts / mp4 走系统下载器，存 Movies/tvbox，退出即停')
@@ -2972,6 +3079,99 @@ def apply_spacing():
         log('行距收紧：已是目标值，跳过')
 
 
+def apply_download_anywhere():
+    """详情页加「下载」按钮；播放时把真实地址记进 TkUrlMemo，之后不播放也能下。"""
+    L = chr(10)
+    write_text(jp('app/src/main/java/com/github/tvbox/osc/util/TkUrlMemo.java'), TK_URL_MEMO_JAVA)
+    write_text(jp('app/src/main/java/com/github/tvbox/osc/util/TkDownloadPicker.java'), TK_DL_PICKER_JAVA)
+
+    lay = jp('app/src/main/res/layout/activity_detail.xml')
+    x = read_text(lay)
+    if '@+id/tvDownload' not in x:
+        k = x.find('@+id/tvChangeSource')
+        if k < 0:
+            sys.exit('详情页布局锚点丢失：tvChangeSource')
+        st = x.rfind('<TextView', 0, k)
+        ind = st
+        while ind > 0 and x[ind - 1] in ' \t':
+            ind -= 1
+        indent = x[ind:st]
+        en = x.find('/>', k) + 2
+        node = x[st:en]
+        if 'layout_marginEnd' not in node:
+            node = node.replace('android:layout_width="@dimen/vs_120"',
+                                'android:layout_width="@dimen/vs_120"' + L
+                                + '                        android:layout_marginEnd="@dimen/vs_10"' + L
+                                + '                        android:layout_marginRight="@dimen/vs_10"', 1)
+        btn = (node.replace('@+id/tvChangeSource', '@+id/tvDownload')
+               .replace('@drawable/button_detail_change_source', '@drawable/button_detail_collect')
+               .replace('android:text="切源"', 'android:text="下载"'))
+        x = x[:st] + node + L + indent + btn + x[en:]
+        write_text(lay, x)
+        log('详情页新增按钮：下载（紧跟切源右侧）')
+    else:
+        log('详情页下载按钮已存在，跳过布局')
+
+    da = jp('app/src/main/java/com/github/tvbox/osc/ui/activity/DetailActivity.java')
+    t = read_text(da)
+    if 'tvDownload' not in t:
+        a = '    private TextView tvChangeSource;'
+        if a not in t:
+            sys.exit('详情页锚点丢失：tvChangeSource 字段')
+        t = t.replace(a, a + L + '    private TextView tvDownload;', 1)
+        a = '        tvChangeSource = findViewById(R.id.tvChangeSource);'
+        if a not in t:
+            sys.exit('详情页锚点丢失：tvChangeSource 绑定')
+        t = t.replace(a, a + L + '        tvDownload = findViewById(R.id.tvDownload);', 1)
+        a = '        tvChangeSource.setOnClickListener(new View.OnClickListener() {'
+        if a not in t:
+            sys.exit('详情页锚点丢失：tvChangeSource 点击')
+        block = ('        if (tvDownload != null) {' + L
+                 + '            tvDownload.setOnClickListener(new View.OnClickListener() {' + L
+                 + '                @Override' + L
+                 + '                public void onClick(View v) {' + L
+                 + '                    FastClickCheckUtil.check(v);' + L
+                 + '                    try {' + L
+                 + '                        if (vodInfo == null) return;' + L
+                 + '                        com.github.tvbox.osc.util.TkDownloadPicker.show((android.content.Context) DetailActivity.this, vodInfo);' + L
+                 + '                    } catch (Throwable ignored) {' + L
+                 + '                    }' + L
+                 + '                }' + L
+                 + '            });' + L
+                 + '        }' + L)
+        t = t.replace(a, block + a, 1)
+        write_text(da, t)
+        log('详情页：下载按钮已接上选集框')
+    else:
+        log('详情页下载按钮代码已存在，跳过')
+
+    pf = jp('app/src/main/java/com/github/tvbox/osc/ui/fragment/PlayFragment.java')
+    t = read_text(pf)
+    # 旧的下载弹窗实现（含自己的判断逻辑）统一换成 Picker
+    i = t.find('    public void tkShowDownloadDialog() {')
+    if i >= 0 and 'TkDownloadPicker.show(requireContext()' not in t:
+        j = t.find(L + '    }' + L, i)
+        if j > 0:
+            t = t[:i] + TK_DL_DIALOG.strip(L) + L + t[j + len(L + '    }' + L):]
+    # 播放页拿到真实地址就记账
+    if 'TkUrlMemo.remember' not in t:
+        a = '    void playUrl(String url, HashMap<String, String> headers) {'
+        if a not in t:
+            sys.exit('地址记账锚点丢失：playUrl')
+        t = t.replace(a, a + L
+                      + '        try {' + L
+                      + '            com.github.tvbox.osc.util.TkUrlMemo.remember(mVodInfo, url);' + L
+                      + '        } catch (Throwable ignored) {' + L
+                      + '        }', 1)
+    write_text(pf, t)
+    if 'TkUrlMemo.remember' not in read_text(pf):
+        sys.exit('地址记账没写进 PlayFragment')
+    for f in ('TkUrlMemo.java', 'TkDownloadPicker.java'):
+        if not os.path.isfile(jp('app/src/main/java/com/github/tvbox/osc/util', f)):
+            sys.exit('新文件没生成：' + f)
+    log('下载链路：详情页入口 + 地址记忆 + UA/Referer 已就绪')
+
+
 def apply_slot_align():
     """① 片头片尾「00:00」与汉字行对齐；② 旋屏图标描边 0.8 → 0.6。"""
     L = chr(10)
@@ -3725,6 +3925,7 @@ def main():
     if OPT_DOWNLOAD: apply_download()
     if OPT_SEARCH_BOOST: apply_search_boost()
     if OPT_SPACING: apply_spacing()
+    apply_download_anywhere()
     self_check()
     print('-' * 46)
     print('=== 完成 ===')
