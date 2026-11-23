@@ -39,7 +39,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261123-U44'
+VER = 'VER-20261123-U45'
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -932,19 +932,19 @@ def apply_layout():
         box.set(A + 'gravity', 'center_horizontal')
         box.set(A + 'layout_width', 'wrap_content')
         box.set(A + 'layout_height', 'wrap_content')
-        box.set(A + 'paddingLeft', PAD_LR)
+        # 时间文字要放大到 30dp 才能完整显示 00:00，左右留白同步收到 2dp，
+        # 容器总宽 30+2+2=34dp，仍然等于别的按钮的 35dp，整排位置不动。
+        box.set(A + 'paddingLeft', '2dp')
         box.set(A + 'paddingTop', PAD_TB)
-        box.set(A + 'paddingRight', PAD_LR)
+        box.set(A + 'paddingRight', '2dp')
         box.set(A + 'paddingBottom', PAD_TB)
         slot = ET.SubElement(box, 'TextView')
         slot.set(A + 'id', '@+id/' + slot_id)
-        # 格子宽一律等于图标位（23dp）：按钮总宽 23+6+6=35dp，与其它按钮完全一致，
-        # 片头/片尾之间、片尾↔重置的空白自然就等于普通按钮之间的 20.8dp，不再有例外。
-        # "00:00" 12dp 自然宽约 26–28dp，放不进 23dp → 用 textScaleX 左右压扁（不动字高）。
-        slot.set(A + 'layout_width', ICON_SIZE)
+        # "00:00" 12dp 自然宽约 26–27dp，23dp 放不下会裁成 "00:…"；
+        # 放到 30dp 就能整串显示，不再压扁（textScaleX 去掉）。
+        slot.set(A + 'layout_width', '30dp')
         slot.set(A + 'layout_height', ICON_SIZE)
-        slot.set(A + 'minWidth', ICON_SIZE)
-        slot.set(A + 'textScaleX', '0.82')
+        slot.set(A + 'minWidth', '30dp')
         # 垂直居中：和其它按钮的图标（23dp 高）在同一个 23dp 槽里居中，顶端和基线都对得上，
         # 不再用 top+paddingTop 那种"看起来低半格"的摆法。
         slot.set(A + 'gravity', 'center_vertical|center_horizontal')
@@ -957,9 +957,14 @@ def apply_layout():
         slot.set(A + 'textColor', '@android:color/white')
         slot.set(A + 'text', '00:00')
         par.remove(node)
-        for k in ('paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom',
+        for k in ('padding', 'paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom',
+                  'layout_marginEnd', 'layout_marginRight', 'layout_marginStart', 'layout_marginLeft',
                   'minHeight', 'lineSpacingExtra', 'drawableTop', 'drawablePadding'):
             node.attrib.pop(A + k, None)
+        # 汉字紧贴时间下沿：上下留白一律 0，高度结构和其它按钮（图标23dp+汉字）完全相同，
+        # 底边才会和「重置」「EXO」落在同一条线上。
+        node.set(A + 'paddingTop', '0dp')
+        node.set(A + 'paddingBottom', '0dp')
         node.set(A + 'layout_width', 'wrap_content')
         node.set(A + 'layout_height', 'wrap_content')
         node.set(A + 'gravity', 'top|center_horizontal')
@@ -2973,29 +2978,27 @@ def apply_slot_align():
     path = jp(LAYOUT)
     tree = ET.parse(path)
     root = tree.getroot()
-    ref = find_id(root, 'play_time_start')
-    if ref is None:
-        sys.exit('对齐锚点丢失：play_time_start')
-    ref_end = ref.get(A + 'layout_marginEnd')
-    if ref_end is None:
-        sys.exit('对齐锚点丢失：play_time_start 没有 marginEnd')
+    # 片头尾格子内部只有上下两层（时间 / 汉字），自身不再需要任何左右外边距；
+    # 早先为了把 00:00 往里挪而给它们加过 marginEnd，反而把容器撑宽，
+    # 这里统一清掉，容器宽度只由「时间宽 + 2dp + 2dp」决定。
     changed = 0
-    for sid in ('tk_slot_start', 'tk_slot_end'):
-        v = find_id(root, sid)
+    for nid in ('tk_slot_start', 'tk_slot_end', 'play_time_start', 'play_time_end'):
+        v = find_id(root, nid)
         if v is None:
-            sys.exit('对齐锚点丢失：' + sid)
-        if v.get(A + 'layout_marginEnd') != ref_end:
-            v.set(A + 'layout_marginEnd', ref_end)
-            v.set(A + 'layout_marginRight', ref_end)
-            changed += 1
+            continue
+        for k in ('layout_marginEnd', 'layout_marginRight', 'layout_marginStart', 'layout_marginLeft'):
+            if v.get(A + k) is not None:
+                v.attrib.pop(A + k, None)
+                changed += 1
     if changed:
         tree.write(path, encoding='utf-8', xml_declaration=True)
     root2 = ET.parse(path).getroot()
-    for sid in ('tk_slot_start', 'tk_slot_end'):
-        v = find_id(root2, sid)
-        if v.get(A + 'layout_marginEnd') != ref_end:
-            sys.exit('对齐没生效：' + sid)
-    log('片头尾对齐：00:00 两行补齐右侧间距（%s），与汉字行同一基准居中' % ref_end)
+    for nid in ('tk_slot_start', 'tk_slot_end', 'play_time_start', 'play_time_end'):
+        v = find_id(root2, nid)
+        if v is not None and (v.get(A + 'layout_marginEnd') is not None
+                              or v.get(A + 'layout_marginStart') is not None):
+            sys.exit('左右外边距没清干净：' + nid)
+    log('片头尾对齐：时间/汉字三层左右外边距已清空，宽度只由内容决定')
 
     hp = jp('app/src/main/res/drawable/htov.xml')
     if os.path.exists(hp):
