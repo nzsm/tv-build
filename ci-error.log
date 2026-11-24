@@ -1,4 +1,4 @@
-# CI 失败日志  2026-11-22 15:11:32Z
+# CI 失败日志  2026-11-24 04:14:50Z
 
 ## 环境
 openjdk version "17.0.21" 2026-10-20
@@ -12,7 +12,7 @@ ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
 /usr/local/lib/android/sdk/ndk/30.0.16248370
 
 ## 复现自检（源码目录状态）
--rwxr-xr-x 1 runner runner 5296 Nov 22 15:10 tvboxos-src/gradlew
+-rwxr-xr-x 1 runner runner 5296 Nov 24 04:12 tvboxos-src/gradlew
 #!/usr/bin/env sh
 
 ##############################################################################
@@ -28,128 +28,186 @@ org.gradle.caching=true
 
 ## 增强脚本输出（最后 120 行）
 ```
-*** 脚本版本 VER-20261122-U7 ***
-=== 底部菜单：图标 23dp / 汉字 8dp / 结构对齐 / 不动内核 ===
-源码： /home/runner/work/tv-build/tv-build/tvboxos-src
-  + 图标写入 19 个（自包含，不引用任何外部资源）
-  + 按钮组外层加横向滚动（竖屏可左右滑，横屏撑满居中）
-  + 底部顺序：进度条 → 滚动按钮组 → 解析行
-  + 上集已在下集左边
-  + 按钮统一样式 17 个（图标 23dp、汉字 8dp、无底、左右居中）
-  + 进度条收边：横屏边 35dp / 竖屏边 5dp；条与时间 横屏0.5dp / 竖屏0.6dp
-  + 字幕：底部抬高 104dp，不再压住按钮
-  + 间距：时间↔条 3dp、条↔按钮排 5dp；底板去掉；旋屏按画面自动显示
-  + 片头/片尾：上格 23dp 时间 + 下格 8dp 汉字（结构对齐）
-  + 进度条轨道：3dp -> 2dp
+  + 内置规则固化：广告域名/源级正则/网页规则/插片正则全部编译进包
+  +   · 改 9 / 增 2 / 删 0 · 0.05s
+  + ▶ apply_single_layout
   + 删除重复布局：box_vod_control_view.xml（零引用的上游死文件）
   + 删除其专属背景：box_controller_top_bg.xml
   + 播放控制布局现在只有一份：player_vod_control_view.xml
+  +   · 改 0 / 增 0 / 删 2 · 0.01s
+  + ▶ apply_app_name
   + 应用名：NZ（桌面显示 + 最近任务）
-  + 片头/片尾：点击提示 + 整块可点
-  + 旋屏按钮：保持上游自动判定（电视/横屏视频不显示）
-  + 旋屏文字固定为“旋屏”、硬解常显
-  + 竖屏：进度条两端时间、片头/片尾/重置 全部保留
-  + DNS：腾讯/阿里 + Cloudflare/Google；去广告（M3u8 净化）默认开启
-  + 去广告/DNS：内置精简规则（无远程清单）+ 内置 DoH（不读订阅自定义字段）
-  + 设置页：去广告开关即时生效（无远程清单、无长按清缓存）
-  + 推送字样：改为“直链”（播放页线路菜单不再出现“推送”）
-  + 投屏按钮：去掉 2 处系统版本门槛，任何电视都显示
-  + 硬解按钮：非 IJK 播放器下点击无效
-  + 播放器/解码切换后延迟补刷标签
-  + 自适应：按屏宽/电视判定调整时间字号、底栏边距、按钮间距
-  + VodController：片头时间入上格、搜弹幕/视轨物理摘除（+1.5s/5s 复扫）
-  + 播放器名称缩短：IJK / EXO / MX / Reex / Kodi / VLC
-  + 去广告：内置规则 + 本地缓存 + 24h 自动更新（tvbox-server 的 ads/rules）
-  + 字面量检查通过：无多字符 char
-  + 内置规则固化：广告域名/源级正则/网页规则/插片正则全部编译进包
-  + 起播放行：净化仍在，但 3.5 秒没抓完就直接播（不再等 20 秒）
-  + 播放页新增按钮：下载（紧跟投屏右侧）
-  + 下载：点按钮弹选集框（可多选）→ 串行排队；m3u8 拼 ts / mp4 走系统下载器，存 Movies/tvbox，退出即停
-  + 搜索：新源自动并入 + 不限 searchable + 每批 10 个源 + 1s 推进 + 单源 18s + 关键词去书名号
-  + 顶部：网速默认不常显，只在缓冲时出现（不再压住播放时间/系统时间）
-  + 顶部：屏显开关不再强制打开网速
-  + 自适应 UI：尺寸不变不再重排（减卡顿）
+  +   · 改 1 / 增 0 / 删 0 · 0.00s
+  + ▶ apply_app_icon
+  + 桌面图标：NZ（M2 速度条）+ 橙红渐变，adaptive + 5 档 PNG
+  +   · 改 5 / 增 9 / 删 0 · 0.00s
+  + ▶ apply_top_transparent
   + 顶部透明：4 处去掉半透明底板（片名/分辨率/时间行/网速），只剩白字
+  +   · 改 1 / 增 0 / 删 0 · 0.01s
+  + ▶ apply_text_stroke
   + 顶部文字：保持原样，不加描边
+  +   · 改 0 / 增 0 / 删 0 · 0.00s
+  + ▶ apply_static_ui
   + 底栏尺寸：已静态化（手机竖屏贴边 / 手机横屏 24dp / 电视 60dp，inflate 即最终形态，不再起播后突变）
-  + 按钮间距：23 处改为 @dimen/tk_btn_gap（静态）
+  + 按钮间距：20 处改为 @dimen/tk_btn_gap（静态）
   + 去掉了起播后的运行时重排（不再先小后大）
-  + 片头尾对齐：00:00 两行补齐右侧间距（@dimen/tk_btn_gap），与汉字行同一基准居中
+  +   · 改 4 / 增 1 / 删 0 · 0.00s
+  + ▶ apply_slot_align
+  + 片头尾对齐：时间/汉字三层左右外边距已清空，宽度只由内容决定
   + 旋屏图标：描边 0.6（原 0.8）
-  + 底栏白名单：只保留 20 个我方按钮，运行时塞进来的（Zx推送等）当场删除
-  + 底栏守卫：层级监听已挂上（任何非法节点在添加瞬间被移除），并在 initView 先扫一遍
-  + 暂停保活：暂停时闲置计时器不再把底栏/时间面板收掉
-  + 唤出底栏：先清掉遗留的隐藏消息，外层同步可见（不会点了没反应）
-  + 广告兜底：切集后旧的 3.5s 超时作废（不会再被拉回上一集的广告）
-  + 广告兜底：净化代理 12 秒没画面自动回落原地址（不会黑在那儿不切）
-  + 净化缓存：同一地址切软解/硬解/换播放器不再等 3.5 秒
+  +   · 改 0 / 增 0 / 删 0 · 0.00s
+  + ▶ apply_btn_whitelist
+  + 底栏白名单：只保留 19 个我方按钮，运行时塞进来的（Zx推送等）当场删除
+  +   · 改 1 / 增 0 / 删 0 · 0.00s
+  + ▶ apply_ad_safety
+  + 广告兜底：已关闭（强起关了，不再有需要作废的超时回调）
+  +   · 改 0 / 增 0 / 删 0 · 0.00s
+  + ▶ apply_speed_fix
   + seekBar 高度：30mm → @dimen/tk_seek_h
-  + 底栏进度条行高：手机 24dp / 竖屏 20dp / 电视 28dp（静态，不再受 30mm 影响）
-  + 广告段播完：整段 <=120 秒就重新解析当前集（最多 2 次），不再直接判"最后一集"
+  + 底栏进度条行高：手机 16dp / 竖屏 14dp / 电视 20dp（静态，不再受 30mm 影响）
+  +   · 改 4 / 增 0 / 删 0 · 0.00s
+  + ▶ apply_ad_replay
+  + 广告段播完重解析：已关闭，播完仍走上游"下一集"逻辑
+  +   · 改 0 / 增 0 / 删 0 · 0.00s
+  + ▶ apply_danmu_alpha
   + 弹幕透明度：下限 10% -> 0%（0% 时彻底不可见）
+  +   · 改 2 / 增 0 / 删 0 · 0.00s
+  + ▶ apply_danmu_doubletap
   + 弹幕按钮：双击 = 持久关闭；单击 = 设置面板（关着时单击=恢复）；开启时带小对号
-  + 顶部/底部整条渐变底板：屏幕边最深 → 往中间渐透，正中不动（方块边界取消）
+  +   · 改 1 / 增 0 / 删 0 · 0.00s
+  + ▶ apply_scrim_bg
+  + 顶部/底部底板：整块半透明 #8C000000（均匀，不渐变；顶部 40dp 延伸内边距已撤）
+  +   · 改 1 / 增 1 / 删 0 · 0.00s
+  + ▶ apply_screen_default
+  + 屏显：4 处默认值 GONE → VISIBLE（右上角网速/时间出厂即显示）
+  +   · 改 1 / 增 0 / 删 0 · 0.00s
+  + ▶ apply_ad_switch_final
   + 广告开关：订阅规则分支也受 M3U8_PURIFY 控制，关闭时零规则加载
-  + 右上角：网速控件不再冒出来，时间块随底栏一起收（原来只收了左边片名块）
+  +   · 改 1 / 增 0 / 删 0 · 0.00s
+  + ▶ apply_render_fix
+  + 画面比例：修「填充」档 1 处、补像素宽高比 2 处（EXO 用 pixelWidthHeightRatio / IJK 用 SAR）
+  +   · 改 0 / 增 0 / 删 0 · 0.00s
+  + ▶ apply_dns_default
+  + DNS 默认：6 处默认值由"关闭"改为腾讯 DoH（关掉 DNS 会解析不出源）
+  +   · 改 3 / 增 0 / 删 0 · 0.00s
+  + ▶ apply_download
+  + 底栏不放下载按钮（入口在详情页）
+  + 下载：点按钮弹选集框（可多选）→ 串行排队；m3u8 拼 ts / mp4 走系统下载器，存 Movies/tvbox，退出即停
+  +   · 改 3 / 增 1 / 删 0 · 0.01s
+  + ▶ apply_search_boost
+  + 搜索：新源自动并入 + 不限 searchable + 每批 10 个源 + 1s 推进 + 单源 18s + 关键词去书名号
+  +   · 改 3 / 增 0 / 删 0 · 0.00s
+  + ▶ apply_spacing
+  + 行距收紧：顶部两行 4dp、进度条到按钮 16dp、按钮行贴边 12dp（改 46 处）
+  +   · 改 1 / 增 0 / 删 0 · 0.00s
+  + ▶ apply_download_anywhere
+  + 详情页新增按钮：下载（紧跟切源右侧，宽度按文字自适应，不再溢出）
+  + 详情页：下载按钮已接上选集框
+  + 详情页：下载按钮已接状态显示（进度/完成/失败）
+  + 下载链路：详情页入口 + 地址记忆 + UA/Referer 已就绪
+  +   · 改 3 / 增 3 / 删 0 · 0.01s
+  + ▶ apply_parse_hardening
+  + 解析加固：同线路自动换解析器重试（最多 3 个）
+  +   · 改 1 / 增 0 / 删 0 · 0.00s
+  + ▶ self_check
   + 自检通过：@color 全部存在，图标 19 个齐全
+  + 产物体检通过：启动图标 / 应用名 / 底栏结构 / 自愈链 / 下载入口 全部就位
+  +   · 改 0 / 增 0 / 删 0 · 0.01s
 ----------------------------------------------
+步骤明细（改=修改已有文件，增/删=文件数）：
+  write_icons                改0   增19  删0     0.01s
+  apply_layout               改2   增2   删0     0.01s
+  apply_top_width            改1   增0   删0     0.00s
+  apply_fast_start           改0   增0   删0     0.00s
+  apply_java                 改9   增2   删0     0.05s
+  apply_single_layout        改0   增0   删2     0.01s
+  apply_app_name             改1   增0   删0     0.00s
+  apply_app_icon             改5   增9   删0     0.00s
+  apply_top_transparent      改1   增0   删0     0.01s
+  apply_text_stroke          改0   增0   删0     0.00s
+  apply_static_ui            改4   增1   删0     0.00s
+  apply_slot_align           改0   增0   删0     0.00s
+  apply_btn_whitelist        改1   增0   删0     0.00s
+  apply_ad_safety            改0   增0   删0     0.00s
+  apply_speed_fix            改4   增0   删0     0.00s
+  apply_ad_replay            改0   增0   删0     0.00s
+  apply_danmu_alpha          改2   增0   删0     0.00s
+  apply_danmu_doubletap      改1   增0   删0     0.00s
+  apply_scrim_bg             改1   增1   删0     0.00s
+  apply_screen_default       改1   增0   删0     0.00s
+  apply_ad_switch_final      改1   增0   删0     0.00s
+  apply_render_fix           改0   增0   删0     0.00s
+  apply_dns_default          改3   增0   删0     0.00s
+  apply_download             改3   增1   删0     0.01s
+  apply_search_boost         改3   增0   删0     0.00s
+  apply_spacing              改1   增0   删0     0.00s
+  apply_download_anywhere    改3   增3   删0     0.01s
+  apply_parse_hardening      改1   增0   删0     0.00s
+  self_check                 改0   增0   删0     0.01s
+  注意：以下步骤 0 改动，若它本应生效，说明锚点漂移了 —— apply_fast_start、apply_text_stroke、apply_slot_align、apply_ad_safety、apply_ad_replay、apply_render_fix、self_check
+总耗时 0.2s
+==============================================
 === 完成 ===
 ```
 
 ## gradle: What went wrong
-* What went wrong:
-Execution failed for task ':app:compilePython64ReleaseJavaWithJavac'.
-> Compilation failed; see the compiler error output for details.
-
-* Try:
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights.
-
-* Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compilePython64ReleaseJavaWithJavac'.
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:142)
-	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:282)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:140)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:128)
-	at org.gradle.api.internal.tasks.execution.CleanupStaleOutputsExecuter.execute(CleanupStaleOutputsExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
-	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
-	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
-	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:56)
-	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
-	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
-	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:69)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:327)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:314)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:307)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:293)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:417)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:339)
-	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
-	at org.gradle.internal.concurrent.ManagedExecutorImpl$1.run(ManagedExecutorImpl.java:48)
 
 ## 关键错误行
-206:/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java:1792: error: cannot find symbol
-220:FAILURE: Build failed with an exception.
-230:* Exception is:
-231:org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compilePython64ReleaseJavaWithJavac'.
-241:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-263:Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler error output for details.
-396:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+254:Missing class java.beans.IntrospectionException (referenced from: java.util.Map com.thoughtworks.xstream.converters.javabean.PropertyDictionary.buildMap(java.lang.Class))
+293:Missing class javax.xml.stream.XMLStreamException (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver.createReader(java.io.File) and 19 other contexts)
+309:Missing class nu.xom.ParsingException (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.xml.XomDriver.createReader(java.io.File) and 3 other contexts)
+311:Missing class nu.xom.ValidityException (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.xml.XomDriver.createReader(java.io.File) and 3 other contexts)
+320:Missing class org.dom4j.DocumentException (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.xml.Dom4JDriver.createReader(java.io.File) and 4 other contexts)
+332:Missing class org.jdom.JDOMException (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.xml.JDomDriver.createReader(java.io.File) and 3 other contexts)
+341:Missing class org.jdom2.JDOMException (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.xml.JDom2Driver.createReader(java.io.File) and 3 other contexts)
 
 ## 日志尾部 350 行
 ```
+> Task :player:prepareReleaseArtProfile
+> Task :pyramid:preparePython64ReleaseArtProfile
+> Task :quickjs:prepareReleaseArtProfile
+> Task :pyramid:copyPython64ReleaseJniLibsProjectOnly
+> Task :app:mergePython64ReleaseArtProfile
+> Task :app:mergePython64ReleaseNativeLibs
+> Task :app:checkPython64ReleaseDuplicateClasses
+
+> Task :app:stripPython64ReleaseDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libchaquopy_java.so, libconceal.so, libcronet.101.0.4951.41.so, libcrypto_chaquopy.so, libffmpegJNI.so, libijkffmpeg.so, libijksdl.so, libp2p.so, libplayer.so, libpython3.8.so, libquickjs-android-wrapper.so, librtmp-jni.so, libsqlite3_chaquopy.so, libssl_chaquopy.so, libxl_stat.so, libxl_thunder_sdk.so.
+
+> Task :app:extractPython64ReleaseNativeSymbolTables FROM-CACHE
+> Task :app:mergePython64ReleaseNativeDebugMetadata NO-SOURCE
+> Task :app:extractProguardFiles
+> Task :player:compileReleaseAidl NO-SOURCE
+> Task :player:compileReleaseRenderscript NO-SOURCE
+> Task :player:generateReleaseBuildConfig FROM-CACHE
+> Task :player:generateReleaseResValues FROM-CACHE
+> Task :player:generateReleaseResources UP-TO-DATE
+> Task :player:packageReleaseResources FROM-CACHE
+> Task :player:parseReleaseLocalResources FROM-CACHE
+> Task :player:processReleaseManifest FROM-CACHE
+> Task :player:generateReleaseRFile FROM-CACHE
+> Task :player:javaPreCompileRelease FROM-CACHE
+> Task :player:compileReleaseJavaWithJavac FROM-CACHE
+> Task :player:mergeReleaseGeneratedProguardFiles
+> Task :player:exportReleaseConsumerProguardFiles FROM-CACHE
+> Task :quickjs:compileReleaseAidl NO-SOURCE
+> Task :quickjs:compileReleaseRenderscript NO-SOURCE
+> Task :quickjs:generateReleaseResValues FROM-CACHE
+> Task :quickjs:generateReleaseResources UP-TO-DATE
+> Task :quickjs:packageReleaseResources FROM-CACHE
+> Task :quickjs:parseReleaseLocalResources FROM-CACHE
+> Task :quickjs:processReleaseManifest FROM-CACHE
+> Task :quickjs:generateReleaseRFile FROM-CACHE
+> Task :quickjs:javaPreCompileRelease FROM-CACHE
+> Task :quickjs:compileReleaseJavaWithJavac FROM-CACHE
+> Task :quickjs:mergeReleaseGeneratedProguardFiles
+> Task :quickjs:exportReleaseConsumerProguardFiles FROM-CACHE
+> Task :pyramid:compilePython64ReleaseAidl NO-SOURCE
+> Task :pyramid:compilePython64ReleaseRenderscript NO-SOURCE
+> Task :pyramid:generatePython64ReleaseBuildConfig FROM-CACHE
+> Task :pyramid:extractPythonBuildPackages
+
+> Task :pyramid:generatePython64ReleasePythonRequirements
 Chaquopy: Installing for arm64-v8a
 Looking in indexes: https://pypi.org/simple, https://chaquo.com/pypi-7.0
 Collecting lxml
@@ -177,26 +235,26 @@ Collecting chaquopy-libxml2>=2.9.8 (from lxml)
   Downloading https://chaquo.com/pypi-7.0/chaquopy-libxml2/chaquopy_libxml2-2.9.8-2-py3-none-android_21_arm64_v8a.whl (773kB)
 Collecting cssselect<=1.4.99,>=1.2.0 (from pyquery==2.0.2)
   Downloading https://files.pythonhosted.org/packages/06/a9/2da08717a6862c48f1d61ef957a7bba171e7eefa6c0aa0ceb96a140c2a6b/cssselect-1.2.0-py2.py3-none-any.whl
-Collecting certifi>=2017.4.17 (from requests)
-  Downloading https://files.pythonhosted.org/packages/6d/39/5eec3296860b94ac20bb8ed807725b88f6adfab3f343df592afd975f5f86/certifi-2026.11.20-py3-none-any.whl (127kB)
 Collecting idna<4,>=2.5 (from requests)
   Downloading https://files.pythonhosted.org/packages/d2/23/408243171aa9aaba178d3e2559159c24c1171a641aa83b67bdd3394ead8e/idna-3.15-py3-none-any.whl (72kB)
 Collecting charset_normalizer<4,>=2 (from requests)
-  Downloading https://files.pythonhosted.org/packages/fc/ad/d07d7862a62ffa6d79d68074d14823243dd235a77c45262acbf6adeb28bf/charset_normalizer-3.5.2-py3-none-any.whl (68kB)
+  Downloading https://files.pythonhosted.org/packages/d2/0d/07ab8eb9b7015274353eac2add4067bde1ab1b51912bbae505392905eedd/charset_normalizer-3.5.3-py3-none-any.whl (68kB)
 Collecting urllib3<3,>=1.21.1 (from requests)
   Downloading https://files.pythonhosted.org/packages/ce/d9/5f4c13cecde62396b0d3fe530a50ccea91e7dfc1ccf0e09c228841bb5ba8/urllib3-2.2.3-py3-none-any.whl (126kB)
-Collecting typing-extensions>=4.0.0 (from beautifulsoup4)
-  Downloading https://files.pythonhosted.org/packages/8b/54/b1ae86c0973cc6f0210b53d508ca3641fb6d0c56823f288d108bc7ab3cc8/typing_extensions-4.13.2-py3-none-any.whl (45kB)
+Collecting certifi>=2017.4.17 (from requests)
+  Downloading https://files.pythonhosted.org/packages/6d/39/5eec3296860b94ac20bb8ed807725b88f6adfab3f343df592afd975f5f86/certifi-2026.11.20-py3-none-any.whl (127kB)
 Collecting soupsieve>=1.6.1 (from beautifulsoup4)
   Downloading https://files.pythonhosted.org/packages/e7/9c/0e6afc12c269578be5c0c1c9f4b49a8d32770a080260c333ac04cc1c832d/soupsieve-2.7-py3-none-any.whl
+Collecting typing-extensions>=4.0.0 (from beautifulsoup4)
+  Downloading https://files.pythonhosted.org/packages/8b/54/b1ae86c0973cc6f0210b53d508ca3641fb6d0c56823f288d108bc7ab3cc8/typing_extensions-4.13.2-py3-none-any.whl (45kB)
 Building wheels for collected packages: jsonpath
   Building wheel for jsonpath (setup.py): started
   Building wheel for jsonpath (setup.py): finished with status 'done'
-  Created wheel for jsonpath: filename=jsonpath-0.82.2-cp39-none-any.whl size=5619 sha256=df34719f81b38c85475ddc96f494c43e6be45c6d193fb81f5e2a79a890f0a9b6
+  Created wheel for jsonpath: filename=jsonpath-0.82.2-cp39-none-any.whl size=5619 sha256=ad4c84b3010fb674faeda4e5eb9e683542dc6d4a69a54e411bed7cb2dca1d215
   Stored in directory: /home/runner/.cache/chaquopy/pip/wheels/1a/7d/6e/393bb72381be6c5fef79020aabdcf87de53b1ed57e5ec8b9d5
 Successfully built jsonpath
-Installing collected packages: chaquopy-libxml2, chaquopy-libxslt, lxml, ujson, cssselect, pyquery, certifi, idna, charset-normalizer, urllib3, requests, jsonpath, cachetools, pycryptodome, typing-extensions, soupsieve, beautifulsoup4
-Successfully installed beautifulsoup4-4.15.0 cachetools-5.5.2 certifi-2026.11.20 chaquopy-libxml2-2.9.8 chaquopy-libxslt-1.1.32 charset-normalizer-3.5.2 cssselect-1.2.0 idna-3.15 jsonpath-0.82.2 lxml-4.6.3 pycryptodome-3.9.4 pyquery-2.0.2 requests-2.32.4 soupsieve-2.7 typing-extensions-4.13.2 ujson-1.35 urllib3-2.2.3
+Installing collected packages: chaquopy-libxml2, chaquopy-libxslt, lxml, ujson, cssselect, pyquery, idna, charset-normalizer, urllib3, certifi, requests, jsonpath, cachetools, pycryptodome, soupsieve, typing-extensions, beautifulsoup4
+Successfully installed beautifulsoup4-4.15.0 cachetools-5.5.2 certifi-2026.11.20 chaquopy-libxml2-2.9.8 chaquopy-libxslt-1.1.32 charset-normalizer-3.5.3 cssselect-1.2.0 idna-3.15 jsonpath-0.82.2 lxml-4.6.3 pycryptodome-3.9.4 pyquery-2.0.2 requests-2.32.4 soupsieve-2.7 typing-extensions-4.13.2 ujson-1.35 urllib3-2.2.3
 Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompatible. See https://chaquo.com/chaquopy/doc/current/android.html#android-bytecode.
 
 > Task :pyramid:mergePython64ReleasePythonSources
@@ -222,9 +280,9 @@ Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompa
 > Task :app:javaPreCompilePython64Release FROM-CACHE
 > Task :player:writeReleaseAarMetadata
 > Task :pyramid:writePython64ReleaseAarMetadata
-> Task :quickjs:writeReleaseAarMetadata
 > Task :app:generatePython64ReleaseResValues FROM-CACHE
 > Task :app:generatePython64ReleaseResources UP-TO-DATE
+> Task :quickjs:writeReleaseAarMetadata
 > Task :app:checkPython64ReleaseAarMetadata
 > Task :app:createPython64ReleaseCompatibleScreenManifests
 > Task :app:extractDeepLinksPython64Release FROM-CACHE
@@ -243,8 +301,8 @@ Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompa
 > Task :app:processPython64ReleaseManifest
 > Task :player:compileReleaseLibraryResources FROM-CACHE
 > Task :pyramid:compilePython64ReleaseLibraryResources FROM-CACHE
-> Task :quickjs:compileReleaseLibraryResources FROM-CACHE
 > Task :app:processPython64ReleaseManifestForPackage
+> Task :quickjs:compileReleaseLibraryResources FROM-CACHE
 > Task :player:bundleLibCompileToJarRelease
 > Task :pyramid:bundleLibCompileToJarPython64Release
 > Task :quickjs:bundleLibCompileToJarRelease
@@ -276,221 +334,176 @@ Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompa
 
 > Task :app:compilePython64ReleaseJavaWithJavac
 Note: [1] Wrote GeneratedAppGlideModule with: []
-/home/runner/work/tv-build/tv-build/tvboxos-src/app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java:1792: error: cannot find symbol
-                try { tkDur = PlayerUtils.safeTimeMs(mControlWrapper.getDuration()); } catch (Throwable ignored) {}
-                              ^
-  symbol:   variable PlayerUtils
-  location: class VodController
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: Some input files use unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-1 error
 
-> Task :app:compilePython64ReleaseJavaWithJavac FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_4-1795360241807.json
+> Task :app:mergePython64ReleaseGeneratedProguardFiles
+> Task :pyramid:generatePython64ReleasePythonBuildAssets
+> Task :pyramid:packagePython64ReleaseAssets FROM-CACHE
+> Task :quickjs:mergeReleaseShaders FROM-CACHE
+> Task :quickjs:compileReleaseShaders NO-SOURCE
+> Task :quickjs:generateReleaseAssets UP-TO-DATE
+> Task :quickjs:packageReleaseAssets FROM-CACHE
+> Task :app:mergePython64ReleaseAssets FROM-CACHE
+> Task :app:compressPython64ReleaseAssets FROM-CACHE
+> Task :app:mergePython64ReleaseJavaResource
 
-FAILURE: Build failed with an exception.
+> Task :app:minifyPython64ReleaseWithR8
+WARNING:/home/runner/work/tv-build/tv-build/tvboxos-src/app/proguard-rules.pro:25:1-18: R8: Option -repackageclasses overrides -flattenpackagehierarchy
+WARNING:/home/runner/work/tv-build/tv-build/tvboxos-src/app/proguard-rules.pro:28:1-27: R8: Ignoring option: -useuniqueclassmembernames
+WARNING:/home/runner/work/tv-build/tv-build/tvboxos-src/app/build/intermediates/merged_java_res/python64Release/base.jar: R8: Unexpected reference to missing service implementation class in META-INF/services/org.xmlpull.v1.XmlPullParserFactory: org.xmlpull.mxp1.MXParser,org.xmlpull.mxp1_serializer.MXSerializer.
+WARNING:R8: Library class android.content.res.XmlResourceParser implements program class org.xmlpull.v1.XmlPullParser
+WARNING:Missing classes detected while running R8. Please add the missing classes or apply additional keep rules that are generated in /home/runner/work/tv-build/tv-build/tvboxos-src/app/build/outputs/mapping/python64Release/missing_rules.txt.
 
-* What went wrong:
-Execution failed for task ':app:compilePython64ReleaseJavaWithJavac'.
-> Compilation failed; see the compiler error output for details.
+WARNING:R8: Missing class com.bea.xml.stream.MXParserFactory (referenced from: javax.xml.stream.XMLInputFactory com.thoughtworks.xstream.io.xml.BEAStaxDriver.createInputFactory())
+Missing class com.bea.xml.stream.XMLOutputFactoryBase (referenced from: javax.xml.stream.XMLOutputFactory com.thoughtworks.xstream.io.xml.BEAStaxDriver.createOutputFactory())
+Missing class com.ctc.wstx.stax.WstxInputFactory (referenced from: javax.xml.stream.XMLInputFactory com.thoughtworks.xstream.io.xml.WstxDriver.createInputFactory())
+Missing class com.ctc.wstx.stax.WstxOutputFactory (referenced from: javax.xml.stream.XMLOutputFactory com.thoughtworks.xstream.io.xml.WstxDriver.createOutputFactory())
+Missing class java.awt.BorderLayout (referenced from: void org.seamless.swing.logging.LogCategorySelector.addLogCategory(org.seamless.swing.logging.LogCategory) and 1 other context)
+Missing class java.awt.Color (referenced from: void com.thoughtworks.xstream.converters.extended.ColorConverter.marshal(java.lang.Object, com.thoughtworks.xstream.io.HierarchicalStreamWriter, com.thoughtworks.xstream.converters.MarshallingContext) and 1 other context)
+Missing class java.awt.Component (referenced from: void org.seamless.swing.logging.LogCategorySelector.<init>(java.util.List) and 5 other contexts)
+Missing class java.awt.Container (referenced from: java.awt.Container org.seamless.swing.AbstractController.view and 6 other contexts)
+Missing class java.awt.Dimension (referenced from: java.awt.Window org.seamless.swing.Application.center(java.awt.Window) and 4 other contexts)
+Missing class java.awt.Font (referenced from: void com.thoughtworks.xstream.converters.extended.FontConverter.marshal(java.lang.Object, com.thoughtworks.xstream.io.HierarchicalStreamWriter, com.thoughtworks.xstream.converters.MarshallingContext) and 1 other context)
+Missing class java.awt.Frame (referenced from: java.awt.Frame org.seamless.swing.logging.LogController.getParentWindow())
+Missing class java.awt.LayoutManager (referenced from: void org.seamless.swing.logging.LogCategorySelector.<init>(java.util.List) and 3 other contexts)
+Missing class java.awt.Rectangle (referenced from: void org.seamless.swing.logging.LogController$3.run())
+Missing class java.awt.Toolkit (referenced from: java.awt.Window org.seamless.swing.Application.center(java.awt.Window) and 1 other context)
+Missing class java.awt.Window (referenced from: java.awt.Window org.seamless.swing.Application.center(java.awt.Window) and 1 other context)
+Missing class java.awt.datatransfer.Clipboard (referenced from: void org.seamless.swing.Application.copyToClipboard(java.lang.String))
+Missing class java.awt.datatransfer.ClipboardOwner (referenced from: void org.seamless.swing.Application.copyToClipboard(java.lang.String))
+Missing class java.awt.datatransfer.StringSelection (referenced from: void org.seamless.swing.Application.copyToClipboard(java.lang.String))
+Missing class java.awt.datatransfer.Transferable (referenced from: void org.seamless.swing.Application.copyToClipboard(java.lang.String))
+Missing class java.awt.event.ActionEvent (referenced from: void org.seamless.swing.AbstractController.actionPerformed(java.awt.event.ActionEvent) and 1 other context)
+Missing class java.awt.event.ActionListener (referenced from: void org.seamless.swing.AbstractController.registerAction(javax.swing.AbstractButton, org.seamless.swing.DefaultAction) and 11 other contexts)
+Missing class java.awt.event.ItemListener (referenced from: void org.seamless.swing.logging.LogCategorySelector.addLoggerGroups(org.seamless.swing.logging.LogCategory, javax.swing.JPanel) and 1 other context)
+Missing class java.awt.event.WindowEvent (referenced from: void org.seamless.swing.AbstractController.windowActivated(java.awt.event.WindowEvent) and 6 other contexts)
+Missing class java.awt.event.WindowListener (referenced from: org.seamless.swing.Controller)
+Missing class java.beans.BeanInfo (referenced from: java.util.Map com.thoughtworks.xstream.converters.javabean.PropertyDictionary.buildMap(java.lang.Class))
+Missing class java.beans.IntrospectionException (referenced from: java.util.Map com.thoughtworks.xstream.converters.javabean.PropertyDictionary.buildMap(java.lang.Class))
+Missing class java.beans.Introspector (referenced from: java.util.Map com.thoughtworks.xstream.converters.javabean.PropertyDictionary.buildMap(java.lang.Class))
+Missing class java.beans.PropertyDescriptor (referenced from: boolean com.thoughtworks.xstream.converters.javabean.BeanProvider.canStreamProperty(java.beans.PropertyDescriptor) and 11 other contexts)
+Missing class java.beans.PropertyEditor (referenced from: java.beans.PropertyEditor com.thoughtworks.xstream.core.util.ThreadSafePropertyEditor.fetchFromPool() and 2 other contexts)
+Missing class javax.activation.ActivationDataFlavor (referenced from: void com.thoughtworks.xstream.converters.extended.ActivationDataFlavorConverter.marshal(java.lang.Object, com.thoughtworks.xstream.io.HierarchicalStreamWriter, com.thoughtworks.xstream.converters.MarshallingContext) and 1 other context)
+Missing class javax.swing.AbstractAction (referenced from: void org.seamless.swing.DefaultAction.<init>() and 1 other context)
+Missing class javax.swing.AbstractButton (referenced from: void org.seamless.swing.AbstractController.actionPerformed(java.awt.event.ActionEvent) and 2 other contexts)
+Missing class javax.swing.BorderFactory (referenced from: void org.seamless.swing.logging.LogCategorySelector.<init>(java.util.List) and 2 other contexts)
+Missing class javax.swing.Box (referenced from: void org.seamless.swing.logging.LogController.initializeToolBar(org.seamless.swing.logging.LogController$Expiration))
+Missing class javax.swing.BoxLayout (referenced from: void org.seamless.swing.logging.LogCategorySelector.<init>(java.util.List) and 1 other context)
+Missing class javax.swing.Icon (referenced from: javax.swing.JButton org.seamless.swing.logging.LogController.createClearButton() and 5 other contexts)
+Missing class javax.swing.ImageIcon (referenced from: javax.swing.ImageIcon org.seamless.swing.Application.createImageIcon(java.lang.Class, java.lang.String) and 18 other contexts)
+Missing class javax.swing.JButton (referenced from: javax.swing.JButton org.seamless.swing.logging.LogController.clearButton and 13 other contexts)
+Missing class javax.swing.JCheckBox (referenced from: void org.seamless.swing.logging.LogCategorySelector.addLoggerGroups(org.seamless.swing.logging.LogCategory, javax.swing.JPanel))
+Missing class javax.swing.JComboBox (referenced from: javax.swing.JComboBox org.seamless.swing.logging.LogController.expirationComboBox and 2 other contexts)
+Missing class javax.swing.JDialog (referenced from: void org.seamless.swing.logging.LogCategorySelector.<init>(java.util.List) and 1 other context)
+Missing class javax.swing.JFrame (referenced from: void org.seamless.swing.AbstractController.windowClosing(java.awt.event.WindowEvent))
+Missing class javax.swing.JLabel (referenced from: javax.swing.JLabel org.seamless.swing.logging.LogController.pauseLabel and 4 other contexts)
+Missing class javax.swing.JPanel (referenced from: javax.swing.JPanel org.seamless.swing.logging.LogCategorySelector$2.val$categoryPanel and 8 other contexts)
+Missing class javax.swing.JScrollPane (referenced from: void org.seamless.swing.logging.LogCategorySelector.<init>(java.util.List) and 1 other context)
+Missing class javax.swing.JTable (referenced from: javax.swing.JTable org.seamless.swing.logging.LogController.logTable and 6 other contexts)
+Missing class javax.swing.JToolBar (referenced from: javax.swing.JToolBar org.seamless.swing.logging.LogController.toolBar and 3 other contexts)
+Missing class javax.swing.ListSelectionModel (referenced from: void org.seamless.swing.logging.LogController.<init>(org.seamless.swing.Controller, org.seamless.swing.logging.LogController$Expiration, java.util.List))
+Missing class javax.swing.SwingUtilities (referenced from: void org.seamless.swing.logging.LogController.pushMessage(org.seamless.swing.logging.LogMessage))
+Missing class javax.swing.border.Border (referenced from: void org.seamless.swing.logging.LogCategorySelector.<init>(java.util.List) and 2 other contexts)
+Missing class javax.swing.border.TitledBorder (referenced from: void org.seamless.swing.logging.LogCategorySelector.addLogCategory(org.seamless.swing.logging.LogCategory))
+Missing class javax.swing.event.ListSelectionListener (referenced from: void org.seamless.swing.logging.LogController.<init>(org.seamless.swing.Controller, org.seamless.swing.logging.LogController$Expiration, java.util.List) and 1 other context)
+Missing class javax.swing.plaf.FontUIResource (referenced from: java.lang.Object com.thoughtworks.xstream.converters.extended.FontConverter.unmarshal(com.thoughtworks.xstream.io.HierarchicalStreamReader, com.thoughtworks.xstream.converters.UnmarshallingContext))
+Missing class javax.swing.table.AbstractTableModel (referenced from: void org.seamless.swing.logging.LogTableModel.<init>(int) and 1 other context)
+Missing class javax.swing.table.DefaultTableCellRenderer (referenced from: void org.seamless.swing.logging.LogTableCellRenderer.<init>() and 2 other contexts)
+Missing class javax.swing.table.JTableHeader (referenced from: void org.seamless.swing.logging.LogController.adjustTableUI())
+Missing class javax.swing.table.TableCellRenderer (referenced from: void org.seamless.swing.logging.LogController.<init>(org.seamless.swing.Controller, org.seamless.swing.logging.LogController$Expiration, java.util.List))
+Missing class javax.swing.table.TableColumn (referenced from: void org.seamless.swing.logging.LogController.adjustTableUI())
+Missing class javax.swing.table.TableColumnModel (referenced from: void org.seamless.swing.logging.LogController.adjustTableUI())
+Missing class javax.swing.table.TableModel (referenced from: void org.seamless.swing.logging.LogController.<init>(org.seamless.swing.Controller, org.seamless.swing.logging.LogController$Expiration, java.util.List))
+Missing class javax.xml.bind.DatatypeConverter (referenced from: byte[] com.thoughtworks.xstream.core.util.Base64JAXBCodec.decode(java.lang.String) and 1 other context)
+Missing class javax.xml.stream.Location (referenced from: void com.thoughtworks.xstream.io.xml.StaxReader.appendErrors(com.thoughtworks.xstream.converters.ErrorWriter))
+Missing class javax.xml.stream.XMLInputFactory (referenced from: javax.xml.stream.XMLInputFactory com.thoughtworks.xstream.io.xml.StaxDriver.inputFactory and 9 other contexts)
+Missing class javax.xml.stream.XMLOutputFactory (referenced from: javax.xml.stream.XMLOutputFactory com.thoughtworks.xstream.io.xml.StaxDriver.outputFactory and 10 other contexts)
+Missing class javax.xml.stream.XMLStreamException (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver.createReader(java.io.File) and 19 other contexts)
+Missing class javax.xml.stream.XMLStreamReader (referenced from: javax.xml.stream.XMLStreamReader com.thoughtworks.xstream.io.xml.StaxReader.in and 20 other contexts)
+Missing class javax.xml.stream.XMLStreamWriter (referenced from: javax.xml.stream.XMLStreamWriter com.thoughtworks.xstream.io.xml.StaxWriter.out and 23 other contexts)
+Missing class net.sf.cglib.proxy.Callback (referenced from: java.lang.Object com.thoughtworks.xstream.converters.reflection.CGLIBEnhancedConverter.create(net.sf.cglib.proxy.Enhancer, java.util.List, boolean) and 6 other contexts)
+Missing class net.sf.cglib.proxy.CallbackFilter (referenced from: java.lang.Object com.thoughtworks.xstream.converters.reflection.CGLIBEnhancedConverter.unmarshal(com.thoughtworks.xstream.io.HierarchicalStreamReader, com.thoughtworks.xstream.converters.UnmarshallingContext) and 1 other context)
+Missing class net.sf.cglib.proxy.Enhancer (referenced from: boolean com.thoughtworks.xstream.converters.reflection.CGLIBEnhancedConverter.canConvert(java.lang.Class) and 3 other contexts)
+Missing class net.sf.cglib.proxy.Factory (referenced from: java.lang.Object com.thoughtworks.xstream.converters.reflection.CGLIBEnhancedConverter.create(net.sf.cglib.proxy.Enhancer, java.util.List, boolean) and 2 other contexts)
+Missing class net.sf.cglib.proxy.NoOp (referenced from: void com.thoughtworks.xstream.converters.reflection.CGLIBEnhancedConverter.readCallback(com.thoughtworks.xstream.io.HierarchicalStreamReader, com.thoughtworks.xstream.converters.UnmarshallingContext, java.util.List, java.util.List))
+Missing class net.sf.cglib.proxy.Proxy (referenced from: boolean com.thoughtworks.xstream.security.CGLIBProxyTypePermission.allows(java.lang.Class))
+Missing class nu.xom.Attribute (referenced from: java.lang.String com.thoughtworks.xstream.io.xml.XomReader.getAttribute(int) and 2 other contexts)
+Missing class nu.xom.Builder (referenced from: nu.xom.Builder com.thoughtworks.xstream.io.xml.XomDriver.builder and 9 other contexts)
+Missing class nu.xom.Document (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.xml.XomDriver.createReader(java.io.File) and 6 other contexts)
+Missing class nu.xom.Element (referenced from: nu.xom.Element com.thoughtworks.xstream.io.xml.XomReader.currentElement and 24 other contexts)
+Missing class nu.xom.Elements (referenced from: java.lang.Object com.thoughtworks.xstream.io.xml.XomReader.getChild(int) and 2 other contexts)
+Missing class nu.xom.Node (referenced from: java.lang.String com.thoughtworks.xstream.io.xml.XomReader.getValue() and 1 other context)
+Missing class nu.xom.ParentNode (referenced from: java.lang.Object com.thoughtworks.xstream.io.xml.XomReader.getParent())
+Missing class nu.xom.ParsingException (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.xml.XomDriver.createReader(java.io.File) and 3 other contexts)
+Missing class nu.xom.Text (referenced from: java.lang.String com.thoughtworks.xstream.io.xml.XomReader.getValue())
+Missing class nu.xom.ValidityException (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.xml.XomDriver.createReader(java.io.File) and 3 other contexts)
+Missing class org.codehaus.jettison.AbstractXMLStreamWriter (referenced from: void com.thoughtworks.xstream.io.json.JettisonStaxWriter.endNode() and 1 other context)
+Missing class org.codehaus.jettison.mapped.Configuration (referenced from: void com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver.<init>(org.codehaus.jettison.mapped.Configuration) and 1 other context)
+Missing class org.codehaus.jettison.mapped.MappedNamespaceConvention (referenced from: org.codehaus.jettison.mapped.MappedNamespaceConvention com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver.convention and 8 other contexts)
+Missing class org.codehaus.jettison.mapped.MappedXMLInputFactory (referenced from: org.codehaus.jettison.mapped.MappedXMLInputFactory com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver.mif and 5 other contexts)
+Missing class org.codehaus.jettison.mapped.MappedXMLOutputFactory (referenced from: org.codehaus.jettison.mapped.MappedXMLOutputFactory com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver.mof and 3 other contexts)
+Missing class org.dom4j.Attribute (referenced from: java.lang.String com.thoughtworks.xstream.io.xml.Dom4JReader.getAttribute(int) and 1 other context)
+Missing class org.dom4j.Branch (referenced from: void com.thoughtworks.xstream.io.xml.Dom4JReader.<init>(org.dom4j.Branch) and 8 other contexts)
+Missing class org.dom4j.Document (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.xml.Dom4JDriver.createReader(java.io.File) and 7 other contexts)
+Missing class org.dom4j.DocumentException (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.xml.Dom4JDriver.createReader(java.io.File) and 4 other contexts)
+Missing class org.dom4j.DocumentFactory (referenced from: org.dom4j.DocumentFactory com.thoughtworks.xstream.io.xml.Dom4JDriver.documentFactory and 17 other contexts)
+Missing class org.dom4j.Element (referenced from: org.dom4j.Element com.thoughtworks.xstream.io.xml.Dom4JReader.currentElement and 22 other contexts)
+Missing class org.dom4j.io.OutputFormat (referenced from: org.dom4j.io.OutputFormat com.thoughtworks.xstream.io.xml.Dom4JDriver.outputFormat and 8 other contexts)
+Missing class org.dom4j.io.SAXReader (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.xml.Dom4JDriver.createReader(java.io.File) and 4 other contexts)
+Missing class org.dom4j.io.XMLWriter (referenced from: org.dom4j.io.XMLWriter com.thoughtworks.xstream.io.xml.Dom4JXmlWriter.writer and 9 other contexts)
+Missing class org.dom4j.tree.DefaultElement (referenced from: void com.thoughtworks.xstream.io.xml.Dom4JXmlWriter.endNode())
+Missing class org.jdom.Attribute (referenced from: java.lang.String com.thoughtworks.xstream.io.xml.JDomReader.getAttribute(int) and 2 other contexts)
+Missing class org.jdom.Content (referenced from: java.lang.Object com.thoughtworks.xstream.io.xml.JDomWriter.createNode(java.lang.String) and 1 other context)
+Missing class org.jdom.DefaultJDOMFactory (referenced from: void com.thoughtworks.xstream.io.xml.JDomWriter.<init>() and 3 other contexts)
+Missing class org.jdom.Document (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.xml.JDomDriver.createReader(java.io.File) and 6 other contexts)
+Missing class org.jdom.Element (referenced from: org.jdom.Element com.thoughtworks.xstream.io.xml.JDomReader.currentElement and 27 other contexts)
+Missing class org.jdom.JDOMException (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.xml.JDomDriver.createReader(java.io.File) and 3 other contexts)
+Missing class org.jdom.JDOMFactory (referenced from: org.jdom.JDOMFactory com.thoughtworks.xstream.io.xml.JDomWriter.documentFactory and 9 other contexts)
+Missing class org.jdom.Text (referenced from: void com.thoughtworks.xstream.io.xml.JDomWriter.setValue(java.lang.String))
+Missing class org.jdom.input.SAXBuilder (referenced from: org.jdom.input.SAXBuilder com.thoughtworks.xstream.io.xml.JDomDriver.createBuilder() and 4 other contexts)
+Missing class org.jdom2.Attribute (referenced from: java.lang.String com.thoughtworks.xstream.io.xml.JDom2Reader.getAttribute(int) and 2 other contexts)
+Missing class org.jdom2.Content (referenced from: java.lang.Object com.thoughtworks.xstream.io.xml.JDom2Writer.createNode(java.lang.String) and 1 other context)
+Missing class org.jdom2.DefaultJDOMFactory (referenced from: void com.thoughtworks.xstream.io.xml.JDom2Writer.<init>() and 2 other contexts)
+Missing class org.jdom2.Document (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.xml.JDom2Driver.createReader(java.io.File) and 5 other contexts)
+Missing class org.jdom2.Element (referenced from: org.jdom2.Element com.thoughtworks.xstream.io.xml.JDom2Reader.currentElement and 23 other contexts)
+Missing class org.jdom2.JDOMException (referenced from: com.thoughtworks.xstream.io.HierarchicalStreamReader com.thoughtworks.xstream.io.xml.JDom2Driver.createReader(java.io.File) and 3 other contexts)
+Missing class org.jdom2.JDOMFactory (referenced from: org.jdom2.JDOMFactory com.thoughtworks.xstream.io.xml.JDom2Writer.documentFactory and 7 other contexts)
+Missing class org.jdom2.Text (referenced from: void com.thoughtworks.xstream.io.xml.JDom2Writer.setValue(java.lang.String))
+Missing class org.jdom2.input.SAXBuilder (referenced from: org.jdom2.input.SAXBuilder com.thoughtworks.xstream.io.xml.JDom2Driver.createBuilder() and 4 other contexts)
+Missing class org.joda.time.DateTime (referenced from: java.lang.Object com.thoughtworks.xstream.core.util.ISO8601JodaTimeConverter.fromString(java.lang.String) and 1 other context)
+Missing class org.joda.time.DateTimeZone (referenced from: java.lang.Object com.thoughtworks.xstream.core.util.ISO8601JodaTimeConverter.fromString(java.lang.String))
+Missing class org.joda.time.format.DateTimeFormatter (referenced from: org.joda.time.format.DateTimeFormatter[] com.thoughtworks.xstream.core.util.ISO8601JodaTimeConverter.formattersNoUTC and 4 other contexts)
+Missing class org.joda.time.format.ISODateTimeFormat (referenced from: void com.thoughtworks.xstream.core.util.ISO8601JodaTimeConverter.<clinit>())
+Missing class org.kxml2.io.KXmlParser (referenced from: org.xmlpull.v1.XmlPullParser com.thoughtworks.xstream.io.xml.KXml2DomDriver.createParser() and 1 other context)
 
-* Try:
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights.
+> Task :app:optimizePython64ReleaseResources
+> Task :app:collectPython64ReleaseDependencies
+> Task :app:sdkPython64ReleaseDependencyData
+> Task :app:writePython64ReleaseAppMetadata
+> Task :app:writePython64ReleaseSigningConfigVersions
 
-* Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compilePython64ReleaseJavaWithJavac'.
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:142)
-	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:282)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:140)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:128)
-	at org.gradle.api.internal.tasks.execution.CleanupStaleOutputsExecuter.execute(CleanupStaleOutputsExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
-	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
-	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
-	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:56)
-	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
-	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
-	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:69)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:327)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:314)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:307)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:293)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:417)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:339)
-	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
-	at org.gradle.internal.concurrent.ManagedExecutorImpl$1.run(ManagedExecutorImpl.java:48)
-Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler error output for details.
-	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:56)
-	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:39)
-	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:97)
-	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.execute(NormalizingJavaCompiler.java:51)
-	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.execute(NormalizingJavaCompiler.java:37)
-	at org.gradle.api.internal.tasks.compile.AnnotationProcessorDiscoveringCompiler.execute(AnnotationProcessorDiscoveringCompiler.java:51)
-	at org.gradle.api.internal.tasks.compile.AnnotationProcessorDiscoveringCompiler.execute(AnnotationProcessorDiscoveringCompiler.java:37)
-	at org.gradle.api.internal.tasks.compile.ModuleApplicationNameWritingCompiler.execute(ModuleApplicationNameWritingCompiler.java:46)
-	at org.gradle.api.internal.tasks.compile.ModuleApplicationNameWritingCompiler.execute(ModuleApplicationNameWritingCompiler.java:36)
-	at org.gradle.jvm.toolchain.internal.DefaultToolchainJavaCompiler.execute(DefaultToolchainJavaCompiler.java:57)
-	at org.gradle.api.tasks.compile.JavaCompile.lambda$createToolchainCompiler$1(JavaCompile.java:232)
-	at org.gradle.api.internal.tasks.compile.CleaningJavaCompiler.execute(CleaningJavaCompiler.java:53)
-	at org.gradle.api.internal.tasks.compile.incremental.IncrementalCompilerFactory.lambda$createRebuildAllCompiler$0(IncrementalCompilerFactory.java:52)
-	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.execute(SelectiveCompiler.java:67)
-	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.execute(SelectiveCompiler.java:41)
-	at org.gradle.api.internal.tasks.compile.incremental.IncrementalResultStoringCompiler.execute(IncrementalResultStoringCompiler.java:66)
-	at org.gradle.api.internal.tasks.compile.incremental.IncrementalResultStoringCompiler.execute(IncrementalResultStoringCompiler.java:52)
-	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler$2.call(CompileJavaBuildOperationReportingCompiler.java:59)
-	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler$2.call(CompileJavaBuildOperationReportingCompiler.java:51)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
-	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
-	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler.execute(CompileJavaBuildOperationReportingCompiler.java:51)
-	at org.gradle.api.tasks.compile.JavaCompile.performCompilation(JavaCompile.java:279)
-	at org.gradle.api.tasks.compile.JavaCompile.performIncrementalCompilation(JavaCompile.java:165)
-	at org.gradle.api.tasks.compile.JavaCompile.compile(JavaCompile.java:146)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at org.gradle.internal.reflect.JavaMethod.invoke(JavaMethod.java:125)
-	at org.gradle.api.internal.project.taskfactory.IncrementalInputsTaskAction.doExecute(IncrementalInputsTaskAction.java:32)
-	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:51)
-	at org.gradle.api.internal.project.taskfactory.AbstractIncrementalTaskAction.execute(AbstractIncrementalTaskAction.java:25)
-	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:29)
-	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:236)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:29)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:26)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:47)
-	at org.gradle.internal.operations.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:68)
-	at org.gradle.api.internal.tasks.execution.TaskExecution.executeAction(TaskExecution.java:221)
-	at org.gradle.api.internal.tasks.execution.TaskExecution.executeActions(TaskExecution.java:204)
-	at org.gradle.api.internal.tasks.execution.TaskExecution.executeWithPreviousOutputFiles(TaskExecution.java:187)
-	at org.gradle.api.internal.tasks.execution.TaskExecution.execute(TaskExecution.java:165)
-	at org.gradle.internal.execution.steps.ExecuteStep.executeInternal(ExecuteStep.java:89)
-	at org.gradle.internal.execution.steps.ExecuteStep.access$000(ExecuteStep.java:40)
-	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:53)
-	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:50)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
-	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
-	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:50)
-	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:40)
-	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:68)
-	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:38)
-	at org.gradle.internal.execution.steps.CancelExecutionStep.execute(CancelExecutionStep.java:41)
-	at org.gradle.internal.execution.steps.TimeoutStep.executeWithoutTimeout(TimeoutStep.java:74)
-	at org.gradle.internal.execution.steps.TimeoutStep.execute(TimeoutStep.java:55)
-	at org.gradle.internal.execution.steps.CreateOutputsStep.execute(CreateOutputsStep.java:51)
-	at org.gradle.internal.execution.steps.CreateOutputsStep.execute(CreateOutputsStep.java:29)
-	at org.gradle.internal.execution.steps.CaptureStateAfterExecutionStep.executeDelegateBroadcastingChanges(CaptureStateAfterExecutionStep.java:124)
-	at org.gradle.internal.execution.steps.CaptureStateAfterExecutionStep.execute(CaptureStateAfterExecutionStep.java:80)
-	at org.gradle.internal.execution.steps.CaptureStateAfterExecutionStep.execute(CaptureStateAfterExecutionStep.java:58)
-	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:48)
-	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:36)
-	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithoutCache(BuildCacheStep.java:181)
-	at org.gradle.internal.execution.steps.BuildCacheStep.executeAndStoreInCache(BuildCacheStep.java:154)
-	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$executeWithCache$4(BuildCacheStep.java:121)
-	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$executeWithCache$5(BuildCacheStep.java:121)
-	at org.gradle.internal.Try$Success.map(Try.java:164)
-	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithCache(BuildCacheStep.java:81)
-	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$execute$0(BuildCacheStep.java:70)
-	at org.gradle.internal.Either$Left.fold(Either.java:115)
-	at org.gradle.internal.execution.caching.CachingState.fold(CachingState.java:59)
-	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:69)
-	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:47)
-	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:36)
-	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:25)
-	at org.gradle.internal.execution.steps.RecordOutputsStep.execute(RecordOutputsStep.java:36)
-	at org.gradle.internal.execution.steps.RecordOutputsStep.execute(RecordOutputsStep.java:22)
-	at org.gradle.internal.execution.steps.SkipUpToDateStep.executeBecause(SkipUpToDateStep.java:110)
-	at org.gradle.internal.execution.steps.SkipUpToDateStep.lambda$execute$2(SkipUpToDateStep.java:56)
-	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:56)
-	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:38)
-	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:73)
-	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:44)
-	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:37)
-	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:27)
-	at org.gradle.internal.execution.steps.ResolveCachingStateStep.execute(ResolveCachingStateStep.java:89)
-	at org.gradle.internal.execution.steps.ResolveCachingStateStep.execute(ResolveCachingStateStep.java:50)
-	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:114)
-	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:57)
-	at org.gradle.internal.execution.steps.CaptureStateBeforeExecutionStep.execute(CaptureStateBeforeExecutionStep.java:76)
-	at org.gradle.internal.execution.steps.CaptureStateBeforeExecutionStep.execute(CaptureStateBeforeExecutionStep.java:50)
-	at org.gradle.internal.execution.steps.SkipEmptyWorkStep.executeWithNoEmptySources(SkipEmptyWorkStep.java:254)
-	at org.gradle.internal.execution.steps.SkipEmptyWorkStep.executeWithNoEmptySources(SkipEmptyWorkStep.java:209)
-	at org.gradle.internal.execution.steps.SkipEmptyWorkStep.execute(SkipEmptyWorkStep.java:88)
-	at org.gradle.internal.execution.steps.SkipEmptyWorkStep.execute(SkipEmptyWorkStep.java:56)
-	at org.gradle.internal.execution.steps.RemoveUntrackedExecutionStateStep.execute(RemoveUntrackedExecutionStateStep.java:32)
-	at org.gradle.internal.execution.steps.RemoveUntrackedExecutionStateStep.execute(RemoveUntrackedExecutionStateStep.java:21)
-	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
-	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:43)
-	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:31)
-	at org.gradle.internal.execution.steps.AssignWorkspaceStep.lambda$execute$0(AssignWorkspaceStep.java:40)
-	at org.gradle.api.internal.tasks.execution.TaskExecution$4.withWorkspace(TaskExecution.java:281)
-	at org.gradle.internal.execution.steps.AssignWorkspaceStep.execute(AssignWorkspaceStep.java:40)
-	at org.gradle.internal.execution.steps.AssignWorkspaceStep.execute(AssignWorkspaceStep.java:30)
-	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:37)
-	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:27)
-	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:44)
-	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:33)
-	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:76)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:139)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:128)
-	at org.gradle.api.internal.tasks.execution.CleanupStaleOutputsExecuter.execute(CleanupStaleOutputsExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
-	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
-	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
-	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:56)
-	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
-	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
-	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:69)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:327)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:314)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:307)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:293)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:417)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:339)
-	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
-	at org.gradle.internal.concurrent.ManagedExecutorImpl$1.run(ManagedExecutorImpl.java:48)
+> Task :pyramid:stripPython64ReleaseDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libchaquopy_java.so, libcrypto_chaquopy.so, libpython3.8.so, libsqlite3_chaquopy.so, libssl_chaquopy.so.
 
-
-* Get more help at https://help.gradle.org
+> Task :pyramid:copyPython64ReleaseJniLibsProjectAndLocalJars
+> Task :pyramid:extractPython64ReleaseAnnotations FROM-CACHE
+> Task :pyramid:mergePython64ReleaseConsumerProguardFiles
+> Task :pyramid:prepareLintJarForPublish
+> Task :pyramid:mergePython64ReleaseJavaResource
+> Task :pyramid:syncPython64ReleaseLibJars FROM-CACHE
+> Task :app:compilePython64ReleaseArtProfile
+> Task :pyramid:bundlePython64ReleaseAar
+> Task :pyramid:mergePython64ReleaseResources FROM-CACHE
+> Task :pyramid:mapPython64ReleaseSourceSetPaths
+> Task :pyramid:verifyPython64ReleaseResources FROM-CACHE
+> Task :pyramid:assemblePython64Release
+> Task :app:packagePython64Release
+> Task :app:createPython64ReleaseApkListingFileRedirect
+> Task :app:assemblePython64Release
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_4-1795493578695.json
 
 Deprecated Gradle features were used in this build, making it incompatible with Gradle 8.0.
 
@@ -498,6 +511,6 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 See https://docs.gradle.org/7.5/userguide/command_line_interface.html#sec:command_line_warnings
 
-BUILD FAILED in 56s
-88 actionable tasks: 44 executed, 44 from cache
+BUILD SUCCESSFUL in 1m 53s
+116 actionable tasks: 63 executed, 53 from cache
 ```
