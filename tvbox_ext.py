@@ -45,7 +45,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261124-U53'
+VER = 'VER-20261124-U54'
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -1246,6 +1246,26 @@ def apply_layout():
             group.remove(pre)
             group.insert(j, pre)
             log('上集已在下集左边')
+
+    # ③.5 底栏贴底加固：把 bottom_container 套进一层 match_parent 的垂直锚（gravity=bottom）。
+    # 上游只靠 rootView 的 layout_gravity="bottom" 定位；一旦根容器高度/重力被别处改动
+    # （旋屏后实机出现过底栏浮在半空），底栏就跟着走。套一层和父等高、自身居底的锚，
+    # 底栏与父容器底边强绑定，不再依赖同级重力。
+    par = pm.get(bottom)
+    if par is not None and par.tag == 'FrameLayout' and par.get(A + 'id') != '@+id/tk_bottom_anchor':
+        idx = list(par).index(bottom)
+        par.remove(bottom)
+        anc = ET.Element('LinearLayout')
+        anc.set(A + 'id', '@+id/tk_bottom_anchor')
+        anc.set(A + 'layout_width', 'match_parent')
+        anc.set(A + 'layout_height', 'match_parent')
+        anc.set(A + 'orientation', 'vertical')
+        anc.set(A + 'gravity', 'bottom')
+        anc.append(bottom)
+        bottom.attrib.pop(A + 'layout_gravity', None)
+        par.insert(idx, anc)
+        pm = parents(root)
+        log('底栏贴底加固：bottom_container 套进 match_parent 居底锚')
 
     # ④ 按钮文字
     for rid, text in RENAME.items():
