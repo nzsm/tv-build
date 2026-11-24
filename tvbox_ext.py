@@ -21,10 +21,14 @@ import re
 HTVO_XML = ('<vector xmlns:android="http://schemas.android.com/apk/res/android"'
             ' android:width="23dp" android:height="23dp"'
             ' android:viewportWidth="24" android:viewportHeight="24">'
+            # 旋屏（屏显）图标原来是满幅绘制（0-24 全占），实测比同排图标大一圈，
+            # 整体缩到 88%：画布里留出呼吸位，视觉大小和其它图标齐平。
+            '<group android:pivotX="12.0" android:pivotY="12.0"'
+            ' android:scaleX="0.88" android:scaleY="0.88">'
             '<path android:pathData="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32z" android:fillColor="#FFFFFF" android:strokeColor="#FFFFFF" android:strokeWidth="0.6" android:strokeLineJoin="round"/>'
             '<path android:pathData="M10.23 1.75c-.59-.59-1.54-.59-2.12 0L1.75 8.11c-.59.59-.59 1.54 0 2.12l12.02 12.02c.59.59 1.54.59 2.12 0l6.36-6.36c.59-.59.59-1.54 0-2.12L10.23 1.75m4.6 19.44L2.81 9.17l6.36-6.36 12.02 12.02-6.36 6.36z" android:fillColor="#FFFFFF" android:strokeColor="#FFFFFF" android:strokeWidth="0.6" android:strokeLineJoin="round"/>'
             '<path android:pathData="M7.52 22.25C4.25 19.94 1.91 16.76 1.55 13H.05C.56 19.16 5.71 24 12 24l.66-.03-3.81-3.81-1.33 1.32z" android:fillColor="#FFFFFF" android:strokeColor="#FFFFFF" android:strokeWidth="0.6" android:strokeLineJoin="round"/>'
-            '</vector>')
+            '</group></vector>')
 
 ICONS = {'htov': HTVO_XML, 'v_prev': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="11.950" android:pivotY="10.575" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.050" android:translateY="1.425"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.826" android:scaleY="1.826"\n        android:translateX="-0.045" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M7,6c0.55,0 1,0.45 1,1v10c0,0.55 -0.45,1 -1,1s-1,-0.45 -1,-1L6,7c0,-0.55 0.45,-1 1,-1zM10.66,12.82l5.77,4.07c0.66,0.47 1.58,-0.01 1.58,-0.82L18.01,7.93c0,-0.81 -0.91,-1.28 -1.58,-0.82l-5.77,4.07c-0.57,0.4 -0.57,1.24 0,1.64z"/></group></group></vector>', 'v_next': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.600" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.400"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.833" android:scaleY="1.833"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M7.58,16.89l5.77,-4.07c0.56,-0.4 0.56,-1.24 0,-1.63L7.58,7.11C6.91,6.65 6,7.12 6,7.93v8.14c0,0.81 0.91,1.28 1.58,0.82zM16,7v10c0,0.55 0.45,1 1,1s1,-0.45 1,-1V7c0,-0.55 -0.45,-1 -1,-1s-1,0.45 -1,1z"/></group></group></vector>', 'v_replay': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="11.975" android:pivotY="10.575" android:scaleX="0.9929" android:scaleY="0.9929" android:translateX="0.025" android:translateY="1.425"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.136" android:scaleY="1.136"\n        android:translateX="-0.057" android:translateY="-1.123"><path android:fillColor="@android:color/white" android:pathData="M12,5V2.21c0,-0.45 -0.54,-0.67 -0.85,-0.35l-3.8,3.79c-0.2,0.2 -0.2,0.51 0,0.71l3.79,3.79c0.32,0.31 0.86,0.09 0.86,-0.36V7c3.73,0 6.68,3.42 5.86,7.29 -0.47,2.27 -2.31,4.1 -4.57,4.57 -3.57,0.75 -6.75,-1.7 -7.23,-5.01 -0.07,-0.48 -0.49,-0.85 -0.98,-0.85 -0.6,0 -1.08,0.53 -1,1.13 0.62,4.39 4.8,7.64 9.53,6.72 3.12,-0.61 5.63,-3.12 6.24,-6.24C20.84,9.48 16.94,5 12,5z"/></group></group></vector>', 'v_replay_play': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp" android:height="26dp"\n    android:viewportWidth="24" android:viewportHeight="24"\n    android:tint="#FFFFFF"><group android:pivotX="11.925" android:pivotY="10.875" android:scaleX="1.1382" android:scaleY="1.1382" android:translateX="0.075" android:translateY="1.125"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.136" android:scaleY="1.136"\n        android:translateX="-0.057" android:translateY="-1.123"><path android:strokeColor="@android:color/white" android:strokeWidth="2.2" android:fillColor="@android:color/transparent" android:pathData="M12,5 A7,7 0 1 1 11.99,5"/><path android:fillColor="@android:color/white" android:pathData="M9.85,8.4 L16.25,12.0 L9.85,15.6 Z"/></group></group></vector>', 'v_aspect': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.0" android:scaleY="1.0"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M18,12c-0.55,0 -1,0.45 -1,1v2h-2c-0.55,0 -1,0.45 -1,1s0.45,1 1,1h3c0.55,0 1,-0.45 1,-1v-3c0,-0.55 -0.45,-1 -1,-1zM7,9h2c0.55,0 1,-0.45 1,-1s-0.45,-1 -1,-1L6,7c-0.55,0 -1,0.45 -1,1v3c0,0.55 0.45,1 1,1s1,-0.45 1,-1L7,9zM21,3L3,3c-1.1,0 -2,0.9 -2,2v14c0,1.1 0.9,2 2,2h18c1.1,0 2,-0.9 2,-2L23,5c0,-1.1 -0.9,-2 -2,-2zM20,19.01L4,19.01c-0.55,0 -1,-0.45 -1,-1L3,5.99c0,-0.55 0.45,-1 1,-1h16c0.55,0 1,0.45 1,1v12.02c0,0.55 -0.45,1 -1,1z"/></group></group></vector>', 'v_ffwd': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.309" android:scaleY="1.309"\n        android:translateX="-0.523" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M5.58,16.89l5.77,-4.07c0.56,-0.4 0.56,-1.24 0,-1.63L5.58,7.11C4.91,6.65 4,7.12 4,7.93v8.14c0,0.81 0.91,1.28 1.58,0.82zM13,7.93v8.14c0,0.81 0.91,1.28 1.58,0.82l5.77,-4.07c0.56,-0.4 0.56,-1.24 0,-1.63l-5.77,-4.07c-0.67,-0.47 -1.58,0 -1.58,0.81z"/></group></group></vector>', 'v_type': '<vector android:height="26dp"\n    android:tint="#FFFFFF"\n    android:viewportHeight="24"\n    android:viewportWidth="24"\n    android:width="26dp"\n    xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.0" android:scaleY="1.0"\n        android:translateX="0.0" android:translateY="-1.833"><path\n        android:fillColor="@android:color/white"\n        android:pathData="M21,3L3,3c-1.11,0 -2,0.89 -2,2v12c0,1.1 0.89,2 2,2h5v2h8v-2h5c1.1,0 1.99,-0.9 1.99,-2L23,5c0,-1.11 -0.9,-2 -2,-2zM21,17L3,17L3,5h18v12zM16,11l-7,4L9,7z" /></group></group></vector>', 'v_subtitle': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.1" android:scaleY="1.1"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M20,4L4,4c-1.1,0 -2,0.9 -2,2v12c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2L22,6c0,-1.1 -0.9,-2 -2,-2zM4,12h4v2L4,14v-2zM14,18L4,18v-2h10v2zM20,18h-4v-2h4v2zM20,14L10,14v-2h10v2z"/></group></group></vector>', 'v_audio': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.600" android:scaleX="0.9906" android:scaleY="0.9906" android:translateX="0.000" android:translateY="1.400"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.222" android:scaleY="1.222"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M12,5v8.55c-0.94,-0.54 -2.1,-0.75 -3.33,-0.32 -1.34,0.48 -2.37,1.67 -2.61,3.07 -0.46,2.74 1.86,5.08 4.59,4.65 1.96,-0.31 3.35,-2.11 3.35,-4.1V7h2c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2h-2c-1.1,0 -2,0.9 -2,2z"/></group></group></vector>', 'v_danmu': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp"\n    android:height="26dp"\n    android:viewportWidth="436"\n    android:viewportHeight="419"><group android:pivotX="218.000" android:pivotY="185.058" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="24.442"><group android:pivotX="218.0" android:pivotY="209.5"\n        android:scaleX="0.916" android:scaleY="0.916"\n        android:translateX="0.0" android:translateY="-25.507"><path\n      android:pathData="M322.65,272.14L274.13,272.14L274.13,290.36L328.16,290.36L328.16,318.2L274.13,318.2L274.13,347.96L242.96,347.96L242.96,318.2L188.7,318.2L188.7,290.36L242.96,290.36L242.96,272.14L194.21,272.14L194.21,147.1L216.3,147.1L209.39,129.82L238.16,129.82L245.13,147.1L271.73,147.1L278.7,129.82L307.53,129.82L300.32,147.1L322.88,147.1L322.65,272.14ZM115.05,189.58L152.26,189.58L152.26,164.62L110.25,164.62L110.25,135.09L182.96,135.09L182.96,218.35L143.59,218.35L142.18,244.78L184.66,244.78L177.92,347.02L117.22,347.02L117.22,316.79L148.39,316.79L151.79,273.55L110.25,273.55L115.05,189.58ZM244.89,243.08L244.89,223.16L222.81,223.16L222.81,243.08L244.89,243.08ZM244.89,195.79L244.89,176.11L222.81,176.11L222.81,195.79L244.89,195.79ZM294.06,243.08L294.06,223.16L272.02,223.16L272.02,243.08L294.06,243.08ZM294.06,195.79L294.06,176.11L272.02,176.11L272.02,195.79L294.06,195.79Z"\n      android:fillColor="#FFFFFF"\n      android:fillType="evenOdd"/><path\n      android:pathData="M20.27,79.27Q0.5,99.04 0.5,127L0.5,351Q0.5,378.96 20.27,398.73Q40.04,418.5 68,418.5L368,418.5Q395.96,418.5 415.73,398.73Q435.5,378.96 435.5,351L435.5,127Q435.5,99.04 415.73,79.27Q395.96,59.5 368,59.5L68,59.5Q40.04,59.5 20.27,79.27ZM35.5,351L35.5,127Q35.5,113.54 45.02,104.02Q54.54,94.5 68,94.5L368,94.5Q381.46,94.5 390.98,104.02Q400.5,113.54 400.5,127L400.5,351Q400.5,364.46 390.98,373.98Q381.46,383.5 368,383.5L68,383.5Q54.54,383.5 45.02,373.98Q35.5,364.46 35.5,351Z"\n      android:strokeLineJoin="miter"\n      android:strokeWidth="35"\n      android:fillColor="#FCFCFC"\n      android:fillType="evenOdd"\n      android:strokeLineCap="butt"/><path\n      android:pathData="M208.26,55.63L128.98,0.62L109.02,29.38L188.31,84.39Q201.24,93.36 216.98,93.4Q232.71,93.44 245.69,84.53L325.91,29.42L306.09,0.57L225.87,55.68Q221.89,58.41 217.06,58.4Q212.23,58.39 208.26,55.63Z"\n      android:strokeLineJoin="miter"\n      android:strokeWidth="35"\n      android:fillColor="#FFFFFF"\n      android:fillType="evenOdd"\n      android:strokeLineCap="butt"/></group></group></vector>', 'v_back': '<vector android:autoMirrored="true" android:height="26dp"\n    android:tint="#FFFFFF" android:viewportHeight="24"\n    android:viewportWidth="24" android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.575" android:scaleX="0.9929" android:scaleY="0.9929" android:translateX="0.000" android:translateY="1.425"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.169" android:scaleY="1.169"\n        android:translateX="0.468" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M16.62,2.99c-0.49,-0.49 -1.28,-0.49 -1.77,0L6.54,11.3c-0.39,0.39 -0.39,1.02 0,1.41l8.31,8.31c0.49,0.49 1.28,0.49 1.77,0s0.49,-1.28 0,-1.77L9.38,12l7.25,-7.25c0.48,-0.48 0.48,-1.28 -0.01,-1.76z"/></group></group></vector>', 'ic_clock': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.600" android:scaleX="0.9906" android:scaleY="0.9906" android:translateX="-0.000" android:translateY="1.400"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.047" android:scaleY="1.047"\n        android:translateX="-0.262" android:translateY="-1.31"><path\n        android:fillColor="@android:color/white"\n        android:pathData="M11,8H13V14H11V8M12,20C8.13,20 5,16.87 5,13S8.13,6 12,6 19,9.13 19,13C19.7,13 20.36,13.13 21,13.35C21,13.23 21,13.12 21,13C21,10.88 20.26,8.93 19.03,7.39L20.45,5.97C20,5.46 19.55,5 19.04,4.56L17.62,6C16.07,4.74 14.12,4 12,4C7.03,4 3,8.03 3,13S7.03,22 12,22C12.59,22 13.16,21.94 13.71,21.83C13.4,21.25 13.18,20.6 13.08,19.91C12.72,19.96 12.37,20 12,20M15,1H9V3H15V1M16.5,16.5V21.5H21.5V16.5H16.5Z"/></group></group></vector>', 'play_skip': '<vector android:height="26dp" android:viewportHeight="1000"\n    android:viewportWidth="1000" android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="500.000" android:pivotY="423.958" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="76.042"><group android:pivotX="500.0" android:pivotY="500.0"\n        android:scaleX="0.932" android:scaleY="0.932"\n        android:translateX="0.0" android:translateY="-76.375"><path android:fillColor="#FFFFFFFF" android:pathData="M10,499.5c0,301.7 0.3,319.9 4.5,316.5C24,808.3 345.7,501.9 345.7,500.3c0,-0.8 -75.3,-73.4 -167.7,-161.1L10,179.6L10,499.5z"/><path android:fillColor="#FFFFFFFF" android:pathData="M414.1,498.9c0,203.1 1.1,319.9 2.6,319.4c2.6,-0.8 335.5,-316.2 335.5,-318c0,-0.5 -234,-223.5 -328.1,-312.5l-10,-9.3L414.1,498.9z"/><path android:fillColor="#FFFFFFFF" android:pathData="M820.9,500.5l0,321l84.5,-0L990,821.5L990,500.5l0,-320.9l-84.5,-0l-84.5,-0L820.9,500.5z"/></group></group></vector>', 'tk_unlock': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp"\n    android:height="26dp"\n    android:tint="#FFFFFF"\n    android:viewportWidth="24"\n    android:viewportHeight="24"><group android:pivotX="12.000" android:pivotY="10.600" android:scaleX="0.9906" android:scaleY="0.9906" android:translateX="-0.000" android:translateY="1.400"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.047" android:scaleY="1.047"\n        android:translateX="0.0" android:translateY="-1.31"><path\n        android:fillColor="@android:color/white"\n        android:pathData="M18,8h-1L17,6c0,-2.76 -2.24,-5 -5,-5S7,3.24 7,6h2c0,-1.66 1.34,-3 3,-3s3,1.34 3,3v2L6,8c-1.1,0 -2,0.9 -2,2v10c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2L20,10c0,-1.1 -0.9,-2 -2,-2zM18,20L6,20L6,10h12v10zM12,17c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2z" /></group></group></vector>', 'v_cast': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp" android:height="26dp"\n    android:viewportWidth="24" android:viewportHeight="24"\n    android:tint="#FFFFFF"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.0" android:scaleY="1.0"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M1,18v3h3c0,-1.66 -1.34,-3 -3,-3zM1,14v2c2.76,0 5,2.24 5,5h2c0,-3.87 -3.13,-7 -7,-7zM1,10v2c4.97,0 9,4.03 9,9h2c0,-6.08 -4.93,-11 -11,-11zM21,3L3,3c-1.1,0 -2,0.9 -2,2v3h2L3,5h18v14h-7v2h7c1.1,0 2,-0.9 2,-2L23,5c0,-1.1 -0.9,-2 -2,-2z"/></group></group></vector>', 'tk_space': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp" android:height="26dp"\n    android:viewportWidth="26" android:viewportHeight="26"><path android:fillColor="#00000000" android:pathData="M0,0 L26,0 L26,26 L0,26 Z" /></vector>'}
 
@@ -39,7 +43,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261123-U47'
+VER = 'VER-20261124-U50'
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -61,6 +65,7 @@ FEAT_AD_REPLAY = False
 OPT_BTN_TEXT = True           # 02 按钮文字：上集/下集/旋屏/EXO；播放器名缩短；线路名"直链"；投屏去门槛；摘除搜弹幕/视轨
 OPT_SINGLE_LAYOUT = True      # 03 删掉第二份播放控制布局，只留 player_vod_control_view
 OPT_APP_NAME = True           # 04 应用名改成 NZ
+OPT_APP_ICON = True           # 桌面启动图标换成 NZ（M2 + 橙红渐变）
 OPT_TOPBAR_TRANSPARENT = True # 05 顶部四块半透明底板去掉（只留白字）
 OPT_TEXT_STROKE = True        # 06 描边撤销（True=保持无描边原样，False=不做处理，结果一样）
 OPT_STATIC_UI = True          # 07 尺寸静态化（手机竖屏/横屏/电视三套 dimen，不再起播后跳变）
@@ -310,9 +315,61 @@ public class TkDownloadPicker {
 }
 '''
 
+TK_DL_CENTER_JAVA = r'''package com.github.tvbox.osc.util;
+
+import android.os.Handler;
+import android.os.Looper;
+import android.view.View;
+import android.widget.TextView;
+
+/**
+ * 详情页「下载」按钮的状态显示：没任务时是「下载」，一开始下载就变成「下载 3/10」，
+ * 有失败的会在后面挂「失败N」。长按按钮弹出下载列表，能看到每集的排队/百分比/完成/失败原因。
+ */
+public class TkDownloadCenter {
+
+    private static final java.util.WeakHashMap<TextView, Boolean> BOUND =
+            new java.util.WeakHashMap<TextView, Boolean>();
+
+    public static void bind(final TextView tv) {
+        if (tv == null) return;
+        try {
+            if (BOUND.containsKey(tv)) return;
+            BOUND.put(tv, Boolean.TRUE);
+        } catch (Throwable ignored) {
+        }
+        try {
+            tv.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    TkDownloader.showList(v.getContext());
+                    return true;
+                }
+            });
+        } catch (Throwable ignored) {
+        }
+        final Handler h = new Handler(Looper.getMainLooper());
+        final Runnable[] r = new Runnable[1];
+        r[0] = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String s = TkDownloader.label();
+                    if (!s.contentEquals(tv.getText())) tv.setText(s);
+                    h.postDelayed(r[0], 1000);
+                } catch (Throwable ignored) {
+                }
+            }
+        };
+        h.post(r[0]);
+    }
+}
+'''
+
 TK_DL_JAVA = r"""package com.github.tvbox.osc.util;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -365,11 +422,24 @@ public class TkDownloader {
             .followRedirects(true)
             .build();
 
+    public static final int ST_QUEUE = 0;
+    public static final int ST_RUN = 1;
+    public static final int ST_OK = 2;
+    public static final int ST_FAIL = 3;
+
     static class Job {
         Context app;
         String url;
         String name;
+        volatile int status = ST_QUEUE;
+        volatile int done = 0;
+        volatile int total = 0;
+        volatile String msg = "";
     }
+
+    /** 界面上的任务表：详情页「下载」按钮的文字、下载列表都读这里。 */
+    public static final java.util.ArrayList<Job> TASKS = new java.util.ArrayList<Job>();
+    private static volatile Job CUR = null;
 
     public static void start(final Context ctx, String urlIn, String title) {
         enqueue(ctx, urlIn, title);
@@ -425,6 +495,14 @@ public class TkDownloader {
                 QUEUE.add(job);
                 left = QUEUE.size() - 1;
             }
+            synchronized (TASKS) {
+                TASKS.add(job);
+                while (TASKS.size() > 40) {
+                    Job old = TASKS.get(0);
+                    if (old.status == ST_RUN || old.status == ST_QUEUE) break;
+                    TASKS.remove(0);
+                }
+            }
             startWorker();
             tip(ctx, "已加入下载队列：" + job.name + (left > 0 ? ("（前面还有 " + left + " 个）") : ""));
         } catch (Throwable e) {
@@ -459,6 +537,8 @@ public class TkDownloader {
                 job = QUEUE.remove(0);
             }
             lastApp = job.app;
+            CUR = job;
+            job.status = ST_RUN;
             try {
                 File dir = outDir();
                 if (dir == null) throw new Exception("创建下载目录失败");
@@ -768,6 +848,11 @@ public class TkDownloader {
 
     private static void progress(Context ctx, String name, int done, int total) {
         try {
+            Job j = CUR;
+            if (j != null) {
+                j.total = total;
+                j.done = done;
+            }
             NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm == null) return;
             if (Build.VERSION.SDK_INT >= 26) {
@@ -787,6 +872,14 @@ public class TkDownloader {
 
     private static void done(Context ctx, String name, boolean ok, String extra) {
         try {
+            Job j = CUR;
+            if (j != null) {
+                j.status = ok ? ST_OK : ST_FAIL;
+                j.msg = extra == null ? "" : extra;
+                if (ok) {
+                    j.done = j.total;
+                }
+            }
             NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm != null) {
                 if (Build.VERSION.SDK_INT >= 26) {
@@ -800,6 +893,59 @@ public class TkDownloader {
                 nm.notify(NOTI_ID, b.build());
             }
             tip(ctx, (ok ? "下载完成：" : "下载失败：") + name + (extra == null ? "" : ("\n" + extra)));
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** 详情页「下载」按钮上的文字：没任务→「下载」；有任务→「下载 3/10」，有失败带个标记。 */
+    public static String label() {
+        synchronized (TASKS) {
+            if (TASKS.isEmpty()) return "下载";
+            int total = TASKS.size();
+            int okc = 0;
+            int fail = 0;
+            for (Job t : TASKS) {
+                if (t.status == ST_OK) okc++;
+                else if (t.status == ST_FAIL) fail++;
+            }
+            String s = "↓" + okc + "/" + total;
+            if (fail > 0) s = s + "·" + fail;
+            return s;
+        }
+    }
+
+    /** 下载列表正文：每集一行，排队/下载中百分比/完成/失败原因。 */
+    public static String listText() {
+        StringBuilder sb = new StringBuilder();
+        synchronized (TASKS) {
+            if (TASKS.isEmpty()) return "还没有下载任务";
+            for (int i = TASKS.size() - 1; i >= 0; i--) {
+                Job t = TASKS.get(i);
+                sb.append(t.name).append("    ");
+                if (t.status == ST_QUEUE) {
+                    sb.append("排队中");
+                } else if (t.status == ST_RUN) {
+                    if (t.total > 0) sb.append("下载中 ").append(t.done * 100 / t.total).append("%");
+                    else sb.append("下载中");
+                } else if (t.status == ST_OK) {
+                    sb.append("完成");
+                } else {
+                    sb.append("失败");
+                    if (t.msg != null && !t.msg.isEmpty()) sb.append("：").append(t.msg);
+                }
+                sb.append("\n\n");
+            }
+        }
+        return sb.toString();
+    }
+
+    public static void showList(Context ctx) {
+        try {
+            new AlertDialog.Builder(ctx)
+                    .setTitle("下载列表")
+                    .setMessage(listText())
+                    .setPositiveButton("知道了", null)
+                    .show();
         } catch (Throwable ignored) {
         }
     }
@@ -835,6 +981,90 @@ ICONS['v_download'] = ('<vector xmlns:android="http://schemas.android.com/apk/re
     '<path android:fillColor="@android:color/white" android:pathData="M3,20.5h18v2.5h-18z"/>'
     '</group></vector>')
 
+# NZ 品牌图标：圆角实心播放三角 + 镂空 NZ（evenOdd 负空间）。
+# 只用两种元素——播放三角（视频）与 NZ 两个字母，缩到 48px 仍能认出。
+# ---------------------------------------------------------------- 桌面启动图标（NZ）
+# 图形用 M2：右指圆角三角被两道平行斜缝切成三块，读作「速度条 / 播放」，单色白。
+# 落地方式：Android 8+ 走 adaptive icon（渐变满幅、不受系统白底方框裁切），
+# 老设备走各密度 PNG（同时覆盖上游原有的 drawable-*/app_icon.png）。
+ICON_M2_PATH = ('M14.82 8.74 L16.32 14.44 L17.91 13.58 L18.6 13.18 L19.02 12.89 L19.31 12.62 L19.45 12.43 L19.52 12.29 L19.57 12.1 L19.57 11.9 L19.52 11.71 L19.45 11.57 L19.31 11.38 L19.14 11.21 L18.83 10.97 L18.23 10.6 Z M10.39 6.33 L13.01 16.25 L15.56 14.86 L13.89 8.47 L13.8 8.18 Z M6.01 4.25 L5.79 4.28 L5.61 4.35 L5.44 4.47 L5.31 4.62 L5.2 4.82 L5.13 5.01 L5.06 5.33 L5.02 5.69 L5.0 6.12 L5.0 17.88 L5.02 18.31 L5.07 18.73 L5.13 18.99 L5.26 19.3 L5.39 19.48 L5.61 19.65 L5.79 19.72 L6.08 19.75 L6.33 19.72 L6.65 19.63 L7.06 19.46 L7.58 19.2 L12.22 16.68 L12.24 16.64 L9.38 5.78 L7.75 4.89 L6.95 4.49 L6.42 4.3 L6.21 4.26 Z')
+
+ICON_B64 = {
+    'mdpi': ('iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAIAAADYYG7QAAAEDElEQVR42s2YTWgcZRjHfzPZTWuTSjQXu0pimm72oyvWNPhFPdiDKMGKKOjBU9FLRUX0IBghvdSjHwQ9VA9CEYpopdJWoVIpVtBYpGljbNPWEimLqdlEd3Z3Jjvzvh72c3ZnZyZ16+xzWDL/zOb58Z/3+cgocup2pIpQkCpCRaq1H2qfSk0vXQoVqjcoiK7yb7H/qep36y+FiuxySCoVhKp2FA2SzqJBonYUDZJQJ9EoFYc6w5uKQx3jTeUMdYw3SKDRoSC9gUaHAvam4QwF701JDHnT3JFk9z6A099x4hBLf90gb0qIIW9vdjzFho0ADz3Og49x8ihff46Wa7s3dZ3a/Un1R6hGV4iHdzH5AaM72u4NQpI3fJyb0Doa4qYedo4jVQa2UH3ofr1RHGiEJG+Q0dB0P6fYKQaHWd/LXaPsfZuxe6/fGwE5g0wWTccS1bJ3rSnHUFWiSX6dY1OEPS/y1ptER9bmjSXJrZLJktOxZPU2HxWO4swUT3HxEroBsGWYidd56YVyp3X3xhRoOhnNjlIdrp79RjrzkNxKUXL+QvlSUbh/O5vvpK+P3l5nbyyBprOskV9FSDtrtco8u1+riETo62f2N5uYilEUTE3w3Djr19XymYJsnkyWvIFoss1puLbuxa0eGZBIcPa8HWiEvwv8ucSTO5l6g0ceQEiyeZaz6MXGJtTcliobo+tkcIlkgoU0/2RrSmyIcJgz8wC33syep3n/NbbFHHM7Kj7mlEtsjWMpnJuvKeEQ8SF+qbNtKMI7rzD5POFuTxqkonpPTRem/lvYdBszF2ziyCCnzlI0beKj97F73JOmbsl3meHukYozM29TtsUoGMxedrjZi6a+7FtvFB5AIyxc4+piXX8apGcD0/bqO/Yj+4/4OUk+9hv3SA6T0zk9Z2vi98SYrii/p3n5PSY+xvBZZZ7blvu53thDdICf52ziWJxzl7mSZt8Bnt3LqVn/VRby3rY8YzTBV98jJGoFPbUZU/LMZPNk8FNlXrsfigfQ9gQrGhf/ADAtvjzJq1Pl8blGmqad2nHbktID6O4o3WGm51hc4d2DLFzzmdtRCbnRWJDXsbyAusNEB/jwEEVrTbkdlZAzjQn5ArrpXfZX0uw/zMyl68jtqDQd6qIkr2OY3mW/uMxHhznyQ2nTawtN3dsPoVK0KKyii8b/9o1iI4pW4MAxDh6vDPC20SCVEFJl1aJQwLBqc63+8+oisaEyStHkixN8cpQV7b/nblFlKxqmQKjONFLls28ZSwEc/4lPvyG91K7cjooin9jlRmPbi9ucu0WV+aJRHNb1G8Pn05v/iabVG7RgvGmeZQF70zDLgvem1TvGwLxxPENBetPsUMDeNDgUvDf1VdYR3pSUfwFVcgBsxJUGYAAAAABJRU5ErkJggg=='),
+    'hdpi': ('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'),
+    'xhdpi': ('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'),
+    'xxhdpi': ('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'),
+    'xxxhdpi': ('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'),
+}
+
+ICON_BG_XML = ('<vector xmlns:android="http://schemas.android.com/apk/res/android"'
+    ' xmlns:aapt="http://schemas.android.com/aapt"'
+    ' android:width="108dp" android:height="108dp"'
+    ' android:viewportWidth="108" android:viewportHeight="108">'
+    '<path android:pathData="M0,0h108v108h-108z">'
+    '<aapt:attr name="android:fillColor">'
+    '<gradient android:startX="0" android:startY="0" android:endX="108" android:endY="108"'
+    ' android:type="linear">'
+    '<item android:offset="0" android:color="#FFFF8A00"/>'
+    '<item android:offset="0.5" android:color="#FFFF3F63"/>'
+    '<item android:offset="1" android:color="#FFFF0F6B"/>'
+    '</gradient></aapt:attr></path>'
+    '<path android:pathData="M0,0h108v30l-108,52z" android:fillColor="#1AFFFFFF"/>'
+    '</vector>')
+
+ICON_FG_XML = ('<vector xmlns:android="http://schemas.android.com/apk/res/android"'
+    ' android:width="108dp" android:height="108dp"'
+    ' android:viewportWidth="108" android:viewportHeight="108">'
+    '<group android:translateX="42.1" android:translateY="42"'
+    ' android:scaleX="3.78" android:scaleY="3.78"'
+    ' android:pivotX="12.9" android:pivotY="12">'
+    '<path android:fillColor="#FFFFFF" android:fillType="evenOdd"'
+    ' android:pathData="' + ICON_M2_PATH + '"/>'
+    '</group></vector>')
+
+ADAPTIVE_XML = ('<?xml version="1.0" encoding="utf-8"?>\n'
+    '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">'
+    '<background android:drawable="@drawable/ic_launcher_background"/>'
+    '<foreground android:drawable="@drawable/ic_launcher_foreground"/>'
+    '</adaptive-icon>')
+
+
+def apply_app_icon():
+    """桌面启动图标换成 NZ（M2 图形 + 橙红渐变）；只动图标资源与清单的一行。"""
+    res = jp(SRC, 'app/src/main/res')
+    adir = os.path.join(res, 'mipmap-anydpi-v26')
+    os.makedirs(adir, exist_ok=True)
+    write_text(os.path.join(adir, 'ic_launcher.xml'), ADAPTIVE_XML)
+    write_text(os.path.join(adir, 'ic_launcher_round.xml'), ADAPTIVE_XML)
+    ddir = os.path.join(res, 'drawable')
+    os.makedirs(ddir, exist_ok=True)
+    write_text(os.path.join(ddir, 'ic_launcher_background.xml'), ICON_BG_XML)
+    write_text(os.path.join(ddir, 'ic_launcher_foreground.xml'), ICON_FG_XML)
+    for dens, b in ICON_B64.items():
+        p = os.path.join(res, 'mipmap-' + dens)
+        os.makedirs(p, exist_ok=True)
+        with open(os.path.join(p, 'ic_launcher.png'), 'wb') as f:
+            f.write(base64.b64decode(b))
+    for dens in ('hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'):
+        p = os.path.join(res, 'drawable-' + dens)
+        if os.path.isdir(p) and dens in ICON_B64:
+            with open(os.path.join(p, 'app_icon.png'), 'wb') as f:
+                f.write(base64.b64decode(ICON_B64[dens]))
+    man = jp(SRC, 'app/src/main/AndroidManifest.xml')
+    t = read_text(man)
+    if '@mipmap/ic_launcher' not in t:
+        t2 = t.replace('android:icon="@drawable/app_icon"',
+                       'android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"')
+        if t2 == t:
+            t2 = re.sub(r'android:icon="@[^"]*"',
+                        'android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"',
+                        t, count=1)
+        write_text(man, t2)
+    if '@mipmap/ic_launcher' not in read_text(man):
+        raise RuntimeError('桌面图标指向写入失败')
+    print('  + 桌面图标：NZ（M2 速度条）+ 橙红渐变，adaptive + %d 档 PNG' % len(ICON_B64))
+
+
 BTN_ICON['play_download'] = 'v_download'
 
 
@@ -844,6 +1074,11 @@ def write_icons():
     for name, xml in ICONS.items():
         xml = re.sub(r'android:(width|height)="[0-9.]+dp"',
                      'android:\\1="' + ICON_SIZE + '"', xml)
+        # 重播：环形箭头中间是空的，视觉重量比同排实心图标轻，实测看着小一号。
+        # 内层放大 1.136 → 1.28（约 +12.7%），外接框仍在 23dp 画布内，不会被裁。
+        if name == 'v_replay':
+            xml = xml.replace('android:scaleX="1.136" android:scaleY="1.136"',
+                              'android:scaleX="1.28" android:scaleY="1.28"', 1)
         write_text(os.path.join(ddir, name + '.xml'), xml)
     # 弹幕“已开启”图标：左下角一个小对号，画布/尺寸不变
     base_danmu = ICONS.get('v_danmu', '')
@@ -1104,6 +1339,12 @@ def apply_layout():
         node.set(A + 'textSize', TEXT_SIZE)
         node.set(A + 'singleLine', 'true')
         node.set(A + 'text', text)
+        # 实测：片头/片尾汉字底面比「重置」「EXO」低 7px（约 2.7dp），
+        # 这个汉字节点还带着字体自带上下留白（includeFontPadding=true），
+        # 行框比普通按钮的汉字高 0.3 个字号（8dp 字号下约 2.4dp→6px），
+        # 竖向居中后底边就被压低了同样的量。关掉留白，行高与普通按钮汉字完全一致，
+        # 底边自动回到同一条线上；时间格 23dp 和「00:00↔汉字」的间隔都不动。
+        node.set(A + 'includeFontPadding', 'false')
         box.append(node)
         par.insert(idx, box)
     log('片头/片尾：上格 %s 时间 + 下格 %s 汉字（结构对齐）' % (ICON_SIZE, TEXT_SIZE))
@@ -3084,9 +3325,30 @@ def apply_download_anywhere():
     L = chr(10)
     write_text(jp('app/src/main/java/com/github/tvbox/osc/util/TkUrlMemo.java'), TK_URL_MEMO_JAVA)
     write_text(jp('app/src/main/java/com/github/tvbox/osc/util/TkDownloadPicker.java'), TK_DL_PICKER_JAVA)
+    write_text(jp('app/src/main/java/com/github/tvbox/osc/util/TkDownloadCenter.java'), TK_DL_CENTER_JAVA)
 
     lay = jp('app/src/main/res/layout/activity_detail.xml')
     x = read_text(lay)
+
+    def _tune_dl(seg):
+        """把「下载」按钮收成按文字自适应的窄按钮。
+        这一排前面已经有 5 个 vs_120（约 107dp）的按钮，再塞一个同宽的会顶出父容器，
+        圆角背景右边被裁掉——实机上看到的「底板显示不全」就是这个溢出。
+        """
+        seg = seg.replace('android:layout_width="@dimen/vs_120"',
+                          'android:layout_width="wrap_content"', 1)
+        if 'android:minWidth' not in seg:
+            seg = (seg.replace('android:layout_width="wrap_content"',
+                               'android:layout_width="wrap_content"'
+                               + L + '                        android:minWidth="@dimen/vs_80"'
+                               + L + '                        android:paddingLeft="@dimen/vs_10"'
+                               + L + '                        android:paddingRight="@dimen/vs_10"', 1))
+        seg = seg.replace('android:layout_marginEnd="@dimen/vs_10"',
+                          'android:layout_marginEnd="0dp"')
+        seg = seg.replace('android:layout_marginRight="@dimen/vs_10"',
+                          'android:layout_marginRight="0dp"')
+        return seg
+
     if '@+id/tvDownload' not in x:
         k = x.find('@+id/tvChangeSource')
         if k < 0:
@@ -3106,11 +3368,19 @@ def apply_download_anywhere():
         btn = (node.replace('@+id/tvChangeSource', '@+id/tvDownload')
                .replace('@drawable/button_detail_change_source', '@drawable/button_detail_collect')
                .replace('android:text="切源"', 'android:text="下载"'))
+        btn = _tune_dl(btn)
         x = x[:st] + node + L + indent + btn + x[en:]
         write_text(lay, x)
-        log('详情页新增按钮：下载（紧跟切源右侧）')
+        log('详情页新增按钮：下载（紧跟切源右侧，宽度按文字自适应，不再溢出）')
     else:
-        log('详情页下载按钮已存在，跳过布局')
+        # 老树里可能还是 107dp 宽，就地修正
+        m = re.search(r'<TextView[^>]*@\+id/tvDownload[^>]*/>', x, re.S)
+        if m and 'android:layout_width="wrap_content"' not in m.group(0):
+            x = x[:m.start()] + _tune_dl(m.group(0)) + x[m.end():]
+            write_text(lay, x)
+            log('详情页下载按钮：宽度已收回自适应（修掉溢出裁切）')
+        else:
+            log('详情页下载按钮已存在，跳过布局')
 
     da = jp('app/src/main/java/com/github/tvbox/osc/ui/activity/DetailActivity.java')
     t = read_text(da)
@@ -3144,6 +3414,15 @@ def apply_download_anywhere():
         log('详情页：下载按钮已接上选集框')
     else:
         log('详情页下载按钮代码已存在，跳过')
+    # 按钮上的字跟着任务走：下载 → 下载 3/10，长按看列表
+    t = read_text(da)
+    if 'TkDownloadCenter.bind' not in t:
+        a = '        tvDownload = findViewById(R.id.tvDownload);'
+        if a not in t:
+            sys.exit('详情页锚点丢失：tvDownload 绑定（状态显示）')
+        t = t.replace(a, a + L + '        com.github.tvbox.osc.util.TkDownloadCenter.bind(tvDownload);', 1)
+        write_text(da, t)
+        log('详情页：下载按钮已接状态显示（进度/完成/失败）')
 
     pf = jp('app/src/main/java/com/github/tvbox/osc/ui/fragment/PlayFragment.java')
     t = read_text(pf)
@@ -3166,10 +3445,84 @@ def apply_download_anywhere():
     write_text(pf, t)
     if 'TkUrlMemo.remember' not in read_text(pf):
         sys.exit('地址记账没写进 PlayFragment')
-    for f in ('TkUrlMemo.java', 'TkDownloadPicker.java'):
+    for f in ('TkUrlMemo.java', 'TkDownloadPicker.java', 'TkDownloadCenter.java'):
         if not os.path.isfile(jp('app/src/main/java/com/github/tvbox/osc/util', f)):
             sys.exit('新文件没生成：' + f)
     log('下载链路：详情页入口 + 地址记忆 + UA/Referer 已就绪')
+
+
+def apply_parse_hardening():
+    """解析接口时好时坏：同一条线路内自动换解析器重试（最多 3 个），失败提示给清楚。"""
+    L = chr(10)
+    pf = jp('app/src/main/java/com/github/tvbox/osc/ui/fragment/PlayFragment.java')
+    t = read_text(pf)
+    if 'tkNextParse(' in t:
+        log('解析加固：已存在，跳过')
+        return
+
+    a = '    private String parseFlag;'
+    if a not in t:
+        sys.exit('解析加固锚点丢失：parseFlag 字段')
+    t = t.replace(a, a + L
+                  + '    private String tkParseName = "";' + L
+                  + '    private final java.util.ArrayList<String> tkParseTried = new java.util.ArrayList<String>();', 1)
+
+    a = '    private void doParse(ParseBean pb) {' + L + '        stopParse();'
+    if a not in t:
+        sys.exit('解析加固锚点丢失：doParse')
+    t = t.replace(a, '    private void doParse(ParseBean pb) {' + L
+                  + '        try {' + L
+                  + '            tkParseName = (pb == null || pb.getName() == null) ? "" : pb.getName();' + L
+                  + '        } catch (Throwable ignored) {' + L
+                  + '        }' + L
+                  + '        stopParse();', 1)
+
+    a = '        parseFlag = flag;'
+    if a not in t:
+        sys.exit('解析加固锚点丢失：initParse')
+    t = t.replace(a, a + L + '        try { tkParseTried.clear(); } catch (Throwable ignored) { }', 1)
+
+    method = (
+        '    /** 解析失败时在同一条线路里换下一个 json 解析器再试，最多试 3 个。 */' + L
+        + '    private boolean tkNextParse() {' + L
+        + '        try {' + L
+        + '            java.util.List<ParseBean> all = ApiConfig.get().getParseBeanList();' + L
+        + '            if (all == null || all.size() < 2) return false;' + L
+        + '            if (tkParseTried.isEmpty()) tkParseTried.add(tkParseName);' + L
+        + '            for (ParseBean pb : all) {' + L
+        + '                if (pb == null || pb.getType() != 1) continue;' + L
+        + '                String nm = pb.getName();' + L
+        + '                if (nm == null) nm = "";' + L
+        + '                if (tkParseTried.contains(nm)) continue;' + L
+        + '                if (tkParseTried.size() >= 3) break;' + L
+        + '                tkParseTried.add(nm);' + L
+        + '                doParse(pb);' + L
+        + '                try {' + L
+        + '                    Toast.makeText(mContext, "解析失败，换解析器重试：" + nm, Toast.LENGTH_SHORT).show();' + L
+        + '                } catch (Throwable ignored) {' + L
+        + '                }' + L
+        + '                return true;' + L
+        + '            }' + L
+        + '        } catch (Throwable ignored) {' + L
+        + '        }' + L
+        + '        return false;' + L
+        + '    }' + L + L)
+    a = '    private void doParse(ParseBean pb) {'
+    t = t.replace(a, method + a, 1)
+
+    # errorWithRetry 内：解析类错误先横向换解析器
+    k = t.find('    void errorWithRetry(String err, boolean finish) {')
+    if k < 0:
+        sys.exit('解析加固锚点丢失：errorWithRetry')
+    q = t.find('        if (!autoRetry()) {', k)
+    if q < 0:
+        sys.exit('解析加固锚点丢失：autoRetry 调用')
+    hook = ('        // 解析接口时好时坏：同一线路先横向换一个解析器重试（最多 3 个），' + L
+            + '        // 都失败才落到原来的换线路/换播放器逻辑，避免一挂就直接换源。' + L
+            + '        if (err != null && err.indexOf("解析") >= 0 && webPlayUrl == null && tkNextParse()) return;' + L)
+    t = t[:q] + hook + t[q:]
+    write_text(pf, t)
+    log('解析加固：同线路自动换解析器重试（最多 3 个）')
 
 
 def apply_slot_align():
@@ -3902,6 +4255,7 @@ def main():
     if OPT_PUSH_BTN: apply_push_button()
     if OPT_SINGLE_LAYOUT: apply_single_layout()
     if OPT_APP_NAME: apply_app_name()
+    if OPT_APP_ICON: apply_app_icon()
     # apply_top_fix() 已撤：尺寸节流不在保留清单内，全部回上游
     if OPT_TOPBAR_TRANSPARENT: apply_top_transparent()
     if OPT_TEXT_STROKE: apply_text_stroke()
@@ -3926,6 +4280,7 @@ def main():
     if OPT_SEARCH_BOOST: apply_search_boost()
     if OPT_SPACING: apply_spacing()
     apply_download_anywhere()
+    apply_parse_hardening()
     self_check()
     print('-' * 46)
     print('=== 完成 ===')
