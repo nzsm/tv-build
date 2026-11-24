@@ -100,7 +100,7 @@ jobs:
           echo "内置订阅: ${DEF_URL}"
           echo "APP 名称: ${APP_NAME}"
           set +e
-          python3 tvbox_ext.py tvboxos-src "${DEF_URL}" "${APP_NAME}" 2>&1 | tee /tmp/ext.log
+          python3 -u tvbox_ext.py tvboxos-src "${DEF_URL}" "${APP_NAME}" 2>&1 | tee /tmp/ext.log
           EXT_EXIT=${PIPESTATUS[0]}
           echo "=== 增强脚本退出码: ${EXT_EXIT} ==="
           if [ ${EXT_EXIT} -ne 0 ]; then
@@ -177,6 +177,30 @@ jobs:
             echo "!!! 没有找到编译产物"; exit 1
           fi
 
+      - name: 9.5 产物自检（应用名 / 图标 / 版本 / 包名）
+        env:
+          IN_NAME: ${{ github.event.inputs.app_name }}
+        run: |
+          set -e
+          BT=$(ls -d "${ANDROID_SDK_ROOT}"/build-tools/*/ 2>/dev/null | tail -1)
+          A2="${BT}aapt2"
+          WANT="${IN_NAME:-NZ}"
+          FAIL=0
+          for f in apk-out/*.apk; do
+            [ -f "$f" ] || continue
+            echo "=== 自检 $f ==="
+            "$A2" dump badging "$f" > /tmp/bdg.txt 2>/dev/null || { echo "!!! aapt2 dump badging 失败"; FAIL=1; continue; }
+            grep -m1 "package:" /tmp/bdg.txt || true
+            grep -m1 "application-label" /tmp/bdg.txt || true
+            grep -m1 "application-icon-.*ic_launcher" /tmp/bdg.txt || true
+            grep -m1 "launchable-activity" /tmp/bdg.txt || true
+            grep -q "application-label:'${WANT}'" /tmp/bdg.txt && echo "应用名 OK：${WANT}" || { echo "!!! 应用名不是 ${WANT}（见上面 application-label）"; FAIL=1; }
+            grep -q "ic_launcher" /tmp/bdg.txt && echo "桌面图标 OK：mipmap/ic_launcher" || { echo "!!! APK 里没有 ic_launcher（启动图标没进包）"; FAIL=1; }
+            ls -l "$f"
+          done
+          [ ${FAIL} -ne 0 ] && { echo "产物自检未通过，签名前直接停止"; exit 1; }
+          echo "产物自检通过"
+
       - name: 10. 正式签名 + 验签
         env:
           KS_PASS: "${{ secrets.KEYSTORE_PASS || 'tvbox2026' }}"
@@ -226,9 +250,12 @@ jobs:
           PAGES="https://${GITHUB_REPOSITORY_OWNER}.github.io/tvbox-server/apk/${FN}"
           printf '最新 APK（手机浏览器打开即下载）：\n%s\n备用链接：\n%s\n' "${RAW}" "${PAGES}" > apk/下载链接.txt
           rm -f apk/*.apk
+          rm -f ci-error.log
+          rm -f tk-step-fail.txt
           cp apk-out/*.apk "apk/${FN}"
           ls -la apk/
-          git add apk/
+          git add -A apk/ || true
+          git add -A ci-error.log tk-step-fail.txt 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "apk 无变化，跳过提交"
             exit 0
@@ -283,6 +310,7 @@ jobs:
           } > ci-error.log 2>&1
           wc -l ci-error.log
           head -20 ci-error.log
-          git add -f ci-error.log
+          git add -f ci-error.log 2>/dev/null || true
+          [ -f tk-step-fail.txt ] && git add -f tk-step-fail.txt
           git commit -m "CI 失败日志 $(date -u '+%Y%m%d-%H%M%S')" || echo "（无变化）"
           git push origin "HEAD:${BRANCH}" 2>&1 | tail -5
