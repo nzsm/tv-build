@@ -1,4 +1,4 @@
-# CI 失败日志  2026-11-24 04:14:50Z
+# CI 失败日志  2026-11-24 10:37:41Z
 
 ## 环境
 openjdk version "17.0.21" 2026-10-20
@@ -12,7 +12,7 @@ ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
 /usr/local/lib/android/sdk/ndk/30.0.16248370
 
 ## 复现自检（源码目录状态）
--rwxr-xr-x 1 runner runner 5296 Nov 24 04:12 tvboxos-src/gradlew
+-rwxr-xr-x 1 runner runner 5296 Nov 24 10:35 tvboxos-src/gradlew
 #!/usr/bin/env sh
 
 ##############################################################################
@@ -98,7 +98,7 @@ org.gradle.caching=true
   + 搜索：新源自动并入 + 不限 searchable + 每批 10 个源 + 1s 推进 + 单源 18s + 关键词去书名号
   +   · 改 3 / 增 0 / 删 0 · 0.00s
   + ▶ apply_spacing
-  + 行距收紧：顶部两行 4dp、进度条到按钮 16dp、按钮行贴边 12dp（改 46 处）
+  + 行距收紧：顶部两行 4dp、进度条到按钮 16dp、按钮行贴边 12dp（改 44 处）
   +   · 改 1 / 增 0 / 删 0 · 0.00s
   + ▶ apply_download_anywhere
   + 详情页新增按钮：下载（紧跟切源右侧，宽度按文字自适应，不再溢出）
@@ -235,14 +235,14 @@ Collecting chaquopy-libxml2>=2.9.8 (from lxml)
   Downloading https://chaquo.com/pypi-7.0/chaquopy-libxml2/chaquopy_libxml2-2.9.8-2-py3-none-android_21_arm64_v8a.whl (773kB)
 Collecting cssselect<=1.4.99,>=1.2.0 (from pyquery==2.0.2)
   Downloading https://files.pythonhosted.org/packages/06/a9/2da08717a6862c48f1d61ef957a7bba171e7eefa6c0aa0ceb96a140c2a6b/cssselect-1.2.0-py2.py3-none-any.whl
-Collecting idna<4,>=2.5 (from requests)
-  Downloading https://files.pythonhosted.org/packages/d2/23/408243171aa9aaba178d3e2559159c24c1171a641aa83b67bdd3394ead8e/idna-3.15-py3-none-any.whl (72kB)
-Collecting charset_normalizer<4,>=2 (from requests)
-  Downloading https://files.pythonhosted.org/packages/d2/0d/07ab8eb9b7015274353eac2add4067bde1ab1b51912bbae505392905eedd/charset_normalizer-3.5.3-py3-none-any.whl (68kB)
 Collecting urllib3<3,>=1.21.1 (from requests)
   Downloading https://files.pythonhosted.org/packages/ce/d9/5f4c13cecde62396b0d3fe530a50ccea91e7dfc1ccf0e09c228841bb5ba8/urllib3-2.2.3-py3-none-any.whl (126kB)
 Collecting certifi>=2017.4.17 (from requests)
   Downloading https://files.pythonhosted.org/packages/6d/39/5eec3296860b94ac20bb8ed807725b88f6adfab3f343df592afd975f5f86/certifi-2026.11.20-py3-none-any.whl (127kB)
+Collecting charset_normalizer<4,>=2 (from requests)
+  Downloading https://files.pythonhosted.org/packages/d2/0d/07ab8eb9b7015274353eac2add4067bde1ab1b51912bbae505392905eedd/charset_normalizer-3.5.3-py3-none-any.whl (68kB)
+Collecting idna<4,>=2.5 (from requests)
+  Downloading https://files.pythonhosted.org/packages/d2/23/408243171aa9aaba178d3e2559159c24c1171a641aa83b67bdd3394ead8e/idna-3.15-py3-none-any.whl (72kB)
 Collecting soupsieve>=1.6.1 (from beautifulsoup4)
   Downloading https://files.pythonhosted.org/packages/e7/9c/0e6afc12c269578be5c0c1c9f4b49a8d32770a080260c333ac04cc1c832d/soupsieve-2.7-py3-none-any.whl
 Collecting typing-extensions>=4.0.0 (from beautifulsoup4)
@@ -250,10 +250,10 @@ Collecting typing-extensions>=4.0.0 (from beautifulsoup4)
 Building wheels for collected packages: jsonpath
   Building wheel for jsonpath (setup.py): started
   Building wheel for jsonpath (setup.py): finished with status 'done'
-  Created wheel for jsonpath: filename=jsonpath-0.82.2-cp39-none-any.whl size=5619 sha256=ad4c84b3010fb674faeda4e5eb9e683542dc6d4a69a54e411bed7cb2dca1d215
+  Created wheel for jsonpath: filename=jsonpath-0.82.2-cp39-none-any.whl size=5619 sha256=a807f3b9dfd0c20785dbdea51a46eba3a5494d9c4e6abbbd065672aaf91a584c
   Stored in directory: /home/runner/.cache/chaquopy/pip/wheels/1a/7d/6e/393bb72381be6c5fef79020aabdcf87de53b1ed57e5ec8b9d5
 Successfully built jsonpath
-Installing collected packages: chaquopy-libxml2, chaquopy-libxslt, lxml, ujson, cssselect, pyquery, idna, charset-normalizer, urllib3, certifi, requests, jsonpath, cachetools, pycryptodome, soupsieve, typing-extensions, beautifulsoup4
+Installing collected packages: chaquopy-libxml2, chaquopy-libxslt, lxml, ujson, cssselect, pyquery, urllib3, certifi, charset-normalizer, idna, requests, jsonpath, cachetools, pycryptodome, soupsieve, typing-extensions, beautifulsoup4
 Successfully installed beautifulsoup4-4.15.0 cachetools-5.5.2 certifi-2026.11.20 chaquopy-libxml2-2.9.8 chaquopy-libxslt-1.1.32 charset-normalizer-3.5.3 cssselect-1.2.0 idna-3.15 jsonpath-0.82.2 lxml-4.6.3 pycryptodome-3.9.4 pyquery-2.0.2 requests-2.32.4 soupsieve-2.7 typing-extensions-4.13.2 ujson-1.35 urllib3-2.2.3
 Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompatible. See https://chaquo.com/chaquopy/doc/current/android.html#android-bytecode.
 
@@ -280,16 +280,15 @@ Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompa
 > Task :app:javaPreCompilePython64Release FROM-CACHE
 > Task :player:writeReleaseAarMetadata
 > Task :pyramid:writePython64ReleaseAarMetadata
+> Task :quickjs:writeReleaseAarMetadata
 > Task :app:generatePython64ReleaseResValues FROM-CACHE
 > Task :app:generatePython64ReleaseResources UP-TO-DATE
-> Task :quickjs:writeReleaseAarMetadata
 > Task :app:checkPython64ReleaseAarMetadata
 > Task :app:createPython64ReleaseCompatibleScreenManifests
 > Task :app:extractDeepLinksPython64Release FROM-CACHE
 > Task :player:extractDeepLinksRelease FROM-CACHE
 > Task :pyramid:extractDeepLinksPython64Release FROM-CACHE
 > Task :quickjs:extractDeepLinksRelease FROM-CACHE
-> Task :app:mergePython64ReleaseResources
 
 > Task :app:processPython64ReleaseMainManifest
 [org.chromium.net:cronet-embedded:101.4951.41] /home/runner/.gradle/caches/transforms-3/afb769089853f9fe157a8408a42d871b/transformed/jetified-cronet-embedded-101.4951.41/AndroidManifest.xml Warning:
@@ -297,12 +296,13 @@ Warning: Failed to compile to .pyc format: buildPython version 3.9.25 is incompa
 [:quickjs] /home/runner/work/tv-build/tv-build/tvboxos-src/quickjs/build/intermediates/merged_manifest/release/AndroidManifest.xml Warning:
 	Namespace 'com.whl.quickjs.android' used in: :quickjs, wang.harlon.quickjs:wrapper-android:2.1.0.
 
-> Task :app:mapPython64ReleaseSourceSetPaths
+> Task :app:mergePython64ReleaseResources
 > Task :app:processPython64ReleaseManifest
+> Task :app:mapPython64ReleaseSourceSetPaths
 > Task :player:compileReleaseLibraryResources FROM-CACHE
 > Task :pyramid:compilePython64ReleaseLibraryResources FROM-CACHE
-> Task :app:processPython64ReleaseManifestForPackage
 > Task :quickjs:compileReleaseLibraryResources FROM-CACHE
+> Task :app:processPython64ReleaseManifestForPackage
 > Task :player:bundleLibCompileToJarRelease
 > Task :pyramid:bundleLibCompileToJarPython64Release
 > Task :quickjs:bundleLibCompileToJarRelease
@@ -503,7 +503,7 @@ Unable to strip the following libraries, packaging them as they are: libchaquopy
 > Task :app:packagePython64Release
 > Task :app:createPython64ReleaseApkListingFileRedirect
 > Task :app:assemblePython64Release
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_4-1795493578695.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_4-1795516551560.json
 
 Deprecated Gradle features were used in this build, making it incompatible with Gradle 8.0.
 
@@ -511,6 +511,6 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 See https://docs.gradle.org/7.5/userguide/command_line_interface.html#sec:command_line_warnings
 
-BUILD SUCCESSFUL in 1m 53s
+BUILD SUCCESSFUL in 1m 51s
 116 actionable tasks: 63 executed, 53 from cache
 ```
