@@ -45,7 +45,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261124-U54'
+VER = 'VER-20261124-U59'
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -1222,6 +1222,8 @@ def apply_layout():
         group.attrib.pop(A + 'layout_marginBottom', None)
     group.set(A + 'layout_width', 'wrap_content')
     group.set(A + 'gravity', 'center')
+    group.set(A + 'clipChildren', 'false')
+    group.set(A + 'clipToPadding', 'false')
     pm = parents(root)
     log('按钮组外层加横向滚动（竖屏可左右滑，横屏撑满居中）')
 
@@ -1376,6 +1378,9 @@ def apply_layout():
         box.set(A + 'paddingTop', PAD_TB)
         box.set(A + 'paddingRight', '2dp')
         box.set(A + 'paddingBottom', '0dp')
+        # 运行时像素兜底会用到 translationY（≤ 数 px），别让容器把超出的那一两像素裁掉
+        box.set(A + 'clipChildren', 'false')
+        box.set(A + 'clipToPadding', 'false')
         for k in ('padding', 'paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom',
                   'layout_marginEnd', 'layout_marginRight', 'layout_marginStart', 'layout_marginLeft',
                   'minHeight', 'lineSpacingExtra', 'drawableTop', 'drawablePadding',
@@ -2747,62 +2752,110 @@ def apply_btn_whitelist():
     if vc.count(a) != 1:
         sys.exit('白名单锚点丢失：mPlayerConfig')
     TK_HEAL = '''
-    // tk自愈：bottom_container 还亮着、按钮行却被藏/淡没了（实机偶发），定时拉回来。
-    // 正常隐藏 UI 是整块 GONE，不会命中这里的条件，不会跟用户抢控制权。
-    // U52：全类只允许一条巡检链；View 脱离窗口后自动断链，并在 onDetachedFromWindow 里清除。
-    private android.os.Handler tkHealH = null;
-    private Runnable tkHealR = null;
-    private int tkHealWait = 0;
+    // 片头/片尾 两枚汉字：按「重置」的真实底边做像素级对齐。
+    // 静态布局已与普通按钮同构（pad4 + 23dp 占位 + 同一行字），这里用测量结果兜一次，
+    // 不依赖任何 dp 推算，父容器怎么居中都不会差。
+    private void tkAlignSlotText() {
+        try {
+            View reset = findViewById(R.id.play_time_reset);
+            View start = findViewById(R.id.play_time_start);
+            View end = findViewById(R.id.play_time_end);
+            if (reset == null || start == null) return;
+            if (reset.getHeight() <= 0 || start.getHeight() <= 0) return;
+            int[] rl = new int[2];
+            reset.getLocationOnScreen(rl);
+            int rBottom = rl[1] + reset.getHeight();
+            for (View v : new View[]{start, end}) {
+                if (v == null) continue;
+                v.setTranslationY(0f);
+                int[] vl = new int[2];
+                v.getLocationOnScreen(vl);
+                int d = rBottom - (vl[1] + v.getHeight());
+                if (d != 0) v.setTranslationY(d);
+            }
+        } catch (Throwable ignored) {
+        }
+    }
 
-    private void tkSelfHeal() {
-        if (tkHealH != null) return;
-        tkHealWait = 0;
-        tkHealH = new android.os.Handler(android.os.Looper.getMainLooper());
-        tkHealR = new Runnable() {
-            public void run() {
-                if (tkHealH == null) return;
-                boolean attached = VodController.this.isAttachedToWindow();
-                if (attached) {
-                    tkHealWait = 0;
-                    try {
-                        android.view.ViewGroup b = findViewById(R.id.bottom_container);
-                        android.view.ViewGroup g = findViewById(R.id.play_btn_group);
-                        if (b != null && g != null && b.getVisibility() == android.view.View.VISIBLE) {
-                            if (g.getVisibility() != android.view.View.VISIBLE) {
-                                g.setVisibility(android.view.View.VISIBLE);
-                            }
-                            if (g.getAlpha() < 0.99f) g.setAlpha(1.0f);
-                            for (int i = 0; i < g.getChildCount(); i++) {
-                                android.view.View c = g.getChildAt(i);
-                                if (c.getVisibility() != android.view.View.VISIBLE) {
-                                    c.setVisibility(android.view.View.VISIBLE);
-                                }
-                                if (c.getAlpha() <= 0.05f) c.setAlpha(1.0f);
-                            }
+    // 底栏按钮行的横滑位置：控制栏每次显隐都会让内容宽度变化，
+    // HorizontalScrollView 会把 scrollX 夹回去，看着就像按钮自己左右挪了一下。
+    private boolean tkAlignWatched = false;
+
+    // 布局一变（旋屏、按场景显隐、控制栏展开收起）就补一次对齐，
+    // 保证片头/片尾那四个字永远和普通按钮同一条线，不靠事件猜时机。
+    private void tkAlignWatch() {
+        try {
+            if (tkAlignWatched) return;
+            View b = findViewById(R.id.bottom_container);
+            if (b == null) return;
+            tkAlignWatched = true;
+            b.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+                @Override
+                public void onLayoutChange(View v, int l, int t, int r, int bo,
+                                           int ol, int ot, int or, int ob) {
+                    v.post(new Runnable() {
+                        public void run() {
+                            tkAlignSlotText();
                         }
+                    });
+                }
+            });
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private int tkScrollX = 0;
+    private void tkKeepScroll() {
+        try {
+            View g = findViewById(R.id.play_btn_group);
+            if (g == null || g.getParent() == null) return;
+            if (!(g.getParent() instanceof android.widget.HorizontalScrollView)) return;
+            final android.widget.HorizontalScrollView h = (android.widget.HorizontalScrollView) g.getParent();
+            final int target = tkScrollX;
+            // 等这一帧布局完成（显隐刚改完宽高还是旧的），再把横滑位置按回去
+            h.post(new Runnable() {
+                public void run() {
+                    try {
+                        if (h.getChildCount() == 0) return;
+                        int max = Math.max(0, h.getChildAt(0).getWidth() - h.getWidth());
+                        h.scrollTo(Math.min(target, max), 0);
+                        tkScrollX = h.getScrollX();
+                        tkAlignSlotText();
                     } catch (Throwable ignored) {
                     }
-                    tkHealH.postDelayed(this, 900);
-                } else {
-                    // 还没挂到窗口（刚 new 出来）：等最多 6 拍（约 5 秒），之后彻底放弃，不留后台链
-                    tkHealWait++;
-                    if (tkHealWait < 6) {
-                        tkHealH.postDelayed(this, 900);
-                    } else {
-                        tkHealH = null;
-                        tkHealR = null;
-                    }
+                }
+            });
+        } catch (Throwable ignored) {
+        }
+    }
+
+    // 底栏自愈：只在「展开控制栏」这一个时机清一次，不挂常驻轮询。
+    // 原先 900ms 一轮是防第三方往按钮行塞东西/把透明度清零，
+    // 但这类事只会发生在控制栏展示期间，展开时清一遍就够，没必要一直盯着。
+    private void tkSelfHeal() {
+        try {
+            if (!isAttachedToWindow()) return;
+            android.view.ViewGroup b = findViewById(R.id.bottom_container);
+            android.view.ViewGroup g = findViewById(R.id.play_btn_group);
+            if (b == null || g == null) return;
+            if (b.getVisibility() != android.view.View.VISIBLE) return;
+            if (g.getVisibility() != android.view.View.VISIBLE) g.setVisibility(android.view.View.VISIBLE);
+            if (g.getAlpha() < 0.99f) g.setAlpha(1.0f);
+            // 只恢复透明度，绝不改子项可见性：竖屏/按场景本来该隐藏的按钮（片头尾/投屏/字幕…）
+            // 一旦被拉出来，按钮行宽度就会跳变，HorizontalScrollView 跟着重排，
+            // 实机表现就是"点屏幕中间，图标左右闪一下"。
+            for (int i = 0; i < g.getChildCount(); i++) {
+                android.view.View c = g.getChildAt(i);
+                if (c.getVisibility() == android.view.View.VISIBLE && c.getAlpha() <= 0.05f) {
+                    c.setAlpha(1.0f);
                 }
             }
-        };
-        tkHealH.postDelayed(tkHealR, 900);
+            tkKeepScroll();
+        } catch (Throwable ignored) {
+        }
     }
 
     private void tkStopHeal() {
-        if (tkHealH != null && tkHealR != null) tkHealH.removeCallbacks(tkHealR);
-        tkHealH = null;
-        tkHealR = null;
-        tkHealWait = 0;
     }
 '''
     if 'TK_BTN_OK' not in vc:
@@ -2820,6 +2873,9 @@ def apply_btn_whitelist():
            + '        tkPurgeButtons();' + L
            + '        tkPurgeTextAll();' + L
            + '        tkPurgeLater();' + L
+           + '        tkKeepScroll();' + L
+           + '        tkAlignSlotText();' + L
+           + '        tkSelfHeal();' + L
            + '    }')
     if sb2 not in vc:
         if sb not in vc:
@@ -2833,6 +2889,8 @@ def apply_btn_whitelist():
                   '        // tk：尺寸已全部静态化到 dimen（按屏宽/方向自动生效），不再运行时重排',
                   '        tkPurgeButtons();',
                   '        tkSelfHeal();',
+                  '        tkKeepScroll();',
+                  '        tkAlignWatch();',
                   '    }'])
     if old in vc:
         vc = vc.replace(old, new, 1)
@@ -2846,6 +2904,8 @@ def apply_btn_whitelist():
         vc = vc.replace(od, od + L + '        tkStopHeal();', 1)
     write_text(vp, vc)
     vcx = read_text(vp)
+    if 'tkAlignSlotText' not in vcx or 'tkKeepScroll' not in vcx:
+        sys.exit('片头尾像素对齐 / 横滑保持 没写入')
     if 'TK_BTN_OK' not in vcx or 'tkPurgeButtons();' not in vcx or 'tkSelfHeal();' not in vcx:
         sys.exit('白名单没写入')
     log('底栏白名单：只保留 %d 个我方按钮，运行时塞进来的（Zx推送等）当场删除' % len(ok))
@@ -3464,6 +3524,50 @@ def apply_spacing():
         log('行距收紧：顶部两行 4dp、进度条到按钮 16dp、按钮行贴边 12dp（改 %d 处）' % n)
     else:
         log('行距收紧：已是目标值，跳过')
+
+
+def apply_full_preview_fix():
+    """详情页全屏预览必须满屏（旋屏不重建 Activity 时上游不会再设 LayoutParams）。"""
+    L = chr(10)
+    da = jp('app/src/main/java/com/github/tvbox/osc/ui/activity/DetailActivity.java')
+    t = read_text(da)
+    if 'tkForceFullPreview' in t:
+        log('全屏预览满屏：已存在，跳过')
+        return
+    a = '    void setFullPreview(boolean full) {'
+    if a not in t:
+        sys.exit('锚点丢失：setFullPreview')
+    blk = ('    // tk：全屏预览必须是满屏。上游只在切换那一刻设一次 LayoutParams，' + L
+           + '    // 旋屏时 Activity 不重建就不会再设，容器停在旧尺寸上 —— 实机竖屏底栏就浮在屏幕半空。' + L
+           + '    private void tkForceFullPreview() {' + L
+           + '        try {' + L
+           + '            if (!fullWindows || llPlayerFragmentContainer == null) return;' + L
+           + '            llPlayerFragmentContainer.setLayoutParams(new android.widget.FrameLayout.LayoutParams(' + L
+           + '                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,' + L
+           + '                    android.view.ViewGroup.LayoutParams.MATCH_PARENT));' + L
+           + '            llPlayerFragmentContainer.requestLayout();' + L
+           + '        } catch (Throwable ignored) {' + L
+           + '        }' + L
+           + '    }' + L + L)
+    t = t.replace(a, blk + a, 1)
+
+    a2 = '        toggleSubtitleTextSize();' + L + '    }' + L + L + '    @Override' + L + '    public void onConfigurationChanged(Configuration newConfig) {'
+    if a2 not in t:
+        sys.exit('锚点丢失：setFullPreview 收尾')
+    t = t.replace(a2, '        toggleSubtitleTextSize();' + L + '        tkForceFullPreview();' + L + '    }' + L + L
+                  + '    @Override' + L + '    public void onConfigurationChanged(Configuration newConfig) {', 1)
+
+    a3 = '        super.onConfigurationChanged(newConfig);'
+    if a3 not in t:
+        sys.exit('锚点丢失：onConfigurationChanged')
+    t = t.replace(a3, a3 + L
+                  + '        // tk：旋屏后预览容器缓存的是上一个方向的尺寸，清掉重取，并让全屏预览重新铺满' + L
+                  + '        windowsPreview = null;' + L
+                  + '        tkForceFullPreview();', 1)
+    if 'tkForceFullPreview();' not in t or 'windowsPreview = null;' not in t:
+        sys.exit('全屏预览满屏没写进去')
+    write_text(da, t)
+    log('详情页：全屏预览强制满屏 + 旋屏后重取预览尺寸')
 
 
 def apply_download_anywhere():
@@ -4357,6 +4461,9 @@ def apply_top_time_fix():
 
 
 def self_check():
+    dax = read_text(jp('app/src/main/java/com/github/tvbox/osc/ui/activity/DetailActivity.java'))
+    if 'tkForceFullPreview' not in dax or 'windowsPreview = null;' not in dax:
+        sys.exit('全屏预览满屏没写入')
     res = jp('app/src/main/res')
     colors = set()
     for f in os.listdir(os.path.join(res, 'values')):
@@ -4427,7 +4534,7 @@ def self_check():
         if box is None or find_id(box, tid) is None:
             fails.append('%s 不在 FrameLayout 容器里（结构没换成与「重置」同构）' % tid)
     vc = read_text(jp(VOD))
-    for kw in ('tkSelfHeal();', 'tkStopHeal();', 'tkHealH'):
+    for kw in ('tkSelfHeal();', 'tkStopHeal();'):
         if kw not in vc:
             fails.append('VodController 缺 %s（自愈兜底失效或未清理）' % kw)
     if OPT_DOWNLOAD:
@@ -4547,6 +4654,7 @@ def main():
     if OPT_SEARCH_BOOST: _step('apply_search_boost', apply_search_boost)
     if OPT_SPACING: _step('apply_spacing', apply_spacing)
     _step('apply_download_anywhere', apply_download_anywhere)
+    _step('apply_full_preview_fix', apply_full_preview_fix)
     _step('apply_parse_hardening', apply_parse_hardening)
     _step('self_check', self_check)
     print('-' * 46)
