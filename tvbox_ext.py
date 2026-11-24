@@ -45,7 +45,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261124-U52'
+VER = 'VER-20261124-U54'
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -100,7 +100,6 @@ ICON_SIZE = '23dp'      # 图标位高度（26 → 23，整体缩 3dp）
 TEXT_SIZE = '8dp'       # 汉字（10 → 8）
 PAD_LR = '6dp'          # 每个按钮左右内边距 → 相邻 12dp ≈ 半个图标
 PAD_TB = '10dp'
-SLOT_TEXT_LIFT = '-2.2dp'  # 片头/片尾 汉字相对时间格的上提量（实测 7px ≈ 2.2dp）；残差就调这里
 SEEK_INSET = '12dp'     # 进度条整行左右各收
 
 RENAME = {'play_pre': '上集', 'play_next': '下集', 'landscape_portrait': '旋屏',
@@ -1248,6 +1247,26 @@ def apply_layout():
             group.insert(j, pre)
             log('上集已在下集左边')
 
+    # ③.5 底栏贴底加固：把 bottom_container 套进一层 match_parent 的垂直锚（gravity=bottom）。
+    # 上游只靠 rootView 的 layout_gravity="bottom" 定位；一旦根容器高度/重力被别处改动
+    # （旋屏后实机出现过底栏浮在半空），底栏就跟着走。套一层和父等高、自身居底的锚，
+    # 底栏与父容器底边强绑定，不再依赖同级重力。
+    par = pm.get(bottom)
+    if par is not None and par.tag == 'FrameLayout' and par.get(A + 'id') != '@+id/tk_bottom_anchor':
+        idx = list(par).index(bottom)
+        par.remove(bottom)
+        anc = ET.Element('LinearLayout')
+        anc.set(A + 'id', '@+id/tk_bottom_anchor')
+        anc.set(A + 'layout_width', 'match_parent')
+        anc.set(A + 'layout_height', 'match_parent')
+        anc.set(A + 'orientation', 'vertical')
+        anc.set(A + 'gravity', 'bottom')
+        anc.append(bottom)
+        bottom.attrib.pop(A + 'layout_gravity', None)
+        par.insert(idx, anc)
+        pm = parents(root)
+        log('底栏贴底加固：bottom_container 套进 match_parent 居底锚')
+
     # ④ 按钮文字
     for rid, text in RENAME.items():
         e = find_id(root, rid)
@@ -1346,62 +1365,52 @@ def apply_layout():
             continue
         par = pm[node]
         idx = list(par).index(node)
-        box = ET.Element('LinearLayout')
-        box.set(A + 'orientation', 'vertical')
-        box.set(A + 'gravity', 'center_horizontal')
+        # 结构上跟「重置」完全同构：FrameLayout 里放「TextView + drawableTop 占位 26dp」，
+        # 汉字底边由"图标位 + 一行字"决定，和普通按钮一模一样 —— 不再靠负 margin 硬凑。
+        # 00:00 用一层 23dp 的格子叠在图标位上，位置与原来完全一致。
+        par.remove(node)
+        box = ET.Element('FrameLayout')
         box.set(A + 'layout_width', 'wrap_content')
         box.set(A + 'layout_height', 'wrap_content')
-        # 时间文字要放大到 30dp 才能完整显示 00:00，左右留白同步收到 2dp，
-        # 容器总宽 30+2+2=34dp，仍然等于别的按钮的 35dp，整排位置不动。
         box.set(A + 'paddingLeft', '2dp')
         box.set(A + 'paddingTop', PAD_TB)
         box.set(A + 'paddingRight', '2dp')
-        box.set(A + 'paddingBottom', PAD_TB)
-        slot = ET.SubElement(box, 'TextView')
-        slot.set(A + 'id', '@+id/' + slot_id)
-        # "00:00" 12dp 自然宽约 26–27dp，23dp 放不下会裁成 "00:…"；
-        # 放到 30dp 就能整串显示，不再压扁（textScaleX 去掉）。
-        slot.set(A + 'layout_width', '30dp')
-        slot.set(A + 'layout_height', ICON_SIZE)
-        slot.set(A + 'minWidth', '30dp')
-        # 垂直居中：和其它按钮的图标（23dp 高）在同一个 23dp 槽里居中，顶端和基线都对得上，
-        # 不再用 top+paddingTop 那种"看起来低半格"的摆法。
-        slot.set(A + 'gravity', 'center_vertical|center_horizontal')
-        # 12dp 原字号、不加描边：片头尾只是陪衬，不能比按钮更抢眼。
-        slot.set(A + 'textSize', '12dp')
-        slot.set(A + 'fontFamily', 'sans-serif-light')
-        # 字体自带留白参与居中：数字没有下伸部，关掉 padding 会让 00:00 看着比图标偏高
-        slot.set(A + 'includeFontPadding', 'true')
-        slot.set(A + 'singleLine', 'true')
-        slot.set(A + 'textColor', '@android:color/white')
-        slot.set(A + 'text', '00:00')
-        par.remove(node)
+        box.set(A + 'paddingBottom', '0dp')
         for k in ('padding', 'paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom',
                   'layout_marginEnd', 'layout_marginRight', 'layout_marginStart', 'layout_marginLeft',
-                  'minHeight', 'lineSpacingExtra', 'drawableTop', 'drawablePadding'):
+                  'minHeight', 'lineSpacingExtra', 'drawableTop', 'drawablePadding',
+                  'layout_marginTop', 'layout_marginBottom', 'layout_gravity'):
             node.attrib.pop(A + k, None)
-        # 汉字紧贴时间下沿：上下留白一律 0，高度结构和其它按钮（图标23dp+汉字）完全相同，
-        # 底边才会和「重置」「EXO」落在同一条线上。
         node.set(A + 'paddingTop', '0dp')
         node.set(A + 'paddingBottom', '0dp')
         node.set(A + 'layout_width', 'wrap_content')
         node.set(A + 'layout_height', 'wrap_content')
+        node.set(A + 'layout_gravity', 'top|center_horizontal')
         node.set(A + 'gravity', 'top|center_horizontal')
         node.set(A + 'textSize', TEXT_SIZE)
         node.set(A + 'singleLine', 'true')
+        node.set(A + 'textColor', '@android:color/white')
         node.set(A + 'text', text)
-        # 实测：片头/片尾汉字底面比「重置」「EXO」低 7px（约 2.7dp），
-        # 这个汉字节点还带着字体自带上下留白（includeFontPadding=true），
-        # 行框比普通按钮的汉字高 0.3 个字号（8dp 字号下约 2.4dp→6px），
-        # 竖向居中后底边就被压低了同样的量。关掉留白，行高与普通按钮汉字完全一致，
-        # 底边自动回到同一条线上；时间格 23dp 和「00:00↔汉字」的间隔都不动。
         node.set(A + 'includeFontPadding', 'false')
-        # 第二次实测（3200×1440 实机）：关掉留白后底边仍比「重置」低 7px（约 2.2dp），
-        # 说明差异来自时间格与图形按钮的盒内基线，而不是字体留白。
-        # 直接把汉字节点上提 2.2dp：底边与「重置」「EXO」落在同一条线，
-        # 「00:00 ↔ 汉字」的间隙由 9.2dp 收到 7.0dp，仍然宽松，不会贴字。
-        node.set(A + 'layout_marginTop', SLOT_TEXT_LIFT)
+        # 透明占位图：撑出与普通按钮相同的 26dp 图标位，屏幕上什么都看不到
+        node.set(A + 'drawableTop', '@drawable/tk_space')
+        node.set(A + 'drawablePadding', '0dp')
         box.append(node)
+
+        slot = ET.Element('TextView')
+        slot.set(A + 'id', '@+id/' + slot_id)
+        slot.set(A + 'layout_width', '30dp')
+        slot.set(A + 'layout_height', ICON_SIZE)
+        slot.set(A + 'minWidth', '30dp')
+        slot.set(A + 'layout_gravity', 'top|center_horizontal')
+        slot.set(A + 'gravity', 'center')
+        slot.set(A + 'textSize', '12dp')
+        slot.set(A + 'fontFamily', 'sans-serif-light')
+        slot.set(A + 'includeFontPadding', 'true')
+        slot.set(A + 'singleLine', 'true')
+        slot.set(A + 'textColor', '@android:color/white')
+        slot.set(A + 'text', '00:00')
+        box.append(slot)
         par.insert(idx, box)
     log('片头/片尾：上格 %s 时间 + 下格 %s 汉字（结构对齐）' % (ICON_SIZE, TEXT_SIZE))
 
@@ -4406,8 +4415,17 @@ def self_check():
             fails.append('播放布局缺 @+id/%s' % rid)
     if 'play_download' in lay:
         fails.append('播放布局里还留着 play_download（底栏下载按钮没删干净）')
-    if SLOT_TEXT_LIFT not in lay:
-        fails.append('片头/片尾 汉字缺 layout_marginTop="-2.2dp"（底边会再低 7px）')
+    if '@drawable/tk_space' not in lay:
+        fails.append('片头/片尾 汉字没走 drawableTop 占位（底边会与「重置」错开）')
+    layroot = ET.parse(jp(LAYOUT)).getroot()
+    for tid, sid in (('play_time_start', 'tk_slot_start'), ('play_time_end', 'tk_slot_end')):
+        box = None
+        for par in layroot.iter():
+            if par.tag == 'FrameLayout' and find_id(par, sid) is not None:
+                box = par
+                break
+        if box is None or find_id(box, tid) is None:
+            fails.append('%s 不在 FrameLayout 容器里（结构没换成与「重置」同构）' % tid)
     vc = read_text(jp(VOD))
     for kw in ('tkSelfHeal();', 'tkStopHeal();', 'tkHealH'):
         if kw not in vc:
