@@ -45,7 +45,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261124-U63'
+VER = 'VER-20261124-U64'
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -1360,69 +1360,35 @@ def apply_layout():
         if lp is not None: lp.set(A + 'visibility', 'gone')
         log('间距：时间↔条 3dp、条↔按钮排 5dp；底板去掉；旋屏按画面自动显示')
 
-    # ⑧ 片头 / 片尾：上格 26dp 时间（当图标位）+ 下格 10dp 汉字
-    for rid, slot_id, text in (('play_time_start', 'tk_slot_start', '片头'),
-                               ('play_time_end', 'tk_slot_end', '片尾')):
-        # 幂等：时间格已经生成过就直接过，否则第二次跑会把 play_time_start 再包一层，
-        # 结果是同一个 id 出现两份、布局结构错乱。
-        if find_id(root, slot_id) is not None:
-            continue
+    # ⑧ 片头 / 片尾：00:00 时间格整个删掉，这两枚汉字直接与「重置」同构，
+    #     同一排、同一套对齐规则，别再让额外的容器/叠层把字往下推。
+    for rid, text in (('play_time_start', '片头'), ('play_time_end', '片尾')):
         node = find_id(root, rid)
         if node is None or node.tag != 'TextView':
             continue
-        par = pm[node]
-        idx = list(par).index(node)
-        # 结构上跟「重置」完全同构：FrameLayout 里放「TextView + drawableTop 占位 26dp」，
-        # 汉字底边由"图标位 + 一行字"决定，和普通按钮一模一样 —— 不再靠负 margin 硬凑。
-        # 00:00 用一层 23dp 的格子叠在图标位上，位置与原来完全一致。
-        par.remove(node)
-        box = ET.Element('FrameLayout')
-        box.set(A + 'layout_width', 'wrap_content')
-        box.set(A + 'layout_height', 'wrap_content')
-        box.set(A + 'paddingLeft', '2dp')
-        box.set(A + 'paddingTop', PAD_TB)
-        box.set(A + 'paddingRight', '2dp')
-        box.set(A + 'paddingBottom', '0dp')
-        # 运行时像素兜底会用到 translationY（≤ 数 px），别让容器把超出的那一两像素裁掉
-        box.set(A + 'clipChildren', 'false')
-        box.set(A + 'clipToPadding', 'false')
-        for k in ('padding', 'paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom',
-                  'layout_marginEnd', 'layout_marginRight', 'layout_marginStart', 'layout_marginLeft',
-                  'minHeight', 'lineSpacingExtra', 'drawableTop', 'drawablePadding',
-                  'layout_marginTop', 'layout_marginBottom', 'layout_gravity'):
-            node.attrib.pop(A + k, None)
-        node.set(A + 'paddingTop', '0dp')
-        node.set(A + 'paddingBottom', '0dp')
+        # 整个节点属性清空重建：历次补偿（负 margin/容器内偏移/旧图标）全部丢掉，
+        # 属性顺序也固定下来，保证连跑两遍的输出完全一致。
+        vid = node.get(A + 'id')
+        node.attrib.clear()
+        if vid is not None:
+            node.set(A + 'id', vid)
         node.set(A + 'layout_width', 'wrap_content')
         node.set(A + 'layout_height', 'wrap_content')
-        node.set(A + 'layout_gravity', 'top|center_horizontal')
+        # 与「重置」逐项对齐：左右 6dp、上 4dp、下 0dp、一行 8dp 字、图标位 23dp 透明占位
+        node.set(A + 'paddingLeft', PAD_LR)
+        node.set(A + 'paddingRight', PAD_LR)
+        node.set(A + 'paddingTop', '4dp')
+        node.set(A + 'paddingBottom', '0dp')
+        node.set(A + 'layout_marginEnd', '@dimen/tk_btn_gap')
         node.set(A + 'gravity', 'top|center_horizontal')
         node.set(A + 'textSize', TEXT_SIZE)
         node.set(A + 'singleLine', 'true')
         node.set(A + 'textColor', '@android:color/white')
         node.set(A + 'text', text)
         node.set(A + 'includeFontPadding', 'false')
-        # 透明占位图：撑出与普通按钮相同的 26dp 图标位，屏幕上什么都看不到
         node.set(A + 'drawableTop', '@drawable/tk_space')
         node.set(A + 'drawablePadding', '0dp')
-        box.append(node)
-
-        slot = ET.Element('TextView')
-        slot.set(A + 'id', '@+id/' + slot_id)
-        slot.set(A + 'layout_width', '30dp')
-        slot.set(A + 'layout_height', ICON_SIZE)
-        slot.set(A + 'minWidth', '30dp')
-        slot.set(A + 'layout_gravity', 'top|center_horizontal')
-        slot.set(A + 'gravity', 'center')
-        slot.set(A + 'textSize', '12dp')
-        slot.set(A + 'fontFamily', 'sans-serif-light')
-        slot.set(A + 'includeFontPadding', 'true')
-        slot.set(A + 'singleLine', 'true')
-        slot.set(A + 'textColor', '@android:color/white')
-        slot.set(A + 'text', '00:00')
-        box.append(slot)
-        par.insert(idx, box)
-    log('片头/片尾：上格 %s 时间 + 下格 %s 汉字（结构对齐）' % (ICON_SIZE, TEXT_SIZE))
+    log('片头/片尾：00:00 时间格已删除，四枚汉字与「重置」逐项同构')
 
     tree.write(path, encoding='utf-8', xml_declaration=True)
 
@@ -1436,29 +1402,17 @@ def apply_layout():
 
 # ---------------------------------------------------------------- Java
 TIME_PATCH = [
+    # tk：00:00 时间格已删除，这两个按钮只显示汉字，不再显示时间
     ('mPlayerTimeStartBtn.setText(start == 0 ? "片头" : stringForTime(start * 1000));',
-     'mPlayerTimeStartBtn.setText(buildTimeLabel(start == 0 ? "00:00" : stringForTime(start * 1000), "片头"));'),
+     'mPlayerTimeStartBtn.setText("片头");'),
     ('mPlayerTimeSkipBtn.setText(end == 0 ? "片尾" : stringForTime(end * 1000));',
-     'mPlayerTimeSkipBtn.setText(buildTimeLabel(end == 0 ? "00:00" : stringForTime(end * 1000), "片尾"));'),
+     'mPlayerTimeSkipBtn.setText("片尾");'),
 
     ('Toast.makeText(getContext(), "已移除视频广告 "+M3u8.currentAdCount+" 条", Toast.LENGTH_SHORT).show();',
      '// 静默：不再弹出广告过滤条数提示'),
 ]
 
 HELPERS = '''
-    private CharSequence buildTimeLabel(String time, String label) {
-        int sid = "片头".equals(label) ? R.id.tk_slot_start : R.id.tk_slot_end;
-        android.widget.TextView slot = null;
-        android.view.View btn = "片头".equals(label) ? mPlayerTimeStartBtn : mPlayerTimeSkipBtn;
-        android.view.ViewParent p = (btn == null) ? null : btn.getParent();
-        if (p instanceof android.view.ViewGroup) {
-            slot = ((android.view.ViewGroup) p).findViewById(sid);
-        }
-        if (slot == null) slot = findViewById(sid);
-        if (slot != null) slot.setText(time);
-        return label;
-    }
-
     // 切播放器/切解码后会 replay 重建 player，标签可能被刷回旧值 → 延迟再同步一次
     private void tkRefreshCfgView() {
         try {
@@ -1853,11 +1807,13 @@ def apply_java():
     t = read_text(jp(VOD))
     # 幂等：这一套替换（片头尾时间标签、整块可点、旋屏文字）是一次性的，改过就整体跳过，
     # 否则第二次在同一棵树上跑会拿"已经替换后的文本"去找旧锚点，直接 sys.exit。
-    if 'buildTimeLabel(' in t and 'tkRefreshCfgView' in t and '旋屏");' in t:
+    if 'mPlayerTimeStartBtn.setText("片头");' in t and 'tkRefreshCfgView' in t and '旋屏");' in t:
         log('  = 按钮文字 / 片头尾 / 旋屏文字已改好，跳过')
         return
 
     for old, new in TIME_PATCH:
+        if new in t:
+            continue            # 已经换过：再跑一遍不会把同一处改两次
         if old not in t:
             sys.exit('锚点丢失：' + old)
         t = t.replace(old, new, 1)
@@ -2680,7 +2636,6 @@ def apply_btn_whitelist():
         '                    if (!keep) g.removeView(c);',
         '                    continue;',
         '                }',
-        '                if (c.findViewById(R.id.tk_slot_start) != null || c.findViewById(R.id.tk_slot_end) != null) continue;',
         '                g.removeView(c);',
         '            }',
         '        } catch (Throwable ignored) {',
@@ -2919,7 +2874,7 @@ def apply_btn_guard():
     L = chr(10)
     ids = ['bottom_container', 'curr_time', 'seekBar', 'total_time', 'play_btn_group', 'play_label',
            'play_pre', 'play_next', 'play_retry', 'play_refresh', 'play_scale', 'play_speed', 'play_player',
-           'play_ijk', 'play_time_start_end_text', 'tk_slot_start', 'play_time_start', 'tk_slot_end',
+           'play_ijk', 'play_time_start_end_text', 'play_time_start',
            'play_time_end', 'play_time_reset', 'play_cast', 'play_download', 'zimu_select',
            'audio_track_select', 'video_track_select', 'danmu_setting', 'danmu_search_ui',
            'landscape_portrait', 'screen_display', 'parse_root', 'mGridParseView']
@@ -4580,7 +4535,7 @@ def self_check():
     lay = read_text(jp(LAYOUT))
     for rid in ('play_pre', 'play_next', 'play_retry', 'play_refresh', 'play_scale', 'play_speed',
                 'play_player', 'play_time_start', 'play_time_end', 'play_time_reset', 'play_cast',
-                'landscape_portrait', 'screen_display', 'tk_slot_start', 'tk_slot_end'):
+                'landscape_portrait', 'screen_display'):
         if ('@+id/%s"' % rid) not in lay:
             fails.append('播放布局缺 @+id/%s' % rid)
     if 'play_download' in lay:
@@ -4588,14 +4543,17 @@ def self_check():
     if '@drawable/tk_space' not in lay:
         fails.append('片头/片尾 汉字没走 drawableTop 占位（底边会与「重置」错开）')
     layroot = ET.parse(jp(LAYOUT)).getroot()
-    for tid, sid in (('play_time_start', 'tk_slot_start'), ('play_time_end', 'tk_slot_end')):
-        box = None
+    if 'tk_slot_start' in lay or 'tk_slot_end' in lay:
+        fails.append('片头/片尾 的 00:00 时间格没删干净')
+    for tid in ('play_time_start', 'play_time_end'):
+        v = find_id(layroot, tid)
+        if v is None:
+            fails.append('播放布局缺 %s' % tid)
+            continue
         for par in layroot.iter():
-            if par.tag == 'FrameLayout' and find_id(par, sid) is not None:
-                box = par
+            if par is not v and par.tag != layroot.tag and find_id(par, tid) is not None and par.tag == 'FrameLayout':
+                fails.append('%s 还被包在 FrameLayout 里（应直接与「重置」同排）' % tid)
                 break
-        if box is None or find_id(box, tid) is None:
-            fails.append('%s 不在 FrameLayout 容器里（结构没换成与「重置」同构）' % tid)
     vc = read_text(jp(VOD))
     for kw in ('tkSelfHeal();', 'tkStopHeal();'):
         if kw not in vc:
