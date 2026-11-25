@@ -45,7 +45,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261124-U74'   # 每改一次脚本必须同步这里（云端日志/排障只认它）
+VER = 'VER-20261124-U77'   # 每改一次脚本必须同步这里（云端日志/排障只认它）
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -1410,22 +1410,27 @@ def apply_layout():
         box.set(A + 'gravity', 'center_horizontal')
         box.set(A + 'layout_width', 'wrap_content')
         box.set(A + 'layout_height', 'wrap_content')
-        # 左右只留 2dp：30 + 2 + 2 = 34dp，正好等于别的按钮那一格（图标 23 + 左右 6），
-        # 整排宽度和格距完全不变，片头/片尾不会突出成一块
-        box.set(A + 'paddingLeft', '2dp')
-        box.set(A + 'paddingRight', '2dp')
+        # 左右内边距收到槽里：34dp = 槽宽 34dp + 0 + 0，容器总宽仍等于别的按钮那一格
+        #（图标 23 + 左右 6），整排宽度和格距一个字不变。
+        # 早先是“槽 30 + 左右各 2”，但 12dp 的 00:00 实测就占 30dp，零余量下居中会向两侧溢出，
+        # 右边正好压到「重置」的图标 —— 所以把余量给到槽本身。
+        box.set(A + 'paddingLeft', '0dp')
+        box.set(A + 'paddingRight', '0dp')
         box.set(A + 'paddingTop', '4dp')
         box.set(A + 'paddingBottom', '0dp')
         box.set(A + 'layout_marginEnd', '@dimen/tk_btn_gap')
         box.set(A + 'layout_marginRight', '@dimen/tk_btn_gap')
 
-        # 上格：23dp 图标槽里居中放 00:00，中线与别的按钮图标同一条
+        # 上格：23dp 图标槽里放 00:00，字顶贴槽顶
+        # 实拍标定：居中放时 12dp 字被字体上下留白顶到偏下（量到比旁格图标中线低 15px≈6dp）。
+        # 槽内居中能上移的极限就是 4.5dp（贴顶），因此这里直接贴顶，把剩余偏差压到 1.5dp；
+        # 槽高仍 23dp，下面汉字的落点完全不受影响。
         slot = ET.SubElement(box, 'TextView')
         slot.set(A + 'id', '@+id/' + slot_id)
-        slot.set(A + 'layout_width', '30dp')
+        slot.set(A + 'layout_width', '34dp')
         slot.set(A + 'layout_height', ICON_SIZE)
-        slot.set(A + 'minWidth', '30dp')
-        slot.set(A + 'gravity', 'center')
+        slot.set(A + 'minWidth', '34dp')
+        slot.set(A + 'gravity', 'top|center_horizontal')
         slot.set(A + 'textSize', '12dp')
         slot.set(A + 'fontFamily', 'sans-serif-light')
         slot.set(A + 'includeFontPadding', 'true')
@@ -1463,9 +1468,9 @@ def apply_layout():
         n2 = find_id(root, rid)
         if sl is None or n2 is None:
             fail('片头/片尾双层结构没生成：' + rid)
-        if sl.get(A + 'layout_width') != '30dp':
+        if sl.get(A + 'layout_width') != '34dp':
             fail('片头/片尾 上格宽度没归一（会突出一块）：' + rid)
-        if sl.get(A + 'layout_height') != ICON_SIZE or sl.get(A + 'gravity') != 'center':
+        if sl.get(A + 'layout_height') != ICON_SIZE or sl.get(A + 'gravity') != 'top|center_horizontal':
             fail('时间格没落进 %s 图标槽并居中：%s' % (ICON_SIZE, slot_id))
         if n2.get(A + 'includeFontPadding') != 'false' or n2.get(A + 'textSize') != TEXT_SIZE:
             fail('汉字字号/字体留白与按钮汉字不一致：' + rid)
@@ -1738,7 +1743,7 @@ def emit_adrules():
             + '                    "subtitle_text_size", "subtitle_time_delay", "subtitle_exo_scale",' + chr(10)
             + '                    "subtitle_exo_position", "danmu_open", "danmu_max_line", "danmu_speed",' + chr(10)
             + '                    "danmu_alpha", "danmu_size_scale", "danmu_random_color", "danmu_api",' + chr(10)
-            + '                    "live_show_net_speed", "live_show_resolution", "live_show_time"};' + chr(10)
+            + '                    "live_show_net_speed", "live_show_resolution", "live_show_time", "screen_display"};' + chr(10)
             + '            for (String k : keys) {' + chr(10)
             + '                try { Hawk.delete(k); } catch (Throwable ignored) {}' + chr(10)
             + '            }' + chr(10)
@@ -4197,34 +4202,49 @@ def apply_scrim_bg():
 
 
 def apply_screen_default():
-    """屏显默认开：右上角网速 / 播放时间 / 系统时间出厂就显示。
+    """屏显默认关：右上角网速 / 播放时间 / 系统时间出厂不显示，点一下底栏「屏显」才出来。
 
-    上游默认值是 GONE，装完什么都不显示，得手动点一下底栏「屏显」才出来；
-    换包清零又会把这个键删掉，等于每升一版又回到隐藏。
-    这里把默认值改成 VISIBLE，同时清零清单里已去掉这个键，用户点掉的会一直记住。
+    上游默认值本来就是 GONE，之前按「默认开」改成了 VISIBLE；现在改回来。
+    这里做成幂等：发现历史遗留的 VISIBLE 就退回 GONE，已经是 GONE 就什么都不动。
+    换包清零已把 screen_display 加进清单 —— 否则你之前点开的状态会跨版本保留，装完还是「开」。
     """
     vp = jp(VOD)
     t = read_text(vp)
-    if 'tkScreenOn' in t:
-        log('  = 屏显默认已开，跳过')
-        return
-    pairs = (
-        ('Hawk.get(HawkConfig.SCREEN_DISPLAY,GONE)',
-         'Hawk.get(HawkConfig.SCREEN_DISPLAY,VISIBLE) /* tkScreenOn */'),
-        ('Hawk.get(HawkConfig.SCREEN_DISPLAY, GONE)',
-         'Hawk.get(HawkConfig.SCREEN_DISPLAY, VISIBLE) /* tkScreenOn */'),
-    )
+    pats = ('Hawk.get(HawkConfig.SCREEN_DISPLAY,VISIBLE) /* tkScreenOn */',
+            'Hawk.get(HawkConfig.SCREEN_DISPLAY, VISIBLE) /* tkScreenOn */',
+            'Hawk.get(HawkConfig.SCREEN_DISPLAY,VISIBLE)',
+            'Hawk.get(HawkConfig.SCREEN_DISPLAY, VISIBLE)')
     n = 0
-    for a, b in pairs:
+    for a in pats:
         c = t.count(a)
         if c:
-            t = t.replace(a, b)
+            t = t.replace(a, 'Hawk.get(HawkConfig.SCREEN_DISPLAY,GONE) /* tkScreenOff：默认关 */')
             n += c
-    if n == 0:
-        fail('屏显默认锚点丢失：SCREEN_DISPLAY 默认值一处都没找到')
-    write_text(vp, t)
-    log('屏显：%d 处默认值 GONE → VISIBLE（右上角网速/时间出厂即显示）' % n)
+    if n:
+        write_text(vp, t)
+        log('屏显：%d 处由默认开退回默认关（点「屏显」才显示）' % n)
+    else:
+        log('屏显：已是默认关（与上游一致，无需改动）')
 
+
+def apply_danmu_default():
+    """弹幕默认关：出厂不显示弹幕条，点底栏「弹幕」才开；用户开过会被 Hawk 记住。
+
+    上游 DanmuHelper 写的是 Hawk.get(HawkConfig.DANMU_OPEN, true)，即默认开。
+    换包清零清单里本来就有 danmu_open，所以退回默认值后不会残留旧状态。
+    """
+    h = jp('app/src/main/java/com/github/tvbox/osc/util/DanmuHelper.java')
+    if not os.path.isfile(h):
+        fail('找不到 DanmuHelper.java')
+    t = read_text(h)
+    if 'tkDanmuOff' in t:
+        log('  = 弹幕默认已关，跳过')
+        return
+    a = 'return Hawk.get(HawkConfig.DANMU_OPEN, true);'
+    if a not in t:
+        fail('弹幕默认锚点丢失：DanmuHelper DANMU_OPEN 默认值不是 true')
+    write_text(h, t.replace(a, 'return Hawk.get(HawkConfig.DANMU_OPEN, false); /* tkDanmuOff：默认关 */', 1))
+    log('弹幕：出厂默认 DANMU_OPEN true → false')
 
 def apply_gradient_bg():
     """顶部/底部整条渐变底板：靠屏幕边不透明，往画面中间逐渐透明，正中不动。
@@ -4658,6 +4678,7 @@ def main():
     if OPT_GRADIENT_BG: _step('apply_gradient_bg', apply_gradient_bg)
     if OPT_SCRIM_BG: _step('apply_scrim_bg', apply_scrim_bg)
     if OPT_SCREEN_ON: _step('apply_screen_default', apply_screen_default)
+    _step('apply_danmu_default', apply_danmu_default)
     if OPT_AD_SWITCH: _step('apply_ad_switch_final', apply_ad_switch_final)
     if OPT_RENDER_FIX: _step('apply_render_fix', apply_render_fix)
     if OPT_DNS_DEFAULT: _step('apply_dns_default', apply_dns_default)
