@@ -45,7 +45,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261124-U59'
+VER = 'VER-20261124-U63'
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -1199,6 +1199,11 @@ def apply_layout():
         if margin_top:
             group.set(A + 'layout_marginTop', margin_top)
         par.insert(idx, group)
+        # 整排按钮统一按盒子居中对齐，不吃文字基线：
+        # 片头/片尾外面套了一层容器（把 00:00 叠在图标位），容器没有文字基线，
+        # 与按基线排的普通按钮必然差一截（就是那 11/24px）。关掉基线对齐后，
+        # 全排只按一种规则摆，四枚汉字自然与「重置」同一条线，不用任何运行时补偿。
+        group.set(A + 'baselineAligned', 'false')
         pm = parents(root)
 
     # ② 竖屏放不下时可左右滑动：外层横向滚动，撑满时按钮仍居中
@@ -2578,39 +2583,16 @@ def apply_search_boost():
     L = chr(10)
     Q = '"'
 
-    # ① 源清单：换过源之后把新源自动补进来（否则新源永远不参与全局搜索）
+    # ① 源池别变窄：searchable=0 的源也照样排队（这类源进源里能看，全局也该能搜）
     p = jp('app/src/main/java/com/github/tvbox/osc/util/SearchHelper.java')
     s = read_text(p)
-    a = ('        if (mCheckSources == null || mCheckSources.isEmpty()) {' + L +
-         '            mCheckSources = getSources();' + L +
-         '        }')
-    if 'tk补源' not in s:
-        if a not in s:
-            sys.exit('搜索增强锚点丢失：getSourcesForSearch')
-        b = ('        if (mCheckSources == null || mCheckSources.isEmpty()) {' + L +
-             '            mCheckSources = getSources();' + L +
-             '        } else {' + L +
-             '            // tk补源：换过订阅/加过源之后，新源自动进搜索集合，不用再手工勾' + L +
-             '            HashMap<String, String> tkAll = getSources();' + L +
-             '            if (tkAll != null && !tkAll.isEmpty()) {' + L +
-             '                for (String tkKey : tkAll.keySet()) {' + L +
-             '                    if (!mCheckSources.containsKey(tkKey)) {' + L +
-             '                        mCheckSources.put(tkKey, "1");' + L +
-             '                    }' + L +
-             '                }' + L +
-             '            }' + L +
-             '        }')
-        s = s.replace(a, b, 1)
-
-    # ② searchable=0 的源也排队走一遍（这类源进源里能看、全局永远搜不到）
     a2 = ('            if (!bean.isSearchable()) {' + L +
           '                continue;' + L +
           '            }')
     if 'tk不限 searchable' not in s:
-        if a2 not in s:
-            sys.exit('搜索增强锚点丢失：getSources 的 searchable 判断')
-        s = s.replace(a2, '            // tk不限 searchable：不支持搜索的源也排一遍，失败按普通超时处理', 1)
-    write_text(p, s)
+        if a2 in s:
+            s = s.replace(a2, '            // tk不限 searchable：不支持搜索的源也排一遍，失败按普通超时处理', 1)
+        write_text(p, s)
 
     # ③ 并发与超时：每批 6 个 -> 10 个；批次推进 3s/2s -> 1s；单源 15s -> 18s
     for rel, pump in (('app/src/main/java/com/github/tvbox/osc/ui/activity/FastSearchActivity.java', True),
@@ -2653,7 +2635,7 @@ def apply_search_boost():
 
     # ⑤ 校验
     h = read_text(jp('app/src/main/java/com/github/tvbox/osc/util/SearchHelper.java'))
-    if 'tk补源' not in h or 'tk不限 searchable' not in h:
+    if 'tk不限 searchable' not in h:
         sys.exit('搜索增强没写进 SearchHelper')
     for rel in ('app/src/main/java/com/github/tvbox/osc/ui/activity/FastSearchActivity.java',
                 'app/src/main/java/com/github/tvbox/osc/ui/activity/SearchActivity.java'):
@@ -2662,7 +2644,7 @@ def apply_search_boost():
                     'SEARCH_SITE_TIMEOUT_SECONDS = 18;', 'tk关键词归一'):
             if key not in t:
                 sys.exit('搜索增强缺 ' + key + ' @ ' + rel)
-    log('搜索：新源自动并入 + 不限 searchable + 每批 10 个源 + 1s 推进 + 单源 18s + 关键词去书名号')
+    log('搜索：源池不缩（不限 searchable）+ 每批 10 个源 + 1s 推进 + 单源 18s + 关键词去书名号；勾选不自动补源')
 
 
 def apply_btn_whitelist():
@@ -2756,22 +2738,43 @@ def apply_btn_whitelist():
     // 静态布局已与普通按钮同构（pad4 + 23dp 占位 + 同一行字），这里用测量结果兜一次，
     // 不依赖任何 dp 推算，父容器怎么居中都不会差。
     private void tkAlignSlotText() {
+        tkAlignSlotTextPass(0);
+    }
+
+    // 片头/片尾 四枚汉字：底边焊到「重置」那条线上，只动汉字，00:00 不动、间隙不管。
+    // 片头/片尾外面多一层容器（为了把 00:00 叠在图标位），容器没有文字基线，按钮行却按基线排，
+    // 两套规则必然差一截 —— 静态调 padding 只能补一半，所以这里直接量屏幕真实坐标，差多少平移多少。
+    // 平移后立刻复核，最多 4 拍，差值为 0 就停：不是轮询，是追布局抖动的自终止校正。
+    private void tkAlignSlotTextPass(final int pass) {
         try {
-            View reset = findViewById(R.id.play_time_reset);
+            View base = findViewById(R.id.play_time_reset);
+            if (base == null || base.getHeight() <= 0) {
+                base = findViewById(R.id.play_retry);
+            }
             View start = findViewById(R.id.play_time_start);
             View end = findViewById(R.id.play_time_end);
-            if (reset == null || start == null) return;
-            if (reset.getHeight() <= 0 || start.getHeight() <= 0) return;
-            int[] rl = new int[2];
-            reset.getLocationOnScreen(rl);
-            int rBottom = rl[1] + reset.getHeight();
+            if (base == null || base.getHeight() <= 0) return;
+            int[] bl = new int[2];
+            base.getLocationOnScreen(bl);
+            int bBottom = bl[1] + base.getHeight();
+            boolean dirty = false;
             for (View v : new View[]{start, end}) {
-                if (v == null) continue;
+                if (v == null || v.getHeight() <= 0) continue;
                 v.setTranslationY(0f);
                 int[] vl = new int[2];
                 v.getLocationOnScreen(vl);
-                int d = rBottom - (vl[1] + v.getHeight());
-                if (d != 0) v.setTranslationY(d);
+                int d = bBottom - (vl[1] + v.getHeight());
+                if (d != 0) {
+                    v.setTranslationY(d);
+                    dirty = true;
+                }
+            }
+            if (dirty && pass < 3) {
+                postDelayed(new Runnable() {
+                    public void run() {
+                        tkAlignSlotTextPass(pass + 1);
+                    }
+                }, 60);
             }
         } catch (Throwable ignored) {
         }
@@ -2904,7 +2907,7 @@ def apply_btn_whitelist():
         vc = vc.replace(od, od + L + '        tkStopHeal();', 1)
     write_text(vp, vc)
     vcx = read_text(vp)
-    if 'tkAlignSlotText' not in vcx or 'tkKeepScroll' not in vcx:
+    if 'tkAlignSlotTextPass' not in vcx or 'tkKeepScroll' not in vcx:
         sys.exit('片头尾像素对齐 / 横滑保持 没写入')
     if 'TK_BTN_OK' not in vcx or 'tkPurgeButtons();' not in vcx or 'tkSelfHeal();' not in vcx:
         sys.exit('白名单没写入')
@@ -3524,6 +3527,63 @@ def apply_spacing():
         log('行距收紧：顶部两行 4dp、进度条到按钮 16dp、按钮行贴边 12dp（改 %d 处）' % n)
     else:
         log('行距收紧：已是目标值，跳过')
+
+
+def apply_search_source_fix():
+    """「指定搜索源」：勾了就只搜勾的，一个都不勾就真的不搜（上游会回退成全部源）。"""
+    L = chr(10)
+    p = jp('app/src/main/java/com/github/tvbox/osc/util/SearchHelper.java')
+    t = read_text(p)
+    if '明确设置过就用设置' in t:
+        log('搜索源筛选：已修复，跳过')
+        return
+    i = t.find('    public static HashMap<String, String> getSourcesForSearch() {')
+    if i < 0:
+        sys.exit('搜索源锚点丢失：getSourcesForSearch')
+    k = t.find('    public static void putCheckedSources', i)
+    if k < 0:
+        sys.exit('搜索源锚点丢失：putCheckedSources')
+    j = t.rfind('    }' + L, i, k)
+    if j < 0:
+        sys.exit('搜索源锚点丢失：getSourcesForSearch 收尾')
+    j += len('    }')
+    new = ('    public static HashMap<String, String> getSourcesForSearch() {' + L
+           + '        HashMap<String, String> mCheckSources;' + L
+           + '        try {' + L
+           + '            String api = Hawk.get(HawkConfig.API_URL, "");' + L
+           + '            if (api.isEmpty()) return null;' + L
+           + '            HashMap<String, HashMap<String, String>> mCheckSourcesForApi =' + L
+           + '                    Hawk.get(HawkConfig.SOURCES_FOR_SEARCH, new HashMap<>());' + L
+           + '            mCheckSources = mCheckSourcesForApi.get(api);' + L
+           + '        } catch (Exception e) {' + L
+           + '            return null;' + L
+           + '        }' + L
+           + '        // tk：勾了就只搜勾的（不自动补源，勾选才说了算）；' + L
+           + '        //     一个都没勾 = 不指定 → 全部源照搜，源池一个不少。' + L
+           + '        if (mCheckSources == null || mCheckSources.isEmpty()) {' + L
+           + '            mCheckSources = getSources();' + L
+           + '        }' + L
+           + '        return mCheckSources;' + L
+           + '    }')
+    t = t[:i] + new + t[j:]
+    write_text(p, t)
+    if '勾了就只搜勾的' not in read_text(p):
+        sys.exit('搜索源筛选没写进去')
+    log('搜索源筛选：勾哪个只搜哪个；一个不勾 = 全源照搜')
+
+    # 每次发起搜索前重读一次勾选，改完勾选不用退出搜索页也能立刻生效
+    for rel in ('app/src/main/java/com/github/tvbox/osc/ui/activity/FastSearchActivity.java',
+                'app/src/main/java/com/github/tvbox/osc/ui/activity/SearchActivity.java'):
+        act = read_text(jp(rel))
+        if 'tk勾选重读' in act:
+            continue
+        head = '    private void search(String title) {' + L
+        if head not in act:
+            sys.exit('搜索入口锚点丢失：' + rel)
+        act = act.replace(head, head + '        // tk勾选重读：每次搜索都按当前勾选走，不沿用进页面时的旧快照' + L
+                          + '        initCheckedSourcesForSearch();' + L, 1)
+        write_text(jp(rel), act)
+    log('搜索源筛选：发起搜索前重读勾选（不沿用旧快照）')
 
 
 def apply_full_preview_fix():
@@ -4462,6 +4522,9 @@ def apply_top_time_fix():
 
 def self_check():
     dax = read_text(jp('app/src/main/java/com/github/tvbox/osc/ui/activity/DetailActivity.java'))
+    sh = read_text(jp('app/src/main/java/com/github/tvbox/osc/util/SearchHelper.java'))
+    if '勾了就只搜勾的' not in sh:
+        sys.exit('搜索源筛选没写入')
     if 'tkForceFullPreview' not in dax or 'windowsPreview = null;' not in dax:
         sys.exit('全屏预览满屏没写入')
     res = jp('app/src/main/res')
@@ -4655,6 +4718,7 @@ def main():
     if OPT_SPACING: _step('apply_spacing', apply_spacing)
     _step('apply_download_anywhere', apply_download_anywhere)
     _step('apply_full_preview_fix', apply_full_preview_fix)
+    _step('apply_search_source_fix', apply_search_source_fix)
     _step('apply_parse_hardening', apply_parse_hardening)
     _step('self_check', self_check)
     print('-' * 46)
