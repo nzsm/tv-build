@@ -1436,6 +1436,22 @@ def apply_layout():
             sys.exit('汉字字号/字体留白与按钮汉字不一致：' + rid)
         if n2.get(A + 'layout_marginTop') is not None:
             sys.exit('汉字还在用负上边距补偿：' + rid)
+    # 防裁：底栏这一串默认会裁掉超出边界的子视图，格子高度差 1–2dp 就会切掉半个汉字
+    for _nid in ('bottom_container', 'play_btn_group'):
+        nb = find_id(root, _nid)
+        if nb is not None:
+            nb.set(A + 'clipChildren', 'false')
+            nb.set(A + 'clipToPadding', 'false')
+    for _par in root.iter():
+        if _par.tag == 'HorizontalScrollView':
+            _par.set(A + 'clipChildren', 'false')
+            _par.set(A + 'clipToPadding', 'false')
+    for rid, _slot in (('play_time_start', 'tk_slot_start'), ('play_time_end', 'tk_slot_end')):
+        _b = [e for e in root.iter() if find_id(e, rid) is not None]
+        if _b:
+            _b[0].set(A + 'clipChildren', 'false')
+            _b[0].set(A + 'clipToPadding', 'false')
+
     log('片头/片尾：上格 00:00（%s 槽居中）+ 下格 %s 汉字，容器内边距 4/0 与全排等高' % (ICON_SIZE, TEXT_SIZE))
 
     tree.write(path, encoding='utf-8', xml_declaration=True)
@@ -2757,7 +2773,9 @@ def apply_btn_whitelist():
     // 静态布局已与普通按钮同构（pad4 + 23dp 占位 + 同一行字），这里用测量结果兜一次，
     // 不依赖任何 dp 推算，父容器怎么居中都不会差。
     private void tkAlignSlotText() {
-        tkAlignSlotTextPass(0);
+        // tk：片头/片尾改成「容器内 时间格 + 汉字」双层后，容器高度和整排一致，
+        //     静态就已经齐了。这里不再做任何 setTranslationY —— 平移会把汉字
+        //     顶进上面的时间格，再被父容器沿底边裁掉一半。
     }
 
     // 片头/片尾 四枚汉字：底边焊到「重置」那条线上，只动汉字，00:00 不动、间隙不管。
@@ -2765,38 +2783,8 @@ def apply_btn_whitelist():
     // 两套规则必然差一截 —— 静态调 padding 只能补一半，所以这里直接量屏幕真实坐标，差多少平移多少。
     // 平移后立刻复核，最多 4 拍，差值为 0 就停：不是轮询，是追布局抖动的自终止校正。
     private void tkAlignSlotTextPass(final int pass) {
-        try {
-            View base = findViewById(R.id.play_time_reset);
-            if (base == null || base.getHeight() <= 0) {
-                base = findViewById(R.id.play_retry);
-            }
-            View start = findViewById(R.id.play_time_start);
-            View end = findViewById(R.id.play_time_end);
-            if (base == null || base.getHeight() <= 0) return;
-            int[] bl = new int[2];
-            base.getLocationOnScreen(bl);
-            int bBottom = bl[1] + base.getHeight();
-            boolean dirty = false;
-            for (View v : new View[]{start, end}) {
-                if (v == null || v.getHeight() <= 0) continue;
-                v.setTranslationY(0f);
-                int[] vl = new int[2];
-                v.getLocationOnScreen(vl);
-                int d = bBottom - (vl[1] + v.getHeight());
-                if (d != 0) {
-                    v.setTranslationY(d);
-                    dirty = true;
-                }
-            }
-            if (dirty && pass < 3) {
-                postDelayed(new Runnable() {
-                    public void run() {
-                        tkAlignSlotTextPass(pass + 1);
-                    }
-                }, 60);
-            }
-        } catch (Throwable ignored) {
-        }
+        // tk：已停用。双层容器的高度与整排一致，静态即对齐；
+        //     任何 setTranslationY 都会把汉字抬进上面的时间格，再被父容器裁掉。
     }
 
     // 底栏按钮行的横滑位置：控制栏每次显隐都会让内容宽度变化，
@@ -4618,6 +4606,8 @@ def audit_cross_ref():
                 sys.exit('交叉体检：%s 的 %s 指向不存在的图 %s' % (i, k, nm))
 
     # ④ 同一段 Java 补丁只能注入一次（历史上出现过重复注入，症状是按钮错乱且很难看出来）
+    if 'v.setTranslationY(d);' in vc:
+        sys.exit('交叉体检：运行时还在平移片头/片尾汉字（会把字顶进时间格并被裁）')
     for mark in ('private void tkAlignSlotTextPass(', 'private void tkSetSlotText(',
                  'mPlayerTimeStartBtn.setText("片头");', 'private void tkSelfHeal()'):
         cnt = vc.count(mark)
