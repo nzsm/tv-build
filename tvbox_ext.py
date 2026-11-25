@@ -1360,47 +1360,83 @@ def apply_layout():
         if lp is not None: lp.set(A + 'visibility', 'gone')
         log('间距：时间↔条 3dp、条↔按钮排 5dp；底板去掉；旋屏按画面自动显示')
 
-    # ⑧ 片头 / 片尾：00:00 时间格整个删掉，这两枚汉字直接与「重置」同构，
-    #     同一排、同一套对齐规则，别再让额外的容器/叠层把字往下推。
-    for rid, text in (('play_time_start', '片头'), ('play_time_end', '片尾')):
+    # ⑧ 片头 / 片尾：上格 00:00（占图标位）+ 下格汉字，恢复周一那版的双层观感；
+    #     容器内边距与普通按钮逐项相同（上 4dp / 下 0dp / 左右 6dp），
+    #     于是容器高 = 4dp + 23dp 槽 + 一行 8dp 汉字，与别的按钮等高，
+    #     汉字底边天然落在同一条线上，不再需要任何负 margin / 平移补偿。
+    for rid, slot_id, text in (('play_time_start', 'tk_slot_start', '片头'),
+                               ('play_time_end', 'tk_slot_end', '片尾')):
+        # 幂等：已经包出过容器就直接跳过，否则第二遍会在外面再套一层
+        if find_id(root, slot_id) is not None:
+            continue
         node = find_id(root, rid)
         if node is None or node.tag != 'TextView':
             continue
-        # 整个节点属性清空重建：历次补偿（负 margin/容器内偏移/旧图标）全部丢掉，
-        # 属性顺序也固定下来，保证连跑两遍的输出完全一致。
-        vid = node.get(A + 'id')
+        par = pm[node]
+        idx = list(par).index(node)
+
+        box = ET.Element('LinearLayout')
+        box.set(A + 'orientation', 'vertical')
+        box.set(A + 'gravity', 'center_horizontal')
+        box.set(A + 'layout_width', 'wrap_content')
+        box.set(A + 'layout_height', 'wrap_content')
+        # 左右只留 2dp：30 + 2 + 2 = 34dp，正好等于别的按钮那一格（图标 23 + 左右 6），
+        # 整排宽度和格距完全不变，片头/片尾不会突出成一块
+        box.set(A + 'paddingLeft', '2dp')
+        box.set(A + 'paddingRight', '2dp')
+        box.set(A + 'paddingTop', '4dp')
+        box.set(A + 'paddingBottom', '0dp')
+        box.set(A + 'layout_marginEnd', '@dimen/tk_btn_gap')
+        box.set(A + 'layout_marginRight', '@dimen/tk_btn_gap')
+
+        # 上格：23dp 图标槽里居中放 00:00，中线与别的按钮图标同一条
+        slot = ET.SubElement(box, 'TextView')
+        slot.set(A + 'id', '@+id/' + slot_id)
+        slot.set(A + 'layout_width', '30dp')
+        slot.set(A + 'layout_height', ICON_SIZE)
+        slot.set(A + 'minWidth', '30dp')
+        slot.set(A + 'gravity', 'center')
+        slot.set(A + 'textSize', '12dp')
+        slot.set(A + 'fontFamily', 'sans-serif-light')
+        slot.set(A + 'includeFontPadding', 'true')
+        slot.set(A + 'singleLine', 'true')
+        slot.set(A + 'textColor', '@android:color/white')
+        slot.set(A + 'text', '00:00')
+
+        # 下格：汉字，与普通按钮汉字同一套字号/留白/重力
         node.attrib.clear()
-        if vid is not None:
-            node.set(A + 'id', vid)
-        # 盒子高度跟整排按钮走（match_parent），文字贴盒子底边（bottom），
-        # 不再用「透明占位图撑高度」那一招，也不再靠任何 margin/padding 补偿。
+        node.set(A + 'id', '@+id/' + rid)
         node.set(A + 'layout_width', 'wrap_content')
-        node.set(A + 'layout_height', 'match_parent')
-        node.set(A + 'paddingLeft', PAD_LR)
-        node.set(A + 'paddingRight', PAD_LR)
-        node.set(A + 'paddingTop', '4dp')
+        node.set(A + 'layout_height', 'wrap_content')
+        node.set(A + 'paddingLeft', '0dp')
+        node.set(A + 'paddingRight', '0dp')
+        node.set(A + 'paddingTop', '0dp')
         node.set(A + 'paddingBottom', '0dp')
-        node.set(A + 'layout_marginEnd', '@dimen/tk_btn_gap')
-        node.set(A + 'layout_marginRight', '@dimen/tk_btn_gap')
-        node.set(A + 'gravity', 'bottom|center_horizontal')
+        node.set(A + 'gravity', 'center_horizontal')
         node.set(A + 'textSize', TEXT_SIZE)
         node.set(A + 'singleLine', 'true')
         node.set(A + 'textColor', '@android:color/white')
         node.set(A + 'text', text)
         node.set(A + 'includeFontPadding', 'false')
-        node.set(A + 'background', '@null')
-        node.set(A + 'fontFamily', 'sans-serif-light')
-        node.set(A + 'focusable', 'true')
-        node.set(A + 'drawablePadding', '0dp')
-    for rid in ('play_time_start', 'play_time_end'):
+
+        par.remove(node)
+        box.append(node)
+        par.insert(idx, box)
+
+    for rid, slot_id in (('play_time_start', 'tk_slot_start'), ('play_time_end', 'tk_slot_end')):
+        sl = find_id(root, slot_id)
         n2 = find_id(root, rid)
-        if n2 is None:
-            sys.exit('片头/片尾节点丢失：' + rid)
-        if n2.get(A + 'layout_height') != 'match_parent' or n2.get(A + 'gravity') != 'bottom|center_horizontal':
-            sys.exit('片头/片尾没有贴底对齐：' + rid)
-        if n2.get(A + 'drawableTop'):
-            sys.exit('片头/片尾不该再带图标位：' + rid)
-    log('片头/片尾：贴行底对齐（match_parent + bottom），字号/内边距/右间距与「重置」一致')
+        if sl is None or n2 is None:
+            sys.exit('片头/片尾双层结构没生成：' + rid)
+        if sl.get(A + 'layout_width') != '30dp':
+            sys.exit('片头/片尾 上格宽度没归一（会突出一块）：' + rid)
+        if sl.get(A + 'layout_height') != ICON_SIZE or sl.get(A + 'gravity') != 'center':
+            sys.exit('时间格没落进 %s 图标槽并居中：%s' % (ICON_SIZE, slot_id))
+        if n2.get(A + 'includeFontPadding') != 'false' or n2.get(A + 'textSize') != TEXT_SIZE:
+            sys.exit('汉字字号/字体留白与按钮汉字不一致：' + rid)
+        if n2.get(A + 'layout_marginTop') is not None:
+            sys.exit('汉字还在用负上边距补偿：' + rid)
+    log('片头/片尾：上格 00:00（%s 槽居中）+ 下格 %s 汉字，容器内边距 4/0 与全排等高' % (ICON_SIZE, TEXT_SIZE))
 
     tree.write(path, encoding='utf-8', xml_declaration=True)
 
@@ -1414,17 +1450,30 @@ def apply_layout():
 
 # ---------------------------------------------------------------- Java
 TIME_PATCH = [
-    # tk：00:00 时间格已删除，这两个按钮只显示汉字，不再显示时间
+    # tk：双层恢复 —— 按钮自身只显示汉字，时间写到同一容器里的 tk_slot_* 节点
     ('mPlayerTimeStartBtn.setText(start == 0 ? "片头" : stringForTime(start * 1000));',
-     'mPlayerTimeStartBtn.setText("片头");'),
+     'mPlayerTimeStartBtn.setText("片头"); tkSetSlotText(R.id.tk_slot_start, start == 0 ? "00:00" : stringForTime(start * 1000));'),
     ('mPlayerTimeSkipBtn.setText(end == 0 ? "片尾" : stringForTime(end * 1000));',
-     'mPlayerTimeSkipBtn.setText("片尾");'),
+     'mPlayerTimeSkipBtn.setText("片尾"); tkSetSlotText(R.id.tk_slot_end, end == 0 ? "00:00" : stringForTime(end * 1000));'),
 
     ('Toast.makeText(getContext(), "已移除视频广告 "+M3u8.currentAdCount+" 条", Toast.LENGTH_SHORT).show();',
      '// 静默：不再弹出广告过滤条数提示'),
 ]
 
 HELPERS = '''
+    // 上格时间：片头/片尾按钮只显示汉字，00:00 写在同一容器里的 tk_slot_* 节点
+    private void tkSetSlotText(int sid, String t) {
+        try {
+            android.view.View btn = (sid == R.id.tk_slot_start) ? mPlayerTimeStartBtn : mPlayerTimeSkipBtn;
+            android.view.View slot = null;
+            android.view.ViewParent p = (btn == null) ? null : btn.getParent();
+            if (p instanceof android.view.ViewGroup) slot = ((android.view.ViewGroup) p).findViewById(sid);
+            if (slot == null) slot = findViewById(sid);
+            if (slot instanceof android.widget.TextView) ((android.widget.TextView) slot).setText(t);
+        } catch (Throwable ignored) {
+        }
+    }
+
     // 切播放器/切解码后会 replay 重建 player，标签可能被刷回旧值 → 延迟再同步一次
     private void tkRefreshCfgView() {
         try {
@@ -1819,7 +1868,7 @@ def apply_java():
     t = read_text(jp(VOD))
     # 幂等：这一套替换（片头尾时间标签、整块可点、旋屏文字）是一次性的，改过就整体跳过，
     # 否则第二次在同一棵树上跑会拿"已经替换后的文本"去找旧锚点，直接 sys.exit。
-    if 'mPlayerTimeStartBtn.setText("片头");' in t and 'tkRefreshCfgView' in t and '旋屏");' in t:
+    if 'tkSetSlotText(R.id.tk_slot_start' in t and 'tkRefreshCfgView' in t and '旋屏");' in t:
         log('  = 按钮文字 / 片头尾 / 旋屏文字已改好，跳过')
         return
 
@@ -1852,10 +1901,9 @@ def apply_java():
 
     a3 = '        mPlayerTimeResetBtn = findViewById(R.id.play_time_reset);'
     b3 = ('        mPlayerTimeResetBtn = findViewById(R.id.play_time_reset);\n'
-          '        // tk：00:00 的包裹容器已经拆掉，片头/片尾本身就是普通按钮；\n'
-          '        //     这里若再取父容器，拿到的就是整排按钮 group，会把整排变成一个大热区、\n'
-          '        //     还会把四枚汉字置成不可聚焦。故整段失活（保留代码结构，便于对照）。\n'
-          '        for (final TextView b : new TextView[0]) {\n'
+          '        // 片头/片尾外层是专用容器（内有 00:00 与汉字），整块可点；\n'
+          '        //     注意父容器必须不是整排 group —— 布局里已保证是专用 LinearLayout。\n'
+          '        for (final TextView b : new TextView[]{mPlayerTimeStartBtn, mPlayerTimeSkipBtn}) {\n'
           '            View wrap = (View) b.getParent();\n'
           '            if (wrap != null) {\n'
           '                wrap.setFocusable(true);\n'
@@ -2622,7 +2670,7 @@ def apply_btn_whitelist():
     L = chr(10)
     ok = ['play_label', 'play_pre', 'play_next', 'play_retry', 'play_refresh', 'play_scale',
           'play_speed', 'play_player', 'play_ijk', 'play_time_start_end_text',
-          'play_time_start', 'play_time_end', 'play_time_reset',
+          'tk_slot_start', 'play_time_start', 'tk_slot_end', 'play_time_end', 'play_time_reset',
           'play_cast', 'zimu_select', 'audio_track_select', 'video_track_select',
           'danmu_setting', 'landscape_portrait', 'screen_display']
     arr = ', '.join('"%s"' % k for k in ok)
@@ -2651,6 +2699,7 @@ def apply_btn_whitelist():
         '                    if (!keep) g.removeView(c);',
         '                    continue;',
         '                }',
+        '                if (c.findViewById(R.id.tk_slot_start) != null || c.findViewById(R.id.tk_slot_end) != null) continue;',
         '                g.removeView(c);',
         '            }',
         '        } catch (Throwable ignored) {',
@@ -4535,12 +4584,16 @@ def audit_cross_ref():
         sys.exit('交叉体检：VodController 里没有 TK_BTN_OK 白名单')
     allow = set(x.strip().strip('"') for x in m.group(1).split(',') if x.strip())
 
-    # ① 会显示的按钮必须都在白名单里，否则运行时被清理删掉（就是上次"整项消失"的成因）
-    for i, w, h in kids:
-        if w == '0dp' or h == '0dp':
+    # ① 底栏子树里所有会出现的 id 都必须在白名单里，否则运行时被清理删掉
+    #     （上次"整项消失"就是因为白名单漏了 id，而静态检查只看了节点还在不在）
+    for e in group.iter():
+        i = (e.get(A + 'id') or '').split('/')[-1]
+        if not i or e is group:
+            continue
+        if e.get(A + 'layout_width') == '0dp' or e.get(A + 'layout_height') == '0dp':
             continue                                    # 纯占位项，不显示，不受白名单约束
         if i not in allow:
-            sys.exit('交叉体检：底栏按钮 %s 不在 tkPurgeButtons 白名单，装机后会被删掉' % i)
+            sys.exit('交叉体检：底栏里的 %s 不在 tkPurgeButtons 白名单，装机后会被删掉' % i)
 
     # ② 白名单不能有死项（写了却不存在，说明改了 id 没同步）
     all_ids = set()
@@ -4565,7 +4618,7 @@ def audit_cross_ref():
                 sys.exit('交叉体检：%s 的 %s 指向不存在的图 %s' % (i, k, nm))
 
     # ④ 同一段 Java 补丁只能注入一次（历史上出现过重复注入，症状是按钮错乱且很难看出来）
-    for mark in ('private void tkAlignSlotTextPass(', 'new TextView[0]',
+    for mark in ('private void tkAlignSlotTextPass(', 'private void tkSetSlotText(',
                  'mPlayerTimeStartBtn.setText("片头");', 'private void tkSelfHeal()'):
         cnt = vc.count(mark)
         if cnt == 0:
@@ -4666,11 +4719,10 @@ def self_check():
             fails.append('播放布局缺 @+id/%s' % rid)
     if 'play_download' in lay:
         fails.append('播放布局里还留着 play_download（底栏下载按钮没删干净）')
-    if '@drawable/tk_space' not in lay:
-        fails.append('片头/片尾 汉字没走 drawableTop 占位（底边会与「重置」错开）')
     layroot = ET.parse(jp(LAYOUT)).getroot()
-    if 'tk_slot_start' in lay or 'tk_slot_end' in lay:
-        fails.append('片头/片尾 的 00:00 时间格没删干净')
+    for sid in ('tk_slot_start', 'tk_slot_end'):
+        if ('@+id/%s"' % sid) not in lay:
+            fails.append('片头/片尾 缺上格时间节点 %s' % sid)
     for tid in ('play_time_start', 'play_time_end'):
         v = find_id(layroot, tid)
         if v is None:
