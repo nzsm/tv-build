@@ -1418,6 +1418,10 @@ def apply_layout():
         node.set(A + 'textColor', '@android:color/white')
         node.set(A + 'text', text)
         node.set(A + 'includeFontPadding', 'false')
+        # 与其它按钮差 2dp 的原因：这套是「时间格 + 汉字」两个子项堆叠，
+        # 其它按钮是「图标 + 汉字」同一控件内绘制，字体行高取整口径差 2dp。
+        # 汉字单独上提 2dp 抵消，时间格位置不动（仍与图标同中线）。
+        node.set(A + 'layout_marginTop', '-2dp')
 
         par.remove(node)
         box.append(node)
@@ -1434,8 +1438,8 @@ def apply_layout():
             sys.exit('时间格没落进 %s 图标槽并居中：%s' % (ICON_SIZE, slot_id))
         if n2.get(A + 'includeFontPadding') != 'false' or n2.get(A + 'textSize') != TEXT_SIZE:
             sys.exit('汉字字号/字体留白与按钮汉字不一致：' + rid)
-        if n2.get(A + 'layout_marginTop') is not None:
-            sys.exit('汉字还在用负上边距补偿：' + rid)
+        if n2.get(A + 'layout_marginTop') != '-2dp':
+            sys.exit('汉字上提量不是 -2dp（会与其它按钮汉字错开）：%s = %s' % (rid, n2.get(A + 'layout_marginTop')))
     # 防裁：底栏这一串默认会裁掉超出边界的子视图，格子高度差 1–2dp 就会切掉半个汉字
     for _nid in ('bottom_container', 'play_btn_group'):
         nb = find_id(root, _nid)

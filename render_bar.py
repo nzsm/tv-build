@@ -48,8 +48,10 @@ for c in group:
         han  = [k for k in kids if k is not slot][0]
         box_lr = dp(c.get(A+'paddingLeft'))
         w = max(dp(slot.get(A+'layout_width')), tw(han.get(A+'text'), TEXT_DP)) + 2*box_lr
+        off = han.get(A+'layout_marginTop')
+        nudge = dp(off) if off else 0.0
         cells.append(dict(kind='dual', id=cid, w=w, time=slot.get(A+'text') or '00:00',
-                          han=han.get(A+'text') or '', lr=box_lr))
+                          han=han.get(A+'text') or '', lr=box_lr, nudge=nudge))
     else:
         lab = LABEL.get(cid, c.get(A+'text') or cid)
         w = max(dp(ICON_DP), tw(lab, TEXT_DP)) + 2*dp(PAD_LR)
@@ -69,7 +71,7 @@ for c in cells:
     else:
         bb = d.textbbox((0,0), c['time'], font=F_tm)
         d.text((cx, ic + (dp(ICON_DP)-(bb[3]-bb[1]))/2), c['time'], font=F_tm, fill='#fff', anchor='ma')
-    d.text((cx, hn), c['han'], font=F_han, fill='#ececf2', anchor='ma')
+    d.text((cx, hn + c.get('nudge', 0.0)), c['han'], font=F_han, fill='#ececf2', anchor='ma')
     x += c['w'] + dp(GAP_DP)
 
 base = hn + dp(LINE)
