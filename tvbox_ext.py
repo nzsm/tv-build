@@ -45,7 +45,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261124-U65'
+VER = 'VER-20261124-U67'
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -1372,23 +1372,35 @@ def apply_layout():
         node.attrib.clear()
         if vid is not None:
             node.set(A + 'id', vid)
+        # 盒子高度跟整排按钮走（match_parent），文字贴盒子底边（bottom），
+        # 不再用「透明占位图撑高度」那一招，也不再靠任何 margin/padding 补偿。
         node.set(A + 'layout_width', 'wrap_content')
-        node.set(A + 'layout_height', 'wrap_content')
-        # 与「重置」逐项对齐：左右 6dp、上 4dp、下 0dp、一行 8dp 字、图标位 23dp 透明占位
+        node.set(A + 'layout_height', 'match_parent')
         node.set(A + 'paddingLeft', PAD_LR)
         node.set(A + 'paddingRight', PAD_LR)
         node.set(A + 'paddingTop', '4dp')
         node.set(A + 'paddingBottom', '0dp')
         node.set(A + 'layout_marginEnd', '@dimen/tk_btn_gap')
-        node.set(A + 'gravity', 'top|center_horizontal')
+        node.set(A + 'layout_marginRight', '@dimen/tk_btn_gap')
+        node.set(A + 'gravity', 'bottom|center_horizontal')
         node.set(A + 'textSize', TEXT_SIZE)
         node.set(A + 'singleLine', 'true')
         node.set(A + 'textColor', '@android:color/white')
         node.set(A + 'text', text)
         node.set(A + 'includeFontPadding', 'false')
-        node.set(A + 'drawableTop', '@drawable/tk_space')
+        node.set(A + 'background', '@null')
+        node.set(A + 'fontFamily', 'sans-serif-light')
+        node.set(A + 'focusable', 'true')
         node.set(A + 'drawablePadding', '0dp')
-    log('片头/片尾：00:00 时间格已删除，四枚汉字与「重置」逐项同构')
+    for rid in ('play_time_start', 'play_time_end'):
+        n2 = find_id(root, rid)
+        if n2 is None:
+            sys.exit('片头/片尾节点丢失：' + rid)
+        if n2.get(A + 'layout_height') != 'match_parent' or n2.get(A + 'gravity') != 'bottom|center_horizontal':
+            sys.exit('片头/片尾没有贴底对齐：' + rid)
+        if n2.get(A + 'drawableTop'):
+            sys.exit('片头/片尾不该再带图标位：' + rid)
+    log('片头/片尾：贴行底对齐（match_parent + bottom），字号/内边距/右间距与「重置」一致')
 
     tree.write(path, encoding='utf-8', xml_declaration=True)
 
@@ -1840,8 +1852,10 @@ def apply_java():
 
     a3 = '        mPlayerTimeResetBtn = findViewById(R.id.play_time_reset);'
     b3 = ('        mPlayerTimeResetBtn = findViewById(R.id.play_time_reset);\n'
-          '        // 片头/片尾整块可点：外包容器后命中区只剩下面那行小字\n'
-          '        for (final TextView b : new TextView[]{mPlayerTimeStartBtn, mPlayerTimeSkipBtn}) {\n'
+          '        // tk：00:00 的包裹容器已经拆掉，片头/片尾本身就是普通按钮；\n'
+          '        //     这里若再取父容器，拿到的就是整排按钮 group，会把整排变成一个大热区、\n'
+          '        //     还会把四枚汉字置成不可聚焦。故整段失活（保留代码结构，便于对照）。\n'
+          '        for (final TextView b : new TextView[0]) {\n'
           '            View wrap = (View) b.getParent();\n'
           '            if (wrap != null) {\n'
           '                wrap.setFocusable(true);\n'
@@ -2609,7 +2623,7 @@ def apply_btn_whitelist():
     ok = ['play_label', 'play_pre', 'play_next', 'play_retry', 'play_refresh', 'play_scale',
           'play_speed', 'play_player', 'play_ijk', 'play_time_start_end_text',
           'play_time_start', 'play_time_end', 'play_time_reset',
-          'play_cast', 'play_download', 'zimu_select', 'audio_track_select', 'video_track_select',
+          'play_cast', 'zimu_select', 'audio_track_select', 'video_track_select',
           'danmu_setting', 'landscape_portrait', 'screen_display']
     arr = ', '.join('"%s"' % k for k in ok)
     method = L.join([
@@ -3473,6 +3487,11 @@ def apply_spacing():
     group = by_id('play_btn_group')
     if group is not None:
         for c in list(group):
+            # 0dp 的纯占位项（label / 分隔 / 隐藏按钮）不显示却有右边距 → 会把左右空隙撑成两份
+            if c.get(A + 'layout_width') == '0dp' or c.get(A + 'layout_height') == '0dp':
+                n += put(c, 'layout_marginEnd', '0dp')
+                n += put(c, 'layout_marginRight', '0dp')
+                continue
             if c.get(A + 'paddingTop') is not None:
                 n += put(c, 'paddingTop', '4dp')
                 # 片头尾容器原先没有右边距，会和邻居贴得过近，统一补上
@@ -3810,7 +3829,9 @@ def apply_slot_align():
     # 早先为了把 00:00 往里挪而给它们加过 marginEnd，反而把容器撑宽，
     # 这里统一清掉，容器宽度只由「时间宽 + 2dp + 2dp」决定。
     changed = 0
-    for nid in ('tk_slot_start', 'tk_slot_end', 'play_time_start', 'play_time_end'):
+    # 只处理已废弃的 tk_slot 容器；片头/片尾汉字现在是有意保留右边距的正常按钮，
+    # 这里若继续清它的 margin，就会和 ⑧ 写进去的值打架（顺序一变立刻错位）。
+    for nid in ('tk_slot_start', 'tk_slot_end'):
         v = find_id(root, nid)
         if v is None:
             continue
@@ -3821,7 +3842,7 @@ def apply_slot_align():
     if changed:
         tree.write(path, encoding='utf-8', xml_declaration=True)
     root2 = ET.parse(path).getroot()
-    for nid in ('tk_slot_start', 'tk_slot_end', 'play_time_start', 'play_time_end'):
+    for nid in ('tk_slot_start', 'tk_slot_end'):
         v = find_id(root2, nid)
         if v is not None and (v.get(A + 'layout_marginEnd') is not None
                               or v.get(A + 'layout_marginStart') is not None):
@@ -4485,6 +4506,101 @@ def apply_top_time_fix():
     log('右上角：网速控件不再冒出来，时间块随底栏一起收（原来只收了左边片名块）')
 
 
+
+def audit_cross_ref():
+    """交叉体检：布局 ↔ 白名单 ↔ Java 引用 ↔ 资源文件。
+
+    这套检查是吃过亏才加的：曾经删掉 00:00 容器后，底栏两个按钮因为"不在白名单"
+    被运行时清理直接删掉，而所有静态检查都是通过的 —— 因为没人检查过这三者一致。
+    """
+    import glob as _glob
+    import re as _re
+    res = jp('app/src/main/res')
+    vc = read_text(jp('app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'))
+    lay = read_text(jp(LAYOUT))
+
+    root = ET.fromstring(lay.encode('utf-8'))
+    group = find_id(root, 'play_btn_group')
+    if group is None:
+        sys.exit('交叉体检：找不到 play_btn_group')
+
+    kids = []
+    for c in list(group):
+        i = (c.get(A + 'id') or '').split('/')[-1]
+        if i:
+            kids.append((i, c.get(A + 'layout_width'), c.get(A + 'layout_height')))
+
+    m = _re.search(r'TK_BTN_OK = \{([^}]*)\}', vc)
+    if not m:
+        sys.exit('交叉体检：VodController 里没有 TK_BTN_OK 白名单')
+    allow = set(x.strip().strip('"') for x in m.group(1).split(',') if x.strip())
+
+    # ① 会显示的按钮必须都在白名单里，否则运行时被清理删掉（就是上次"整项消失"的成因）
+    for i, w, h in kids:
+        if w == '0dp' or h == '0dp':
+            continue                                    # 纯占位项，不显示，不受白名单约束
+        if i not in allow:
+            sys.exit('交叉体检：底栏按钮 %s 不在 tkPurgeButtons 白名单，装机后会被删掉' % i)
+
+    # ② 白名单不能有死项（写了却不存在，说明改了 id 没同步）
+    all_ids = set()
+    for f in _glob.glob(res + '/layout*/*.xml'):
+        all_ids |= set(_re.findall(r'@\+id/(\w+)', read_text(f)))
+    for i in sorted(allow):
+        if i not in all_ids:
+            sys.exit('交叉体检：白名单里的 %s 在任何布局里都不存在' % i)
+
+    # ③ 子项引用的 drawable 必须真存在（透明占位图少一个，盒子高度就少一档）
+    have = set()
+    for f in _glob.glob(res + '/drawable*/*'):
+        have.add(os.path.basename(f).split('.')[0])
+    for i, w, h in kids:
+        n = find_id(root, i)
+        for k in ('drawableTop', 'drawableBottom', 'drawableLeft', 'drawableRight'):
+            v = n.get(A + k) if n is not None else None
+            if not v or v.startswith('@android:') or v == '@null':
+                continue
+            nm = v.split('/')[-1]
+            if nm not in have:
+                sys.exit('交叉体检：%s 的 %s 指向不存在的图 %s' % (i, k, nm))
+
+    # ④ 同一段 Java 补丁只能注入一次（历史上出现过重复注入，症状是按钮错乱且很难看出来）
+    for mark in ('private void tkAlignSlotTextPass(', 'new TextView[0]',
+                 'mPlayerTimeStartBtn.setText("片头");', 'private void tkSelfHeal()'):
+        cnt = vc.count(mark)
+        if cnt == 0:
+            sys.exit('交叉体检：Java 补丁缺失 —— ' + mark)
+        if cnt > 1:
+            sys.exit('交叉体检：Java 补丁重复注入 %d 次 —— %s' % (cnt, mark))
+
+    # 搜索那两个 Activity 各自只能插一次「每次搜索重读勾选」
+    for act in ('FastSearchActivity', 'SearchActivity'):
+        ap = jp('app/src/main/java/com/github/tvbox/osc/ui/activity/%s.java' % act)
+        if not os.path.isfile(ap):
+            sys.exit('交叉体检：找不到 ' + act)
+        c = read_text(ap).count('tk勾选重读')
+        if c != 1:
+            sys.exit('交叉体检：%s 的勾选重读插入 %d 次（应为 1）' % (act, c))
+
+    # ⑤ 底栏每格左右间距必须是同一个值，只有 0dp 占位项允许为 0（否则空隙会露馅）
+    gaps = set()
+    for c in list(group):
+        i = (c.get(A + 'id') or '').split('/')[-1]
+        e = c.get(A + 'layout_marginEnd')
+        if not i:
+            continue
+        if c.get(A + 'layout_width') == '0dp' or c.get(A + 'layout_height') == '0dp':
+            if e != '0dp':
+                sys.exit('交叉体检：占位项 %s 还带着右间距 %s，会撑出双份空隙' % (i, e))
+        else:
+            gaps.add(e)
+    if len(gaps) != 1 or None in gaps:
+        sys.exit('交叉体检：底栏间距不统一：%s' % sorted(map(str, gaps)))
+
+    log('交叉体检通过：底栏 %d 格全部在白名单内、图标齐全、补丁各注入一次、间距统一为 %s'
+        % (len([1 for i, w, h in kids if w != '0dp']), list(gaps)[0]))
+
+
 def self_check():
     dax = read_text(jp('app/src/main/java/com/github/tvbox/osc/ui/activity/DetailActivity.java'))
     sh = read_text(jp('app/src/main/java/com/github/tvbox/osc/util/SearchHelper.java'))
@@ -4689,6 +4805,7 @@ def main():
     _step('apply_search_source_fix', apply_search_source_fix)
     _step('apply_parse_hardening', apply_parse_hardening)
     _step('self_check', self_check)
+    _step('audit_cross_ref', audit_cross_ref)
     print('-' * 46)
     print('步骤明细（改=修改已有文件，增/删=文件数）：')
     for name, mo, ne, de, dt in STEP_STATS:
