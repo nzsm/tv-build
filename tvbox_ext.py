@@ -45,7 +45,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261124-U64'
+VER = 'VER-20261124-U65'
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -2539,15 +2539,15 @@ def apply_search_boost():
     L = chr(10)
     Q = '"'
 
-    # ① 源池别变窄：searchable=0 的源也照样排队（这类源进源里能看，全局也该能搜）
+    # ① 源池：只让真正支持搜索的源排队。searchable=0 的源搜不出结果，
+    #    却会占满每批的并发名额、各自拖到 18 秒超时 —— 表现就是"全都搜不到东西"。
     p = jp('app/src/main/java/com/github/tvbox/osc/util/SearchHelper.java')
     s = read_text(p)
-    a2 = ('            if (!bean.isSearchable()) {' + L +
-          '                continue;' + L +
-          '            }')
-    if 'tk不限 searchable' not in s:
-        if a2 in s:
-            s = s.replace(a2, '            // tk不限 searchable：不支持搜索的源也排一遍，失败按普通超时处理', 1)
+    if 'tk不限 searchable' in s:
+        s = s.replace('            // tk不限 searchable：不支持搜索的源也排一遍，失败按普通超时处理' + L,
+                      '            if (!bean.isSearchable()) {' + L +
+                      '                continue;' + L +
+                      '            }' + L, 1)
         write_text(p, s)
 
     # ③ 并发与超时：每批 6 个 -> 10 个；批次推进 3s/2s -> 1s；单源 15s -> 18s
@@ -2591,7 +2591,7 @@ def apply_search_boost():
 
     # ⑤ 校验
     h = read_text(jp('app/src/main/java/com/github/tvbox/osc/util/SearchHelper.java'))
-    if 'tk不限 searchable' not in h:
+    if 'if (!bean.isSearchable()) {' not in h:
         sys.exit('搜索增强没写进 SearchHelper')
     for rel in ('app/src/main/java/com/github/tvbox/osc/ui/activity/FastSearchActivity.java',
                 'app/src/main/java/com/github/tvbox/osc/ui/activity/SearchActivity.java'):
@@ -2607,7 +2607,8 @@ def apply_btn_whitelist():
     """底栏只允许我方按钮存在：运行时被塞进来的（如 Zx推送）第一时间删掉，不再"先显示后消失"。"""
     L = chr(10)
     ok = ['play_label', 'play_pre', 'play_next', 'play_retry', 'play_refresh', 'play_scale',
-          'play_speed', 'play_player', 'play_ijk', 'play_time_start_end_text', 'play_time_reset',
+          'play_speed', 'play_player', 'play_ijk', 'play_time_start_end_text',
+          'play_time_start', 'play_time_end', 'play_time_reset',
           'play_cast', 'play_download', 'zimu_select', 'audio_track_select', 'video_track_select',
           'danmu_setting', 'landscape_portrait', 'screen_display']
     arr = ', '.join('"%s"' % k for k in ok)
@@ -2864,6 +2865,9 @@ def apply_btn_whitelist():
     vcx = read_text(vp)
     if 'tkAlignSlotTextPass' not in vcx or 'tkKeepScroll' not in vcx:
         sys.exit('片头尾像素对齐 / 横滑保持 没写入')
+    for kw in ('"play_time_start",', '"play_time_end",'):
+        if kw not in vcx:
+            sys.exit('底栏白名单漏了片头/片尾：' + kw)
     if 'TK_BTN_OK' not in vcx or 'tkPurgeButtons();' not in vcx or 'tkSelfHeal();' not in vcx:
         sys.exit('白名单没写入')
     log('底栏白名单：只保留 %d 个我方按钮，运行时塞进来的（Zx推送等）当场删除' % len(ok))
@@ -3513,18 +3517,24 @@ def apply_search_source_fix():
            + '        } catch (Exception e) {' + L
            + '            return null;' + L
            + '        }' + L
-           + '        // tk：勾了就只搜勾的（不自动补源，勾选才说了算）；' + L
-           + '        //     一个都没勾 = 不指定 → 全部源照搜，源池一个不少。' + L
+           + '        HashMap<String, String> all = getSources();' + L
+           + '        // tk：一个都没勾 = 不指定 → 全部源照搜' + L
            + '        if (mCheckSources == null || mCheckSources.isEmpty()) {' + L
-           + '            mCheckSources = getSources();' + L
+           + '            return all;' + L
            + '        }' + L
-           + '        return mCheckSources;' + L
+           + '        // tk：勾了就只搜勾的；但只认当前源清单里还存在的 key（换订阅后旧 key 会失效），' + L
+           + '        //     要是勾选表跟现在的源一个都对不上，就退回全部 —— 绝不能变成“一个都搜不到”。' + L
+           + '        HashMap<String, String> hit = new HashMap<>();' + L
+           + '        for (String k : mCheckSources.keySet()) {' + L
+           + '            if (all.containsKey(k)) hit.put(k, "1");' + L
+           + '        }' + L
+           + '        return hit.isEmpty() ? all : hit;' + L
            + '    }')
     t = t[:i] + new + t[j:]
     write_text(p, t)
-    if '勾了就只搜勾的' not in read_text(p):
+    if '勾选表跟现在的源一个都对不上' not in read_text(p):
         sys.exit('搜索源筛选没写进去')
-    log('搜索源筛选：勾哪个只搜哪个；一个不勾 = 全源照搜')
+    log('搜索源筛选：勾哪个只搜哪个；一个不勾/勾选全部失效 = 全源照搜')
 
     # 每次发起搜索前重读一次勾选，改完勾选不用退出搜索页也能立刻生效
     for rel in ('app/src/main/java/com/github/tvbox/osc/ui/activity/FastSearchActivity.java',
@@ -4478,7 +4488,7 @@ def apply_top_time_fix():
 def self_check():
     dax = read_text(jp('app/src/main/java/com/github/tvbox/osc/ui/activity/DetailActivity.java'))
     sh = read_text(jp('app/src/main/java/com/github/tvbox/osc/util/SearchHelper.java'))
-    if '勾了就只搜勾的' not in sh:
+    if '勾选表跟现在的源一个都对不上' not in sh:
         sys.exit('搜索源筛选没写入')
     if 'tkForceFullPreview' not in dax or 'windowsPreview = null;' not in dax:
         sys.exit('全屏预览满屏没写入')
