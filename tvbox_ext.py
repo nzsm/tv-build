@@ -45,7 +45,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261124-U73'   # 每改一次脚本必须同步这里（云端日志/排障只认它）
+VER = 'VER-20261124-U74'   # 每改一次脚本必须同步这里（云端日志/排障只认它）
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -1448,10 +1448,11 @@ def apply_layout():
         node.set(A + 'textColor', '@android:color/white')
         node.set(A + 'text', text)
         node.set(A + 'includeFontPadding', 'false')
-        # 与其它按钮差 2dp 的原因：这套是「时间格 + 汉字」两个子项堆叠，
-        # 其它按钮是「图标 + 汉字」同一控件内绘制，字体行高取整口径差 2dp。
-        # 汉字单独上提 2dp 抵消，时间格位置不动（仍与图标同中线）。
-        node.set(A + 'layout_marginTop', '-2dp')
+        # 与其它按钮的差来自两处：① 这套是「时间格 + 汉字」两个子项堆叠，其它按钮是
+        # 「图标 + 汉字」同一控件内绘制，字体行高取整口径不同；② 负边距在纵向 LinearLayout 里
+        # 只兑现一半（容器 wrap_content 高度同步缩短）。
+        # 实拍标定：-2dp 时汉字仍低 3px（1.2dp，density 2.5），故取 -3.5dp，剩 0～1px 不可见。
+        node.set(A + 'layout_marginTop', '-3.5dp')
 
         par.remove(node)
         box.append(node)
@@ -1468,8 +1469,8 @@ def apply_layout():
             fail('时间格没落进 %s 图标槽并居中：%s' % (ICON_SIZE, slot_id))
         if n2.get(A + 'includeFontPadding') != 'false' or n2.get(A + 'textSize') != TEXT_SIZE:
             fail('汉字字号/字体留白与按钮汉字不一致：' + rid)
-        if n2.get(A + 'layout_marginTop') != '-2dp':
-            fail('汉字上提量不是 -2dp（会与其它按钮汉字错开）：%s = %s' % (rid, n2.get(A + 'layout_marginTop')))
+        if n2.get(A + 'layout_marginTop') != '-3.5dp':
+            fail('汉字上提量不是 -3.5dp（会与其它按钮汉字错开）：%s = %s' % (rid, n2.get(A + 'layout_marginTop')))
     # 防裁：底栏这一串默认会裁掉超出边界的子视图，格子高度差 1–2dp 就会切掉半个汉字
     for _nid in ('bottom_container', 'play_btn_group'):
         nb = find_id(root, _nid)
