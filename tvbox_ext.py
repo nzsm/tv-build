@@ -45,7 +45,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261124-U77'   # 每改一次脚本必须同步这里（云端日志/排障只认它）
+VER = 'VER-20261126-U80'   # 每改一次脚本必须同步这里（云端日志/排障只认它）
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -4597,7 +4597,7 @@ def _snap():
     # player 模块必须一起扫：画面比例那套补丁改的是 player/src/main/java，
     # 漏扫时日志会报「改 0」，看起来像没生效（实际改了）。
     for root in ('app/src/main/java', 'app/src/main/res', 'app/src/main/AndroidManifest.xml',
-                 'player/src/main/java', 'player/src/main/res'):
+                 'player/src/main/java', 'player/src/main/res', 'app/build.gradle'):
         p = jp(root)
         if os.path.isfile(p):
             try:
@@ -4615,6 +4615,501 @@ def _snap():
                     continue
                 d[fp] = (st.st_size, st.st_mtime_ns)
     return d
+
+
+# ================================================================ U78 四项
+# ① versionCode 日期化（覆盖安装不再被"同版本号/降级"卡住）
+# ② 关于对话框显示真实构建版本
+# ③ 闪退留痕（写 files/tk_crash.txt，关于对话框里能看）
+# ④ 详情页按钮行 6 格等分父宽（修「下载」粉底右侧被裁）
+
+TK_CRASH_JAVA = r'''package com.github.tvbox.osc.util;
+
+import android.content.Context;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+/**
+ * tk：闪退留痕。把未捕获异常（时间 / 版本 / 线程 / 异常 / 前 12 层栈）写进 files/tk_crash.txt，
+ * 然后把异常交回系统原处理器——不吞崩溃，该崩还是崩，只是留下证据。
+ * 关于对话框里能直接看到这份记录，手机 / 电视上不用 logcat 也能说清是哪一层崩的。
+ */
+public class TkCrash implements Thread.UncaughtExceptionHandler {
+    private static final String FN = "tk_crash.txt";
+    private static Thread.UncaughtExceptionHandler sPrev;
+    private static boolean sInstalled = false;
+    private final Context ctx;
+
+    private TkCrash(Context c) {
+        ctx = c;
+    }
+
+    public static void install(Context c) {
+        if (sInstalled || c == null) return;
+        sInstalled = true;
+        try {
+            sPrev = Thread.getDefaultUncaughtExceptionHandler();
+            Context a = c.getApplicationContext();
+            Thread.setDefaultUncaughtExceptionHandler(new TkCrash(a == null ? c : a));
+        } catch (Throwable ignored) {
+        }
+    }
+
+    @Override
+    public void uncaughtException(Thread th, Throwable ex) {
+        try {
+            save(th, ex);
+        } catch (Throwable ignored) {
+        }
+        if (sPrev != null) {
+            sPrev.uncaughtException(th, ex);
+        }
+    }
+
+    private void save(Thread th, Throwable ex) {
+        StringBuilder sb = new StringBuilder();
+        String ver = "";
+        try {
+            ver = ctx.getPackageManager().getPackageInfo(ctx.getPackageName(), 0).versionName;
+        } catch (Throwable ignored) {
+        }
+        sb.append("时间 ").append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA).format(new Date()))
+          .append(" · 版本 ").append(ver == null ? "" : ver)
+          .append(" · ").append(th == null ? "?" : th.getName()).append("\n");
+        sb.append("异常 ").append(ex.getClass().getName()).append(": ").append(ex.getMessage()).append("\n");
+        StackTraceElement[] st = ex.getStackTrace();
+        if (st != null) {
+            for (int i = 0; i < st.length && i < 12; i++) {
+                sb.append("  at ").append(st[i].toString()).append("\n");
+            }
+        }
+        Throwable c = ex.getCause();
+        int guard = 0;
+        while (c != null && guard < 3) {
+            sb.append("原因 ").append(c.getClass().getName()).append(": ").append(c.getMessage()).append("\n");
+            c = c.getCause();
+            guard++;
+        }
+        String s = sb.toString();
+        if (s.length() > 3000) s = s.substring(0, 3000);
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(new File(ctx.getFilesDir(), FN), false);
+            fos.write(s.getBytes("UTF-8"));
+            fos.flush();
+        } catch (Throwable ignored) {
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (Throwable ignored) {
+                }
+            }
+        }
+    }
+
+    /** 读上次崩溃记录（只取前 8 行 / 1200 字），没有就返回空串。 */
+    public static String read(Context c) {
+        try {
+            File f = new File(c.getFilesDir(), FN);
+            if (!f.exists() || f.length() <= 0) return "";
+            FileInputStream in = new FileInputStream(f);
+            ByteArrayOutputStream bo = new ByteArrayOutputStream();
+            byte[] b = new byte[1024];
+            int n;
+            while ((n = in.read(b)) > 0) bo.write(b, 0, n);
+            in.close();
+            // 关于对话框里只放「摘要」：首行(时间/版本/线程) + 异常行 + 前 3 层栈，
+            // 太长会把关于页顶出屏幕；完整记录留在文件里。
+            String[] lines = bo.toString("UTF-8").split("\n");
+            StringBuilder out = new StringBuilder();
+            int at = 0;
+            int keep = 0;
+            for (int i = 0; i < lines.length && keep < 5; i++) {
+                String ln = lines[i];
+                boolean isAt = ln.startsWith("  at ");
+                if (isAt) {
+                    if (at >= 3) continue;
+                    at++;
+                } else if (i > 1) {
+                    if (ln.startsWith("原因 ")) {
+                        // 原因行照收（最常见的崩溃根因就在这里）
+                    } else {
+                        continue;
+                    }
+                }
+                if (ln.length() > 46) ln = ln.substring(0, 46) + "…";
+                if (keep > 0) out.append("\n");
+                out.append(ln);
+                keep++;
+            }
+            return out.toString();
+        } catch (Throwable ignored) {
+            return "";
+        }
+    }
+}
+'''
+
+
+def apply_version_code():
+    """versionCode 改成 UTC 日期数字（YYYYMMDD）。同日重复跑幂等。"""
+    g = jp('app/build.gradle')
+    t = read_text(g)
+    vc = time.strftime('%Y%m%d', time.gmtime())
+    m = re.search(r'versionCode\s+(\d+)', t)
+    if not m:
+        fail('build.gradle 里找不到 versionCode', 'apply_version_code')
+    if m.group(1) == vc:
+        log('versionCode 已是 %s（同日幂等），跳过' % vc)
+        return
+    t = t.replace(m.group(0), 'versionCode %s' % vc, 1)
+    write_text(g, t)
+    log('versionCode %s → %s（versionName 仍由 workflow 写成构建时间）' % (m.group(1), vc))
+
+
+def apply_about_version():
+    """关于对话框加两行：真实版本号 + 上次崩溃记录（后者默认隐藏）。"""
+    L = chr(10)
+    lay = jp('app/src/main/res/layout/dialog_about.xml')
+    x = read_text(lay)
+    if 'tkAboutVer' not in x:
+        inp = '        android:textSize="@dimen/ts_24" />' + L + L + '</LinearLayout>'
+        add = ('        android:textSize="@dimen/ts_24" />' + L + L
+               + '    <TextView' + L
+               + '        android:id="@+id/tkAboutVer"' + L
+               + '        android:layout_width="match_parent"' + L
+               + '        android:layout_height="wrap_content"' + L
+               + '        android:layout_marginTop="@dimen/vs_20"' + L
+               + '        android:text=""' + L
+               + '        android:textColor="@color/dialog_text_primary"' + L
+               + '        android:textSize="@dimen/ts_24" />' + L + L
+               + '    <TextView' + L
+               + '        android:id="@+id/tkAboutCrash"' + L
+               + '        android:layout_width="match_parent"' + L
+               + '        android:layout_height="wrap_content"' + L
+               + '        android:layout_marginTop="@dimen/vs_10"' + L
+               + '        android:lineSpacingMultiplier="1.2"' + L
+               + '        android:maxLines="7"' + L
+               + '        android:textColor="#FFFF9E9E"' + L
+               + '        android:textSize="@dimen/ts_20"' + L
+               + '        android:visibility="gone" />' + L + L
+               + '</LinearLayout>')
+        x = x.replace(inp, add, 1)
+        write_text(lay, x)
+        log('关于对话框新增两行：版本号 / 上次崩溃（崩溃行默认隐藏）')
+    else:
+        log('关于对话框已有版本行，跳过布局')
+
+    t = read_text(jp('app/src/main/java/com/github/tvbox/osc/ui/dialog/AboutDialog.java'))
+    if 'tkBindInfo' in t:
+        log('AboutDialog 已绑定版本信息，跳过')
+        return
+    old = ('public class AboutDialog extends BaseDialog {' + L + L
+           + '    public AboutDialog(@NonNull @NotNull Context context) {' + L
+           + '        super(context);' + L
+           + '        setContentView(R.layout.dialog_about);' + L
+           + '    }' + L
+           + '}')
+    new = ('public class AboutDialog extends BaseDialog {' + L + L
+           + '    public AboutDialog(@NonNull @NotNull Context context) {' + L
+           + '        super(context);' + L
+           + '        setContentView(R.layout.dialog_about);' + L
+           + '        tkBindInfo();' + L
+           + '    }' + L + L
+           + '    // tk：把「真实构建版本」和「上次崩溃」写进关于对话框' + L
+           + '    private void tkBindInfo() {' + L
+           + '        try {' + L
+           + '            android.widget.TextView v = findViewById(R.id.tkAboutVer);' + L
+           + '            String ver = "";' + L
+           + '            try {' + L
+           + '                android.content.pm.PackageInfo pi = getContext().getPackageManager()' + L
+           + '                        .getPackageInfo(getContext().getPackageName(), 0);' + L
+           + '                if (pi != null && pi.versionName != null) ver = pi.versionName;' + L
+           + '            } catch (Throwable ignored) {' + L
+           + '            }' + L
+           + '            if (v != null) v.setText("NZ 版本 " + ver);' + L
+           + '            android.widget.TextView c = findViewById(R.id.tkAboutCrash);' + L
+           + '            if (c != null) {' + L
+           + '                String crash = com.github.tvbox.osc.util.TkCrash.read(getContext());' + L
+           + '                if (crash != null && crash.length() > 0) {' + L
+           + '                    c.setVisibility(android.view.View.VISIBLE);' + L
+           + '                    c.setText("上次崩溃（截图反馈即可）' + chr(92) + 'n" + crash);' + L
+           + '                } else {' + L
+           + '                    c.setVisibility(android.view.View.GONE);' + L
+           + '                }' + L
+           + '            }' + L
+           + '        } catch (Throwable ignored) {' + L
+           + '        }' + L
+           + '    }' + L
+           + '}')
+    t = t.replace(old, new, 1)
+    if 'tkBindInfo' not in t:
+        fail('AboutDialog 结构锚点未命中', 'apply_about_version')
+    write_text(jp('app/src/main/java/com/github/tvbox/osc/ui/dialog/AboutDialog.java'), t)
+    log('AboutDialog 已绑定版本 / 崩溃记录')
+
+
+def apply_crash_guard():
+    """写 TkCrash.java，并在 App.onCreate 最靠前的位置装上（Hawk 初始化崩也能记下来）。"""
+    L = chr(10)
+    write_text(jp('app/src/main/java/com/github/tvbox/osc/util/TkCrash.java'), TK_CRASH_JAVA)
+    t = read_text(jp('app/src/main/java/com/github/tvbox/osc/base/App.java'))
+    if 'TkCrash.install' in t:
+        log('App 已装崩溃留痕，跳过')
+        return
+    old = '    public void onCreate() {' + L + '        super.onCreate();'
+    if old not in t:
+        fail('App.onCreate 结构锚点未命中', 'apply_crash_guard')
+    new = (old + L
+           + '        com.github.tvbox.osc.util.TkCrash.install(this);' + L
+           + '        // tk：上面这行必须留在最前面——Hawk/QuickJS 初始化崩了也要留痕')
+    t = t.replace(old, new, 1)
+    write_text(jp('app/src/main/java/com/github/tvbox/osc/base/App.java'), t)
+    log('App.onCreate 已装崩溃留痕（异常照旧抛给系统，只是先写一份记录）')
+
+
+def apply_detail_btn_row():
+    """详情页按钮行：6 格等分父宽。
+
+    原来 5 个固定 120mm + 一个自适应「下载」，整行 wrap_content，总宽超过信息区右边界，
+    「下载」的圆角粉底右边被父容器裁掉一截（实机图里看到的缺口就是这个）。
+    现在改成：容器 match_parent，6 个按钮 0dp + weight 1 —— 屏幕多宽都均分，永不溢出。
+    """
+    L = chr(10)
+    lay = jp('app/src/main/res/layout/activity_detail.xml')
+    x = read_text(lay)
+    ids = ['tvPlay', 'tvQuickSearch', 'tvDesc', 'tvCollect', 'tvChangeSource', 'tvDownload']
+    k = x.find('@+id/tvPlay"')
+    if k < 0:
+        fail('详情页按钮行锚点丢失：tvPlay', 'apply_detail_btn_row')
+
+    def _seg(txt, bid):
+        p = txt.find('@+id/%s"' % bid)
+        if p < 0:
+            fail('详情页按钮丢失：%s' % bid, 'apply_detail_btn_row')
+        st = txt.rfind('<TextView', 0, p)
+        en = txt.find('/>', p) + 2
+        return st, en, txt[st:en]
+
+    st, en, seg = _seg(x, 'tvDownload')
+    if 'android:layout_weight="1"' in seg and 'android:layout_width="0dp"' in seg:
+        log('详情页按钮行已是等分，跳过')
+        return
+
+    box = x.rfind('<LinearLayout', 0, k)
+    head_end = x.find('>', box)
+    head = x[box:head_end]
+    if 'android:orientation="horizontal"' not in head:
+        fail('详情页按钮行不是水平容器', 'apply_detail_btn_row')
+    if 'android:layout_width="wrap_content"' in head:
+        head2 = head.replace('android:layout_width="wrap_content"',
+                             'android:layout_width="match_parent"', 1)
+        x = x[:box] + head2 + x[head_end:]
+        log('按钮行容器：wrap_content → match_parent')
+
+    for bid in ids:
+        st, en, seg = _seg(x, bid)
+        seg = re.sub(r'android:layout_width="[^"]*"', 'android:layout_width="0dp"', seg, count=1)
+        if 'android:layout_weight' not in seg:
+            seg = seg.replace('android:layout_width="0dp"',
+                              'android:layout_width="0dp"' + L
+                              + '                        android:layout_weight="1"', 1)
+        # 「下载」以前靠 minWidth+左右 padding 自适应，等分后这两个属性没意义，整行去掉
+        seg = re.sub(r'\n\s*android:(?:minWidth|paddingLeft|paddingRight)="[^"]*"', '', seg)
+        x = x[:st] + seg + x[en:]
+    write_text(lay, x)
+    log('详情页按钮行：6 格等分父宽（下载粉底不再被裁）')
+
+    # 复核：六个按钮都必须是 0dp + weight 1
+    y = read_text(lay)
+    for bid in ids:
+        _, _, s = _seg(y, bid)
+        if 'android:layout_width="0dp"' not in s or 'android:layout_weight="1"' not in s:
+            fail('等分未落地：%s' % bid, 'apply_detail_btn_row')
+
+
+# ================================================================ U79：分屏保活 + 竖屏 9 格
+def apply_split_keepalive():
+    """① 分屏/窗口尺寸变化不再重建 Activity（页面不丢、播放页保留）
+       ② BaseActivity 收到尺寸变化时重算 mm 基准（否则半屏里全是超大元素）
+       ③ PlayFragment 失焦不暂停：来短信自动分屏、切别的 App 时视频继续播
+    """
+    L = chr(10)
+    want = ('android:configChanges="orientation|screenSize|smallestScreenSize|'
+            'screenLayout|keyboardHidden|uiMode"')
+    mf = jp('app/src/main/AndroidManifest.xml')
+    x = read_text(mf)
+    if 'smallestScreenSize' in x:
+        log('manifest 已声明 smallestScreenSize，跳过')
+    else:
+        def _fix(m):
+            tag = m.group(0)
+            if 'android:configChanges=' in tag:
+                return re.sub(r'android:configChanges="[^"]*"', want, tag, count=1)
+            return tag.replace('<activity', '<activity ' + want, 1)
+        x2 = re.sub(r'<activity\b[^>]*>', _fix, x, flags=re.S)
+        write_text(mf, x2)
+        log('manifest：%d 处 activity 已声明 configChanges（分屏不再重建）'
+            % x2.count('android:configChanges='))
+
+    ba = read_text(jp('app/src/main/java/com/github/tvbox/osc/base/BaseActivity.java'))
+    if 'onConfigurationChanged' in ba:
+        log('BaseActivity 已有 onConfigurationChanged，跳过')
+    else:
+        a = '    @Override' + L + '    public void onWindowFocusChanged(boolean hasFocus) {'
+        if a not in ba:
+            fail('BaseActivity 锚点丢失：onWindowFocusChanged', 'apply_split_keepalive')
+        ins = ('    @Override' + L
+               + '    public void onConfigurationChanged(android.content.res.Configuration newConfig) {' + L
+               + '        super.onConfigurationChanged(newConfig);' + L
+               + '        // tk：分屏 / 窗口尺寸变化不再重建页面，这里把 mm 基准按新窗口重算一遍' + L
+               + '        // 这里不能判断 shouldRefreshAutoSize：分屏是「必须重算」，' + L
+               + '        // 否则搜索页/详情页/历史页仍按整屏 mm 算，半屏里会整片溢出' + L
+               + '        refreshAutoSize();' + L
+               + '        scheduleRefreshAutoSize();' + L
+               + '    }' + L + L + a)
+        ba = ba.replace(a, ins, 1)
+        write_text(jp('app/src/main/java/com/github/tvbox/osc/base/BaseActivity.java'), ba)
+        log('BaseActivity：新增 onConfigurationChanged → 重算 mm 基准')
+
+    pf_path = jp('app/src/main/java/com/github/tvbox/osc/ui/fragment/PlayFragment.java')
+    pf = read_text(pf_path)
+    old = ('    @Override' + L
+           + '    public void onPause() {' + L
+           + '        super.onPause();' + L
+           + '        if (mVideoView != null && !exitingPreview && !hasAudioOnlyPlayback()) {' + L
+           + '            mVideoView.pause();' + L
+           + '        }' + L
+           + '    }')
+    if 'tkSplitKeepPlaying' in pf:
+        log('PlayFragment 已改失焦不暂停，跳过')
+    elif old not in pf:
+        fail('PlayFragment.onPause 锚点丢失', 'apply_split_keepalive')
+    else:
+        new = ('    @Override' + L
+               + '    public void onPause() {' + L
+               + '        super.onPause();' + L
+               + '        // tkSplitKeepPlaying：分屏 / 来短信自动分屏 / 切到别的应用时不再暂停，' + L
+               + '        // 画面和声音继续。从播放页真正退出仍走 onDestroyView 释放，不影响「退出即停」。' + L
+               + '    }')
+        pf = pf.replace(old, new, 1)
+        write_text(pf_path, pf)
+        log('PlayFragment：失焦不再暂停，视频继续播')
+
+
+PORTRAIT_METHOD = '''    private void updatePortraitMenu(boolean isPortrait) {
+        if (isPortrait) {
+            // tk：竖屏只留 9 格 —— 上集 / 下集 / 倍速 / 旋屏 / 投屏 / 字幕 / 弹幕 / 片头 / 片尾。
+            // 片头片尾的 00:00 槽必须和汉字一起显隐：上游只把汉字 GONE 掉、槽还留着，
+            // 竖屏就只剩两个 00:00 —— 这就是「四个汉字不显示」的真凶。
+            mParseRoot.setVisibility(GONE);
+            mPlayLabel.setVisibility(GONE);
+            mPlayrefresh.setVisibility(GONE);
+            mPlayerScaleBtn.setVisibility(GONE);
+            mPlayerIJKBtn.setVisibility(GONE);
+            mPlayerBtn.setVisibility(GONE);
+            mPlayerTimeStartEndText.setVisibility(GONE);
+            mPlayerTimeResetBtn.setVisibility(GONE);
+            mAudioTrackBtn.setVisibility(GONE);
+            mVideoTrackBtn.setVisibility(GONE);
+            mDanmuSearchUiBtn.setVisibility(GONE);
+            mScreenDisplay.setVisibility(GONE);
+            mPlayerSpeedBtn.setVisibility(VISIBLE);
+            mPlayerTimeStartBtn.setVisibility(VISIBLE);
+            mPlayerTimeSkipBtn.setVisibility(VISIBLE);
+            tkSetSlotVisible(R.id.tk_slot_start, true);
+            tkSetSlotVisible(R.id.tk_slot_end, true);
+            mCastBtn.setVisibility(VISIBLE);
+            mZimuBtn.setVisibility(VISIBLE);
+            mDanmuSettingBtn.setVisibility(VISIBLE);
+            if (mLandscapePortraitBtn != null) mLandscapePortraitBtn.setVisibility(VISIBLE);
+            return;
+        }
+        mParseRoot.setVisibility(showParse ? VISIBLE : GONE);
+        mPlayrefresh.setVisibility(VISIBLE);
+        mPlayerScaleBtn.setVisibility(VISIBLE);
+        mPlayerBtn.setVisibility(VISIBLE);
+        mPlayerTimeStartEndText.setVisibility(GONE);
+        mPlayerTimeStartBtn.setVisibility(VISIBLE);
+        mPlayerTimeSkipBtn.setVisibility(VISIBLE);
+        mPlayerTimeResetBtn.setVisibility(VISIBLE);
+        tkSetSlotVisible(R.id.tk_slot_start, true);
+        tkSetSlotVisible(R.id.tk_slot_end, true);
+        mZimuBtn.setVisibility(VISIBLE);
+        mScreenDisplay.setVisibility(VISIBLE);
+        mCastBtn.setVisibility(VISIBLE);
+        mPlayerSpeedBtn.setVisibility(VISIBLE);
+        if (mPlayerConfig != null) updatePlayerCfgView();
+        updateDanmuBtn();
+        updateDanmuSearchUiBtn();
+    }
+
+    // tk：片头/片尾的 00:00 槽和汉字必须一起显隐（竖屏只剩 00:00 就是这么来的）
+    private void tkSetSlotVisible(int id, boolean visible) {
+        try {
+            android.view.View v = findViewById(id);
+            if (v != null) v.setVisibility(visible ? VISIBLE : GONE);
+        } catch (Throwable ignored) {
+        }
+    }
+'''
+
+
+def apply_portrait_bar():
+    """竖屏底栏精简为 9 格 + 修掉「只剩 00:00 没有汉字」。"""
+    L = chr(10)
+    vc = read_text(jp('app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'))
+    if 'tkSetSlotVisible' in vc:
+        log('竖屏底栏已是 tk 版，跳过')
+        return
+    i0 = vc.find('    private void updatePortraitMenu(boolean isPortrait) {')
+    if i0 < 0:
+        fail('VodController 锚点丢失：updatePortraitMenu', 'apply_portrait_bar')
+    i1 = vc.find(L + '    }' + L, i0)
+    if i1 < 0:
+        fail('updatePortraitMenu 结束锚点丢失', 'apply_portrait_bar')
+    i1 += len(L + '    }' + L)
+    vc = vc[:i0] + PORTRAIT_METHOD + vc[i1:]
+
+    old = ('        boolean isPortraitNow = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;' + L
+           + '        mDanmuSettingBtn.setVisibility(isPortraitNow ? GONE : VISIBLE);')
+    new = '        mDanmuSettingBtn.setVisibility(VISIBLE);   // tk：竖屏也保留弹幕（9 格之一）'
+    if old in vc:
+        vc = vc.replace(old, new, 1)
+        log('弹幕按钮：竖屏不再隐藏')
+    else:
+        fail('弹幕按钮竖屏隐藏锚点丢失', 'apply_portrait_bar')
+
+    old2 = ('    private void updatePlayLabelVisibility() {' + L
+            + '        if (mPlayLabel == null || mPlayBtnGroup == null) return;')
+    new2 = ('    private void updatePlayLabelVisibility() {' + L
+            + '        if (mPlayLabel == null || mPlayBtnGroup == null) return;' + L
+            + '        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {' + L
+            + '            mPlayLabel.setVisibility(GONE);   // tk：竖屏不占位' + L
+            + '            return;' + L
+            + '        }')
+    if old2 in vc:
+        vc = vc.replace(old2, new2, 1)
+    else:
+        fail('updatePlayLabelVisibility 锚点丢失', 'apply_portrait_bar')
+
+    old3 = '        showButton = width > 0 && height > 0 && (width <= height || shortVideo) && ScreenUtils.getSqrt(mActivity) < 10.0;'
+    new3 = ('        showButton = isPortrait || (width > 0 && height > 0 && (width <= height || shortVideo) && ScreenUtils.getSqrt(mActivity) < 10.0);'
+            + '   // tk：竖屏必显，保证能转回横屏')
+    if old3 in vc:
+        vc = vc.replace(old3, new3, 1)
+    else:
+        fail('旋屏按钮判定锚点丢失', 'apply_portrait_bar')
+
+    write_text(jp('app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'), vc)
+    log('竖屏底栏：9 格（上集/下集/倍速/旋屏/投屏/字幕/弹幕/片头/片尾），片头尾汉字随槽一起显示')
 
 
 def _step(name, fn):
@@ -4687,6 +5182,12 @@ def main():
     if OPT_SEARCH_BOOST: _step('apply_search_boost', apply_search_boost)
     if OPT_SPACING: _step('apply_spacing', apply_spacing)
     _step('apply_download_anywhere', apply_download_anywhere)
+    _step('apply_detail_btn_row', apply_detail_btn_row)   # 详情页按钮行等分，修下载粉底被裁
+    _step('apply_version_code', apply_version_code)       # versionCode 日期化
+    _step('apply_crash_guard', apply_crash_guard)         # 闪退留痕
+    _step('apply_about_version', apply_about_version)     # 关于页显示版本 + 崩溃记录
+    _step('apply_split_keepalive', apply_split_keepalive)  # 分屏不重建 + 失焦继续播
+    _step('apply_portrait_bar', apply_portrait_bar)        # 竖屏 9 格 + 片头尾汉字修复
     _step('apply_full_preview_fix', apply_full_preview_fix)
     _step('apply_search_source_fix', apply_search_source_fix)
     _step('apply_parse_hardening', apply_parse_hardening)
