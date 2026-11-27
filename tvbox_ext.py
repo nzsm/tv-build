@@ -30,7 +30,7 @@ HTVO_XML = ('<vector xmlns:android="http://schemas.android.com/apk/res/android"'
             '<path android:pathData="M7.52 22.25C4.25 19.94 1.91 16.76 1.55 13H.05C.56 19.16 5.71 24 12 24l.66-.03-3.81-3.81-1.33 1.32z" android:fillColor="#FFFFFF" android:strokeColor="#FFFFFF" android:strokeWidth="0.6" android:strokeLineJoin="round"/>'
             '</group></vector>')
 
-ICONS = {'htov': HTVO_XML, 'v_prev': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="11.950" android:pivotY="10.575" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.050" android:translateY="1.425"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.826" android:scaleY="1.826"\n        android:translateX="-0.045" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M7,6c0.55,0 1,0.45 1,1v10c0,0.55 -0.45,1 -1,1s-1,-0.45 -1,-1L6,7c0,-0.55 0.45,-1 1,-1zM10.66,12.82l5.77,4.07c0.66,0.47 1.58,-0.01 1.58,-0.82L18.01,7.93c0,-0.81 -0.91,-1.28 -1.58,-0.82l-5.77,4.07c-0.57,0.4 -0.57,1.24 0,1.64z"/></group></group></vector>', 'v_next': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.600" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.400"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.833" android:scaleY="1.833"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M7.58,16.89l5.77,-4.07c0.56,-0.4 0.56,-1.24 0,-1.63L7.58,7.11C6.91,6.65 6,7.12 6,7.93v8.14c0,0.81 0.91,1.28 1.58,0.82zM16,7v10c0,0.55 0.45,1 1,1s1,-0.45 1,-1V7c0,-0.55 -0.45,-1 -1,-1s-1,0.45 -1,1z"/></group></group></vector>', 'v_replay': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="11.975" android:pivotY="10.575" android:scaleX="0.9929" android:scaleY="0.9929" android:translateX="0.025" android:translateY="1.425"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.136" android:scaleY="1.136"\n        android:translateX="-0.057" android:translateY="-1.123"><path android:fillColor="@android:color/white" android:pathData="M12,5V2.21c0,-0.45 -0.54,-0.67 -0.85,-0.35l-3.8,3.79c-0.2,0.2 -0.2,0.51 0,0.71l3.79,3.79c0.32,0.31 0.86,0.09 0.86,-0.36V7c3.73,0 6.68,3.42 5.86,7.29 -0.47,2.27 -2.31,4.1 -4.57,4.57 -3.57,0.75 -6.75,-1.7 -7.23,-5.01 -0.07,-0.48 -0.49,-0.85 -0.98,-0.85 -0.6,0 -1.08,0.53 -1,1.13 0.62,4.39 4.8,7.64 9.53,6.72 3.12,-0.61 5.63,-3.12 6.24,-6.24C20.84,9.48 16.94,5 12,5z"/></group></group></vector>', 'v_replay_play': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp" android:height="26dp"\n    android:viewportWidth="24" android:viewportHeight="24"\n    android:tint="#FFFFFF"><group android:pivotX="11.925" android:pivotY="10.875" android:scaleX="1.1382" android:scaleY="1.1382" android:translateX="0.075" android:translateY="1.125"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.136" android:scaleY="1.136"\n        android:translateX="-0.057" android:translateY="-1.123"><path android:strokeColor="@android:color/white" android:strokeWidth="2.2" android:fillColor="@android:color/transparent" android:pathData="M12,5 A7,7 0 1 1 11.99,5"/><path android:fillColor="@android:color/white" android:pathData="M9.85,8.4 L16.25,12.0 L9.85,15.6 Z"/></group></group></vector>', 'v_aspect': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.0" android:scaleY="1.0"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M18,12c-0.55,0 -1,0.45 -1,1v2h-2c-0.55,0 -1,0.45 -1,1s0.45,1 1,1h3c0.55,0 1,-0.45 1,-1v-3c0,-0.55 -0.45,-1 -1,-1zM7,9h2c0.55,0 1,-0.45 1,-1s-0.45,-1 -1,-1L6,7c-0.55,0 -1,0.45 -1,1v3c0,0.55 0.45,1 1,1s1,-0.45 1,-1L7,9zM21,3L3,3c-1.1,0 -2,0.9 -2,2v14c0,1.1 0.9,2 2,2h18c1.1,0 2,-0.9 2,-2L23,5c0,-1.1 -0.9,-2 -2,-2zM20,19.01L4,19.01c-0.55,0 -1,-0.45 -1,-1L3,5.99c0,-0.55 0.45,-1 1,-1h16c0.55,0 1,0.45 1,1v12.02c0,0.55 -0.45,1 -1,1z"/></group></group></vector>', 'v_ffwd': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.309" android:scaleY="1.309"\n        android:translateX="-0.523" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M5.58,16.89l5.77,-4.07c0.56,-0.4 0.56,-1.24 0,-1.63L5.58,7.11C4.91,6.65 4,7.12 4,7.93v8.14c0,0.81 0.91,1.28 1.58,0.82zM13,7.93v8.14c0,0.81 0.91,1.28 1.58,0.82l5.77,-4.07c0.56,-0.4 0.56,-1.24 0,-1.63l-5.77,-4.07c-0.67,-0.47 -1.58,0 -1.58,0.81z"/></group></group></vector>', 'v_type': '<vector android:height="26dp"\n    android:tint="#FFFFFF"\n    android:viewportHeight="24"\n    android:viewportWidth="24"\n    android:width="26dp"\n    xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.0" android:scaleY="1.0"\n        android:translateX="0.0" android:translateY="-1.833"><path\n        android:fillColor="@android:color/white"\n        android:pathData="M21,3L3,3c-1.11,0 -2,0.89 -2,2v12c0,1.1 0.89,2 2,2h5v2h8v-2h5c1.1,0 1.99,-0.9 1.99,-2L23,5c0,-1.11 -0.9,-2 -2,-2zM21,17L3,17L3,5h18v12zM16,11l-7,4L9,7z" /></group></group></vector>', 'v_subtitle': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.1" android:scaleY="1.1"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M20,4L4,4c-1.1,0 -2,0.9 -2,2v12c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2L22,6c0,-1.1 -0.9,-2 -2,-2zM4,12h4v2L4,14v-2zM14,18L4,18v-2h10v2zM20,18h-4v-2h4v2zM20,14L10,14v-2h10v2z"/></group></group></vector>', 'v_audio': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.600" android:scaleX="0.9906" android:scaleY="0.9906" android:translateX="0.000" android:translateY="1.400"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.222" android:scaleY="1.222"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M12,5v8.55c-0.94,-0.54 -2.1,-0.75 -3.33,-0.32 -1.34,0.48 -2.37,1.67 -2.61,3.07 -0.46,2.74 1.86,5.08 4.59,4.65 1.96,-0.31 3.35,-2.11 3.35,-4.1V7h2c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2h-2c-1.1,0 -2,0.9 -2,2z"/></group></group></vector>', 'v_danmu': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp"\n    android:height="26dp"\n    android:viewportWidth="436"\n    android:viewportHeight="419"><group android:pivotX="218.000" android:pivotY="185.058" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="24.442"><group android:pivotX="218.0" android:pivotY="209.5"\n        android:scaleX="0.916" android:scaleY="0.916"\n        android:translateX="0.0" android:translateY="-25.507"><path\n      android:pathData="M322.65,272.14L274.13,272.14L274.13,290.36L328.16,290.36L328.16,318.2L274.13,318.2L274.13,347.96L242.96,347.96L242.96,318.2L188.7,318.2L188.7,290.36L242.96,290.36L242.96,272.14L194.21,272.14L194.21,147.1L216.3,147.1L209.39,129.82L238.16,129.82L245.13,147.1L271.73,147.1L278.7,129.82L307.53,129.82L300.32,147.1L322.88,147.1L322.65,272.14ZM115.05,189.58L152.26,189.58L152.26,164.62L110.25,164.62L110.25,135.09L182.96,135.09L182.96,218.35L143.59,218.35L142.18,244.78L184.66,244.78L177.92,347.02L117.22,347.02L117.22,316.79L148.39,316.79L151.79,273.55L110.25,273.55L115.05,189.58ZM244.89,243.08L244.89,223.16L222.81,223.16L222.81,243.08L244.89,243.08ZM244.89,195.79L244.89,176.11L222.81,176.11L222.81,195.79L244.89,195.79ZM294.06,243.08L294.06,223.16L272.02,223.16L272.02,243.08L294.06,243.08ZM294.06,195.79L294.06,176.11L272.02,176.11L272.02,195.79L294.06,195.79Z"\n      android:fillColor="#FFFFFF"\n      android:fillType="evenOdd"/><path\n      android:pathData="M20.27,79.27Q0.5,99.04 0.5,127L0.5,351Q0.5,378.96 20.27,398.73Q40.04,418.5 68,418.5L368,418.5Q395.96,418.5 415.73,398.73Q435.5,378.96 435.5,351L435.5,127Q435.5,99.04 415.73,79.27Q395.96,59.5 368,59.5L68,59.5Q40.04,59.5 20.27,79.27ZM35.5,351L35.5,127Q35.5,113.54 45.02,104.02Q54.54,94.5 68,94.5L368,94.5Q381.46,94.5 390.98,104.02Q400.5,113.54 400.5,127L400.5,351Q400.5,364.46 390.98,373.98Q381.46,383.5 368,383.5L68,383.5Q54.54,383.5 45.02,373.98Q35.5,364.46 35.5,351Z"\n      android:strokeLineJoin="miter"\n      android:strokeWidth="35"\n      android:fillColor="#FCFCFC"\n      android:fillType="evenOdd"\n      android:strokeLineCap="butt"/><path\n      android:pathData="M208.26,55.63L128.98,0.62L109.02,29.38L188.31,84.39Q201.24,93.36 216.98,93.4Q232.71,93.44 245.69,84.53L325.91,29.42L306.09,0.57L225.87,55.68Q221.89,58.41 217.06,58.4Q212.23,58.39 208.26,55.63Z"\n      android:strokeLineJoin="miter"\n      android:strokeWidth="35"\n      android:fillColor="#FFFFFF"\n      android:fillType="evenOdd"\n      android:strokeLineCap="butt"/></group></group></vector>', 'v_back': '<vector android:autoMirrored="true" android:height="26dp"\n    android:tint="#FFFFFF" android:viewportHeight="24"\n    android:viewportWidth="24" android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.575" android:scaleX="0.9929" android:scaleY="0.9929" android:translateX="0.000" android:translateY="1.425"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.169" android:scaleY="1.169"\n        android:translateX="0.468" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M16.62,2.99c-0.49,-0.49 -1.28,-0.49 -1.77,0L6.54,11.3c-0.39,0.39 -0.39,1.02 0,1.41l8.31,8.31c0.49,0.49 1.28,0.49 1.77,0s0.49,-1.28 0,-1.77L9.38,12l7.25,-7.25c0.48,-0.48 0.48,-1.28 -0.01,-1.76z"/></group></group></vector>', 'ic_clock': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.600" android:scaleX="0.9906" android:scaleY="0.9906" android:translateX="-0.000" android:translateY="1.400"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.047" android:scaleY="1.047"\n        android:translateX="-0.262" android:translateY="-1.31"><path\n        android:fillColor="@android:color/white"\n        android:pathData="M11,8H13V14H11V8M12,20C8.13,20 5,16.87 5,13S8.13,6 12,6 19,9.13 19,13C19.7,13 20.36,13.13 21,13.35C21,13.23 21,13.12 21,13C21,10.88 20.26,8.93 19.03,7.39L20.45,5.97C20,5.46 19.55,5 19.04,4.56L17.62,6C16.07,4.74 14.12,4 12,4C7.03,4 3,8.03 3,13S7.03,22 12,22C12.59,22 13.16,21.94 13.71,21.83C13.4,21.25 13.18,20.6 13.08,19.91C12.72,19.96 12.37,20 12,20M15,1H9V3H15V1M16.5,16.5V21.5H21.5V16.5H16.5Z"/></group></group></vector>', 'play_skip': '<vector android:height="26dp" android:viewportHeight="1000"\n    android:viewportWidth="1000" android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="500.000" android:pivotY="423.958" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="76.042"><group android:pivotX="500.0" android:pivotY="500.0"\n        android:scaleX="0.932" android:scaleY="0.932"\n        android:translateX="0.0" android:translateY="-76.375"><path android:fillColor="#FFFFFFFF" android:pathData="M10,499.5c0,301.7 0.3,319.9 4.5,316.5C24,808.3 345.7,501.9 345.7,500.3c0,-0.8 -75.3,-73.4 -167.7,-161.1L10,179.6L10,499.5z"/><path android:fillColor="#FFFFFFFF" android:pathData="M414.1,498.9c0,203.1 1.1,319.9 2.6,319.4c2.6,-0.8 335.5,-316.2 335.5,-318c0,-0.5 -234,-223.5 -328.1,-312.5l-10,-9.3L414.1,498.9z"/><path android:fillColor="#FFFFFFFF" android:pathData="M820.9,500.5l0,321l84.5,-0L990,821.5L990,500.5l0,-320.9l-84.5,-0l-84.5,-0L820.9,500.5z"/></group></group></vector>', 'tk_unlock': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp"\n    android:height="26dp"\n    android:tint="#FFFFFF"\n    android:viewportWidth="24"\n    android:viewportHeight="24"><group android:pivotX="12.000" android:pivotY="10.600" android:scaleX="0.9906" android:scaleY="0.9906" android:translateX="-0.000" android:translateY="1.400"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.047" android:scaleY="1.047"\n        android:translateX="0.0" android:translateY="-1.31"><path\n        android:fillColor="@android:color/white"\n        android:pathData="M18,8h-1L17,6c0,-2.76 -2.24,-5 -5,-5S7,3.24 7,6h2c0,-1.66 1.34,-3 3,-3s3,1.34 3,3v2L6,8c-1.1,0 -2,0.9 -2,2v10c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2L20,10c0,-1.1 -0.9,-2 -2,-2zM18,20L6,20L6,10h12v10zM12,17c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2z" /></group></group></vector>', 'v_cast': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp" android:height="26dp"\n    android:viewportWidth="24" android:viewportHeight="24"\n    android:tint="#FFFFFF"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.0" android:scaleY="1.0"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M1,18v3h3c0,-1.66 -1.34,-3 -3,-3zM1,14v2c2.76,0 5,2.24 5,5h2c0,-3.87 -3.13,-7 -7,-7zM1,10v2c4.97,0 9,4.03 9,9h2c0,-6.08 -4.93,-11 -11,-11zM21,3L3,3c-1.1,0 -2,0.9 -2,2v3h2L3,5h18v14h-7v2h7c1.1,0 2,-0.9 2,-2L23,5c0,-1.1 -0.9,-2 -2,-2z"/></group></group></vector>', 'tk_space': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp" android:height="26dp"\n    android:viewportWidth="26" android:viewportHeight="26"><path android:fillColor="#00000000" android:pathData="M0,0 L26,0 L26,26 L0,26 Z" /></vector>'}
+ICONS = {'htov': HTVO_XML, 'v_prev': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="11.950" android:pivotY="10.575" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.050" android:translateY="1.425"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.826" android:scaleY="1.826"\n        android:translateX="-0.045" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M7,6c0.55,0 1,0.45 1,1v10c0,0.55 -0.45,1 -1,1s-1,-0.45 -1,-1L6,7c0,-0.55 0.45,-1 1,-1zM10.66,12.82l5.77,4.07c0.66,0.47 1.58,-0.01 1.58,-0.82L18.01,7.93c0,-0.81 -0.91,-1.28 -1.58,-0.82l-5.77,4.07c-0.57,0.4 -0.57,1.24 0,1.64z"/></group></group></vector>', 'v_next': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.600" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.400"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.833" android:scaleY="1.833"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M7.58,16.89l5.77,-4.07c0.56,-0.4 0.56,-1.24 0,-1.63L7.58,7.11C6.91,6.65 6,7.12 6,7.93v8.14c0,0.81 0.91,1.28 1.58,0.82zM16,7v10c0,0.55 0.45,1 1,1s1,-0.45 1,-1V7c0,-0.55 -0.45,-1 -1,-1s-1,0.45 -1,1z"/></group></group></vector>', 'v_replay': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="11.975" android:pivotY="10.575" android:scaleX="0.9929" android:scaleY="0.9929" android:translateX="0.025" android:translateY="1.425"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.136" android:scaleY="1.136"\n        android:translateX="-0.057" android:translateY="-1.123"><path android:fillColor="@android:color/white" android:pathData="M12,5V2.21c0,-0.45 -0.54,-0.67 -0.85,-0.35l-3.8,3.79c-0.2,0.2 -0.2,0.51 0,0.71l3.79,3.79c0.32,0.31 0.86,0.09 0.86,-0.36V7c3.73,0 6.68,3.42 5.86,7.29 -0.47,2.27 -2.31,4.1 -4.57,4.57 -3.57,0.75 -6.75,-1.7 -7.23,-5.01 -0.07,-0.48 -0.49,-0.85 -0.98,-0.85 -0.6,0 -1.08,0.53 -1,1.13 0.62,4.39 4.8,7.64 9.53,6.72 3.12,-0.61 5.63,-3.12 6.24,-6.24C20.84,9.48 16.94,5 12,5z"/></group></group></vector>', 'v_replay_play': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp" android:height="26dp"\n    android:viewportWidth="24" android:viewportHeight="24"\n    android:tint="#FFFFFF"><group android:pivotX="11.925" android:pivotY="10.875" android:scaleX="1.1382" android:scaleY="1.1382" android:translateX="0.075" android:translateY="1.125"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.136" android:scaleY="1.136"\n        android:translateX="-0.057" android:translateY="-1.123"><path android:strokeColor="@android:color/white" android:strokeWidth="2.2" android:fillColor="@android:color/transparent" android:pathData="M12,5 A7,7 0 1 1 11.99,5"/><path android:fillColor="@android:color/white" android:pathData="M9.85,8.4 L16.25,12.0 L9.85,15.6 Z"/></group></group></vector>', 'v_aspect': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.0" android:scaleY="1.0"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M18,12c-0.55,0 -1,0.45 -1,1v2h-2c-0.55,0 -1,0.45 -1,1s0.45,1 1,1h3c0.55,0 1,-0.45 1,-1v-3c0,-0.55 -0.45,-1 -1,-1zM7,9h2c0.55,0 1,-0.45 1,-1s-0.45,-1 -1,-1L6,7c-0.55,0 -1,0.45 -1,1v3c0,0.55 0.45,1 1,1s1,-0.45 1,-1L7,9zM21,3L3,3c-1.1,0 -2,0.9 -2,2v14c0,1.1 0.9,2 2,2h18c1.1,0 2,-0.9 2,-2L23,5c0,-1.1 -0.9,-2 -2,-2zM20,19.01L4,19.01c-0.55,0 -1,-0.45 -1,-1L3,5.99c0,-0.55 0.45,-1 1,-1h16c0.55,0 1,0.45 1,1v12.02c0,0.55 -0.45,1 -1,1z"/></group></group></vector>', 'v_ffwd': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.309" android:scaleY="1.309"\n        android:translateX="-0.523" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M5.58,16.89l5.77,-4.07c0.56,-0.4 0.56,-1.24 0,-1.63L5.58,7.11C4.91,6.65 4,7.12 4,7.93v8.14c0,0.81 0.91,1.28 1.58,0.82zM13,7.93v8.14c0,0.81 0.91,1.28 1.58,0.82l5.77,-4.07c0.56,-0.4 0.56,-1.24 0,-1.63l-5.77,-4.07c-0.67,-0.47 -1.58,0 -1.58,0.81z"/></group></group></vector>', 'v_type': '<vector android:height="26dp"\n    android:tint="#FFFFFF"\n    android:viewportHeight="24"\n    android:viewportWidth="24"\n    android:width="26dp"\n    xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.0" android:scaleY="1.0"\n        android:translateX="0.0" android:translateY="-1.833"><path\n        android:fillColor="@android:color/white"\n        android:pathData="M21,3L3,3c-1.11,0 -2,0.89 -2,2v12c0,1.1 0.89,2 2,2h5v2h8v-2h5c1.1,0 1.99,-0.9 1.99,-2L23,5c0,-1.11 -0.9,-2 -2,-2zM21,17L3,17L3,5h18v12zM16,11l-7,4L9,7z" /></group></group></vector>', 'v_subtitle': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.1" android:scaleY="1.1"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M20,4L4,4c-1.1,0 -2,0.9 -2,2v12c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2L22,6c0,-1.1 -0.9,-2 -2,-2zM4,12h4v2L4,14v-2zM14,18L4,18v-2h10v2zM20,18h-4v-2h4v2zM20,14L10,14v-2h10v2z"/></group></group></vector>', 'v_audio': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.600" android:scaleX="0.9906" android:scaleY="0.9906" android:translateX="0.000" android:translateY="1.400"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.222" android:scaleY="1.222"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M12,5v8.55c-0.94,-0.54 -2.1,-0.75 -3.33,-0.32 -1.34,0.48 -2.37,1.67 -2.61,3.07 -0.46,2.74 1.86,5.08 4.59,4.65 1.96,-0.31 3.35,-2.11 3.35,-4.1V7h2c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2h-2c-1.1,0 -2,0.9 -2,2z"/></group></group></vector>', 'v_danmu': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp"\n    android:height="26dp"\n    android:viewportWidth="436"\n    android:viewportHeight="419"><group android:pivotX="218.000" android:pivotY="185.058" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="24.442"><group android:pivotX="218.0" android:pivotY="209.5"\n        android:scaleX="0.916" android:scaleY="0.916"\n        android:translateX="0.0" android:translateY="-25.507"><path\n      android:pathData="M322.65,272.14L274.13,272.14L274.13,290.36L328.16,290.36L328.16,318.2L274.13,318.2L274.13,347.96L242.96,347.96L242.96,318.2L188.7,318.2L188.7,290.36L242.96,290.36L242.96,272.14L194.21,272.14L194.21,147.1L216.3,147.1L209.39,129.82L238.16,129.82L245.13,147.1L271.73,147.1L278.7,129.82L307.53,129.82L300.32,147.1L322.88,147.1L322.65,272.14ZM115.05,189.58L152.26,189.58L152.26,164.62L110.25,164.62L110.25,135.09L182.96,135.09L182.96,218.35L143.59,218.35L142.18,244.78L184.66,244.78L177.92,347.02L117.22,347.02L117.22,316.79L148.39,316.79L151.79,273.55L110.25,273.55L115.05,189.58ZM244.89,243.08L244.89,223.16L222.81,223.16L222.81,243.08L244.89,243.08ZM244.89,195.79L244.89,176.11L222.81,176.11L222.81,195.79L244.89,195.79ZM294.06,243.08L294.06,223.16L272.02,223.16L272.02,243.08L294.06,243.08ZM294.06,195.79L294.06,176.11L272.02,176.11L272.02,195.79L294.06,195.79Z"\n      android:fillColor="#FFFFFF"\n      android:fillType="evenOdd"/><path\n      android:pathData="M20.27,79.27Q0.5,99.04 0.5,127L0.5,351Q0.5,378.96 20.27,398.73Q40.04,418.5 68,418.5L368,418.5Q395.96,418.5 415.73,398.73Q435.5,378.96 435.5,351L435.5,127Q435.5,99.04 415.73,79.27Q395.96,59.5 368,59.5L68,59.5Q40.04,59.5 20.27,79.27ZM35.5,351L35.5,127Q35.5,113.54 45.02,104.02Q54.54,94.5 68,94.5L368,94.5Q381.46,94.5 390.98,104.02Q400.5,113.54 400.5,127L400.5,351Q400.5,364.46 390.98,373.98Q381.46,383.5 368,383.5L68,383.5Q54.54,383.5 45.02,373.98Q35.5,364.46 35.5,351Z"\n      android:strokeLineJoin="miter"\n      android:strokeWidth="35"\n      android:fillColor="#FCFCFC"\n      android:fillType="evenOdd"\n      android:strokeLineCap="butt"/><path\n      android:pathData="M208.26,55.63L128.98,0.62L109.02,29.38L188.31,84.39Q201.24,93.36 216.98,93.4Q232.71,93.44 245.69,84.53L325.91,29.42L306.09,0.57L225.87,55.68Q221.89,58.41 217.06,58.4Q212.23,58.39 208.26,55.63Z"\n      android:strokeLineJoin="miter"\n      android:strokeWidth="35"\n      android:fillColor="#FFFFFF"\n      android:fillType="evenOdd"\n      android:strokeLineCap="butt"/></group></group></vector>', 'v_back': '<vector android:autoMirrored="true" android:height="26dp"\n    android:tint="#FFFFFF" android:viewportHeight="24"\n    android:viewportWidth="24" android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.575" android:scaleX="0.9929" android:scaleY="0.9929" android:translateX="0.000" android:translateY="1.425"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.169" android:scaleY="1.169"\n        android:translateX="0.468" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M16.62,2.99c-0.49,-0.49 -1.28,-0.49 -1.77,0L6.54,11.3c-0.39,0.39 -0.39,1.02 0,1.41l8.31,8.31c0.49,0.49 1.28,0.49 1.77,0s0.49,-1.28 0,-1.77L9.38,12l7.25,-7.25c0.48,-0.48 0.48,-1.28 -0.01,-1.76z"/></group></group></vector>', 'ic_clock': '<vector android:height="26dp" android:tint="#FFFFFF"\n    android:viewportHeight="24" android:viewportWidth="24"\n    android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="12.000" android:pivotY="10.600" android:scaleX="0.9906" android:scaleY="0.9906" android:translateX="-0.000" android:translateY="1.400"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.047" android:scaleY="1.047"\n        android:translateX="-0.262" android:translateY="-1.31"><path\n        android:fillColor="@android:color/white"\n        android:pathData="M11,8H13V14H11V8M12,20C8.13,20 5,16.87 5,13S8.13,6 12,6 19,9.13 19,13C19.7,13 20.36,13.13 21,13.35C21,13.23 21,13.12 21,13C21,10.88 20.26,8.93 19.03,7.39L20.45,5.97C20,5.46 19.55,5 19.04,4.56L17.62,6C16.07,4.74 14.12,4 12,4C7.03,4 3,8.03 3,13S7.03,22 12,22C12.59,22 13.16,21.94 13.71,21.83C13.4,21.25 13.18,20.6 13.08,19.91C12.72,19.96 12.37,20 12,20M15,1H9V3H15V1M16.5,16.5V21.5H21.5V16.5H16.5Z"/></group></group></vector>', 'play_skip': '<vector android:height="26dp" android:viewportHeight="1000"\n    android:viewportWidth="1000" android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><group android:pivotX="500.000" android:pivotY="423.958" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="76.042"><group android:pivotX="500.0" android:pivotY="500.0"\n        android:scaleX="0.932" android:scaleY="0.932"\n        android:translateX="0.0" android:translateY="-76.375"><path android:fillColor="#FFFFFFFF" android:pathData="M10,499.5c0,301.7 0.3,319.9 4.5,316.5C24,808.3 345.7,501.9 345.7,500.3c0,-0.8 -75.3,-73.4 -167.7,-161.1L10,179.6L10,499.5z"/><path android:fillColor="#FFFFFFFF" android:pathData="M414.1,498.9c0,203.1 1.1,319.9 2.6,319.4c2.6,-0.8 335.5,-316.2 335.5,-318c0,-0.5 -234,-223.5 -328.1,-312.5l-10,-9.3L414.1,498.9z"/><path android:fillColor="#FFFFFFFF" android:pathData="M820.9,500.5l0,321l84.5,-0L990,821.5L990,500.5l0,-320.9l-84.5,-0l-84.5,-0L820.9,500.5z"/></group></group></vector>', 'tk_unlock': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp"\n    android:height="26dp"\n    android:tint="#FFFFFF"\n    android:viewportWidth="24"\n    android:viewportHeight="24"><group android:pivotX="12.000" android:pivotY="10.600" android:scaleX="0.9906" android:scaleY="0.9906" android:translateX="-0.000" android:translateY="1.400"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.047" android:scaleY="1.047"\n        android:translateX="0.0" android:translateY="-1.31"><path\n        android:fillColor="@android:color/white"\n        android:pathData="M18,8h-1L17,6c0,-2.76 -2.24,-5 -5,-5S7,3.24 7,6h2c0,-1.66 1.34,-3 3,-3s3,1.34 3,3v2L6,8c-1.1,0 -2,0.9 -2,2v10c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2L20,10c0,-1.1 -0.9,-2 -2,-2zM18,20L6,20L6,10h12v10zM12,17c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2z" /></group></group></vector>', 'v_cast': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp" android:height="26dp"\n    android:viewportWidth="24" android:viewportHeight="24"\n    android:tint="#FFFFFF"><group android:pivotX="12.000" android:pivotY="10.175" android:scaleX="0.9545" android:scaleY="0.9545" android:translateX="0.000" android:translateY="1.825"><group android:pivotX="12.0" android:pivotY="12.0"\n        android:scaleX="1.0" android:scaleY="1.0"\n        android:translateX="0.0" android:translateY="-1.833"><path android:fillColor="@android:color/white" android:pathData="M1,18v3h3c0,-1.66 -1.34,-3 -3,-3zM1,14v2c2.76,0 5,2.24 5,5h2c0,-3.87 -3.13,-7 -7,-7zM1,10v2c4.97,0 9,4.03 9,9h2c0,-6.08 -4.93,-11 -11,-11zM21,3L3,3c-1.1,0 -2,0.9 -2,2v3h2L3,5h18v14h-7v2h7c1.1,0 2,-0.9 2,-2L23,5c0,-1.1 -0.9,-2 -2,-2z"/></group></group></vector>', 'tk_space': '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="26dp" android:height="26dp"\n    android:viewportWidth="26" android:viewportHeight="26"><path android:fillColor="#00000000" android:pathData="M0,0 L26,0 L26,26 L0,26 Z" /></vector>', 'v_more': '<vector android:height="26dp" android:tint="#FFFFFF" android:viewportHeight="24" android:viewportWidth="24" android:width="26dp" xmlns:android="http://schemas.android.com/apk/res/android"><path android:fillColor="@android:color/white" android:pathData="M12,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,10c-1.1,0 -2,0.9 -2,2s0.9,2 2,2 2,-0.9 2,-2 -0.9,-2 -2,-2zM12,16c-1.1,0 -2,0.9 -2,2s0.9,2 2,2 2,-0.9 2,-2 -0.9,-2 -2,-2z"/></vector>'}
 
 
 import glob
@@ -45,7 +45,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261126-U80'   # 每改一次脚本必须同步这里（云端日志/排障只认它）
+VER = 'VER-20261127-U81'   # 每改一次脚本必须同步这里（云端日志/排障只认它）
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -89,6 +89,8 @@ OPT_TOP_TIME_FIX = False      # 19 右上角时间/网速显隐（已回上游�
 OPT_MERGE_SOURCE_ADS = True   # 21 合并源里的 ads 名单进过滤表（= 上游行为）
 OPT_PUSH_BTN = False          # 20 播放页「投屏」保持上游原样（汉字「投屏」+ DLNA 设备列表，不改「推送」）
 OPT_RENDER_FIX = True         # 22 画面比例：修「填充」档拿 MeasureSpec 原值 + 补回像素宽高比（治拉扁）
+OPT_APP_UPDATE = True         # 23 关于页「检查更新」：在线检测新版本 APK 并引导安装（手动触发，不弹窗打扰）
+UPDATE_JSON_URL = ''          # 版本信息 json 地址；留空=按钮提示「更新地址未配置」，不联网。字段：versionCode/versionName/note/apkUrl
 LAYOUT = 'app/src/main/res/layout/player_vod_control_view.xml'
 VOD = 'app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'
 PLAYER_HELPER = 'app/src/main/java/com/github/tvbox/osc/util/PlayerHelper.java'
@@ -121,6 +123,7 @@ BTN_ICON = {
     'danmu_setting': 'v_danmu',
     'landscape_portrait': 'htov',
     'screen_display': 'ic_clock',
+    'play_more': 'v_more',
 }
 
 
@@ -364,6 +367,281 @@ public class TkDownloadCenter {
             }
         };
         h.post(r[0]);
+    }
+}
+'''
+
+TK_UPDATER_JAVA = r'''package com.github.tvbox.osc.util;
+
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.TextUtils;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.core.content.FileProvider;
+
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
+/**
+ * 在线更新：关于页手动点「检查更新」→ 拉版本 json → 对比 versionCode → 弹窗确认 →
+ * 后台下载 APK 到私有 cache → FileProvider 调系统安装器。任何异常只提示不崩。
+ * 版本 json 字段：versionCode(int) / versionName(String) / note(String) / apkUrl(String)
+ */
+public class TkUpdater {
+
+    // 版本信息地址：编译期由脚本写入；留空则不联网，按钮提示未配置。
+    private static final String UPDATE_URL = "%UPDATE_JSON_URL%";
+
+    private static final OkHttpClient CLIENT = new OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .followRedirects(true)
+            .build();
+
+    private static final Handler UI = new Handler(Looper.getMainLooper());
+    private static volatile Thread dlThread = null;
+
+    public static void check(final Context ctx) {
+        if (ctx == null) return;
+        final Context app = ctx.getApplicationContext();
+        if (TextUtils.isEmpty(UPDATE_URL) || UPDATE_URL.contains("%UPDATE_JSON_URL%")) {
+            Toast.makeText(app, "更新地址未配置", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final AlertDialog[] loading = new AlertDialog[1];
+        UI.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    loading[0] = new AlertDialog.Builder(app)
+                            .setTitle("检查更新")
+                            .setMessage("正在检查新版本…")
+                            .setCancelable(false)
+                            .show();
+                } catch (Throwable ignored) {
+                }
+            }
+        });
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String err = null;
+                int newCode = 0;
+                String newName = "";
+                String note = "";
+                String apkUrl = "";
+                try {
+                    Request req = new Request.Builder().url(UPDATE_URL.trim()).get().build();
+                    Response resp = CLIENT.newCall(req).execute();
+                    if (resp == null || !resp.isSuccessful() || resp.body() == null) {
+                        err = "检查失败：网络异常";
+                    } else {
+                        String body = resp.body().string();
+                        resp.close();
+                        JSONObject jo = new JSONObject(body);
+                        newCode = jo.optInt("versionCode", 0);
+                        newName = jo.optString("versionName", "");
+                        note = jo.optString("note", "");
+                        apkUrl = jo.optString("apkUrl", "");
+                    }
+                } catch (Throwable t) {
+                    err = "检查失败：" + (t.getMessage() == null ? "网络异常" : t.getMessage());
+                }
+                final String fErr = err;
+                final int fCode = newCode;
+                final String fName = newName;
+                final String fNote = note;
+                final String fUrl = apkUrl;
+                UI.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        dismiss(loading[0]);
+                        if (fErr != null) {
+                            Toast.makeText(app, fErr, Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        if (fCode <= currentCode(app) || TextUtils.isEmpty(fUrl)) {
+                            Toast.makeText(app, "已是最新版本", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        showUpdateConfirm(app, fName, fNote, fUrl);
+                    }
+                });
+            }
+        }, "tk-update-check").start();
+    }
+
+    private static int currentCode(Context c) {
+        try {
+            PackageInfo pi = c.getPackageManager().getPackageInfo(c.getPackageName(), 0);
+            return pi == null ? 0 : pi.versionCode;
+        } catch (Throwable t) {
+            return 0;
+        }
+    }
+
+    private static void showUpdateConfirm(final Context app, String name, String note, final String url) {
+        String msg = TextUtils.isEmpty(note) ? ("新版本 " + name) : ("版本 " + name + "\n\n" + note);
+        new AlertDialog.Builder(app)
+                .setTitle("发现新版本")
+                .setMessage(msg)
+                .setPositiveButton("立即更新", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int w) {
+                        startDownload(app, url);
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    private static void startDownload(final Context app, String url) {
+        // Android 8+：先确认是否有「安装未知应用」权限，没有就跳设置页引导。
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !app.getPackageManager().canRequestPackageInstalls()) {
+            try {
+                Intent i = new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                        Uri.parse("package:" + app.getPackageName()));
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                app.startActivity(i);
+                Toast.makeText(app, "请先允许安装未知应用，再回来点更新", Toast.LENGTH_LONG).show();
+                return;
+            } catch (Throwable ignored) {
+                // 个别 ROM 没有该页面，继续往下走下载，安装时系统会再拦一次
+            }
+        }
+        final AlertDialog[] pg = new AlertDialog[1];
+        final ProgressBar bar = new ProgressBar(app, null, android.R.attr.progressBarStyleHorizontal);
+        final TextView tip = new TextView(app);
+        final LinearLayout box = new LinearLayout(app);
+        box.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int) (16 * app.getResources().getDisplayMetrics().density);
+        box.setPadding(pad, pad, pad, pad);
+        box.addView(tip);
+        box.addView(bar);
+        bar.setMax(100);
+        UI.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    pg[0] = new AlertDialog.Builder(app)
+                            .setTitle("下载更新")
+                            .setView(box)
+                            .setCancelable(false)
+                            .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface d, int w) {
+                                    if (dlThread != null) dlThread.interrupt();
+                                }
+                            })
+                            .show();
+                    tip.setText("准备下载…");
+                } catch (Throwable ignored) {
+                }
+            }
+        });
+
+        dlThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                File out = new File(app.getCacheDir(), "tk_update.apk");
+                InputStream in = null;
+                FileOutputStream fos = null;
+                try {
+                    Request req = new Request.Builder().url(url).get().build();
+                    Response resp = CLIENT.newCall(req).execute();
+                    if (resp == null || !resp.isSuccessful() || resp.body() == null) {
+                        throw new Exception("下载失败：网络异常");
+                    }
+                    final long total = resp.body().contentLength();
+                    in = resp.body().byteStream();
+                    fos = new FileOutputStream(out);
+                    byte[] buf = new byte[8192];
+                    long done = 0;
+                    int n;
+                    while ((n = in.read(buf)) != -1) {
+                        if (Thread.interrupted()) throw new Exception("已取消");
+                        fos.write(buf, 0, n);
+                        done += n;
+                        if (total > 0) {
+                            final int pct = (int) (done * 100 / total);
+                            UI.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (pg[0] != null) {
+                                        bar.setProgress(pct);
+                                        tip.setText("下载中 " + pct + "%");
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    fos.flush();
+                    resp.close();
+                    if (!out.exists() || out.length() < 1024) throw new Exception("安装包不完整");
+                    UI.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            dismiss(pg[0]);
+                            install(app, out);
+                        }
+                    });
+                } catch (final Throwable t) {
+                    UI.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            dismiss(pg[0]);
+                            String m = t.getMessage();
+                            Toast.makeText(app, TextUtils.isEmpty(m) ? "下载失败" : ("下载失败：" + m), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                } finally {
+                    try { if (fos != null) fos.close(); } catch (Throwable ignored) {}
+                    try { if (in != null) in.close(); } catch (Throwable ignored) {}
+                }
+            }
+        }, "tk-update-dl");
+        dlThread.start();
+    }
+
+    private static void install(Context app, File apk) {
+        try {
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            Uri uri;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                uri = FileProvider.getUriForFile(app, app.getPackageName() + ".fileprovider", apk);
+                i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            } else {
+                uri = Uri.fromFile(apk);
+            }
+            i.setDataAndType(uri, "application/vnd.android.package-archive");
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            app.startActivity(i);
+        } catch (Throwable t) {
+            Toast.makeText(app, "调起安装失败：" + (t.getMessage() == null ? "" : t.getMessage()), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private static void dismiss(AlertDialog d) {
+        try { if (d != null && d.isShowing()) d.dismiss(); } catch (Throwable ignored) {}
     }
 }
 '''
@@ -1317,6 +1595,14 @@ def apply_layout():
             e.set(A + 'layout_width', '0dp')
             e.set(A + 'layout_height', '0dp')
             e.set(A + 'visibility', 'gone')
+
+    # ⑥.5 新增「更多」入口（竖屏可见、横屏隐藏）：弹窗收纳硬解/音轨/重播/重置/默认播放器/视轨
+    if not any((e.get(A + 'id') or '').replace('@+id/', '') == 'play_more' for e in list(group)):
+        more_btn = ET.Element('TextView')
+        more_btn.set(A + 'id', '@+id/play_more')
+        more_btn.set(A + 'text', '更多')
+        more_btn.set(A + 'singleLine', 'true')
+        group.append(more_btn)
 
     # ⑥ 逐按钮：图标 + 统一汉字 + 去底
     styled = 0
@@ -2553,7 +2839,7 @@ def apply_btn_whitelist():
           'play_speed', 'play_player', 'play_ijk', 'play_time_start_end_text',
           'tk_slot_start', 'play_time_start', 'tk_slot_end', 'play_time_end', 'play_time_reset',
           'play_cast', 'zimu_select', 'audio_track_select', 'video_track_select',
-          'danmu_setting', 'landscape_portrait', 'screen_display']
+          'danmu_setting', 'landscape_portrait', 'screen_display', 'play_more']
     arr = ', '.join('"%s"' % k for k in ok)
     method = L.join([
         '    private static final String[] TK_BTN_OK = {%s};' % arr,
@@ -4579,6 +4865,23 @@ def self_check():
             for kw in ('public static void enqueue', 'downloadM3u8', 'AES/CBC', 'getBytesRetry', 'wlOn'):
                 if kw not in t:
                     fails.append('TkDownloader 缺 %s' % kw)
+    if OPT_APP_UPDATE:
+        if 'android.permission.REQUEST_INSTALL_PACKAGES' not in man:
+            fails.append('manifest 缺 REQUEST_INSTALL_PACKAGES（无法安装更新包）')
+        up = jp('app/src/main/java/com/github/tvbox/osc/util/TkUpdater.java')
+        if not os.path.isfile(up):
+            fails.append('TkUpdater.java 未生成')
+        else:
+            t = read_text(up)
+            for kw in ('public static void check', 'startDownload', 'install(', 'FileProvider', 'ACTION_VIEW'):
+                if kw not in t:
+                    fails.append('TkUpdater 缺 %s' % kw)
+        ab = read_text(jp('app/src/main/res/layout/dialog_about.xml'))
+        if 'tkAboutUpdate' not in ab:
+            fails.append('关于布局缺 tkAboutUpdate（检查更新入口没了）')
+        ad = read_text(jp('app/src/main/java/com/github/tvbox/osc/ui/dialog/AboutDialog.java'))
+        if 'tkBindUpdate' not in ad:
+            fails.append('AboutDialog 缺 tkBindUpdate（更新点击没绑定）')
     if fails:
         print('  !! 产物体检不通过 %d 项：' % len(fails))
         for f in fails[:20]:
@@ -4856,6 +5159,77 @@ def apply_about_version():
     log('AboutDialog 已绑定版本 / 崩溃记录')
 
 
+def apply_update():
+    """23 在线更新：关于页加「检查更新」入口，生成 TkUpdater（检查→确认→下载→安装）。
+    手动触发，不做启动自动弹窗；版本地址留空时按钮只提示未配置，不联网。"""
+    L = chr(10)
+    # 1) 版本地址写入 Java 常量（留空则占位符原样保留，运行时判空）
+    updater = TK_UPDATER_JAVA.replace('%UPDATE_JSON_URL%', UPDATE_JSON_URL.strip())
+    write_text(jp('app/src/main/java/com/github/tvbox/osc/util/TkUpdater.java'), updater)
+
+    # 2) 关于布局加一个入口 TextView
+    lay = jp('app/src/main/res/layout/dialog_about.xml')
+    x = read_text(lay)
+    if 'tkAboutUpdate' not in x:
+        btn = ('    <TextView' + L
+               + '        android:id="@+id/tkAboutUpdate"' + L
+               + '        android:layout_width="match_parent"' + L
+               + '        android:layout_height="wrap_content"' + L
+               + '        android:layout_marginTop="@dimen/vs_20"' + L
+               + '        android:padding="@dimen/vs_10"' + L
+               + '        android:gravity="center"' + L
+               + '        android:text="检查更新"' + L
+               + '        android:textColor="@color/dialog_text_primary"' + L
+               + '        android:textSize="@dimen/ts_24" />' + L + L
+               + '</LinearLayout>')
+        if '</LinearLayout>' not in x:
+            fail('关于布局锚点丢失：</LinearLayout>', 'apply_update')
+        x = x.replace('</LinearLayout>', btn, 1)
+        write_text(lay, x)
+        log('关于对话框新增「检查更新」入口')
+    else:
+        log('关于对话框已有更新入口，跳过布局')
+
+    # 3) AboutDialog 绑定点击事件
+    dg = jp('app/src/main/java/com/github/tvbox/osc/ui/dialog/AboutDialog.java')
+    t = read_text(dg)
+    if 'tkBindUpdate' not in t:
+        a = 'setContentView(R.layout.dialog_about);'
+        if a not in t:
+            fail('AboutDialog 锚点丢失：setContentView', 'apply_update')
+        t = t.replace(a, a + L + '        tkBindUpdate();', 1)
+        method = (L + '    // tk：「检查更新」入口 → TkUpdater 在线检测新版本' + L
+                  + '    private void tkBindUpdate() {' + L
+                  + '        try {' + L
+                  + '            android.widget.TextView b = findViewById(R.id.tkAboutUpdate);' + L
+                  + '            if (b != null) {' + L
+                  + '                b.setOnClickListener(new android.view.View.OnClickListener() {' + L
+                  + '                    @Override' + L
+                  + '                    public void onClick(android.view.View v) {' + L
+                  + '                        com.github.tvbox.osc.util.TkUpdater.check(getContext());' + L
+                  + '                    }' + L
+                  + '                });' + L
+                  + '            }' + L
+                  + '        } catch (Throwable ignored) {' + L
+                  + '        }' + L
+                  + '    }')
+        idx = t.rstrip().rfind('}')
+        if idx < 0:
+            fail('AboutDialog 找不到类结尾', 'apply_update')
+        t = t[:idx] + method + L + t[idx:]
+        write_text(dg, t)
+        log('AboutDialog 已绑定「检查更新」')
+    else:
+        log('AboutDialog 已绑定更新入口，跳过')
+
+    # 4) 产物自检
+    up = read_text(jp('app/src/main/java/com/github/tvbox/osc/util/TkUpdater.java'))
+    for key in ('public static void check', 'startDownload', 'install(', 'FileProvider', 'ACTION_VIEW'):
+        if key not in up:
+            fail('TkUpdater 生成异常：缺 ' + key, 'apply_update')
+    log('在线更新：关于页手动检查 → 对比版本号 → 确认后后台下载 APK → 调系统安装')
+
+
 def apply_crash_guard():
     """写 TkCrash.java，并在 App.onCreate 最靠前的位置装上（Hawk 初始化崩也能记下来）。"""
     L = chr(10)
@@ -5112,6 +5486,90 @@ def apply_portrait_bar():
     log('竖屏底栏：9 格（上集/下集/倍速/旋屏/投屏/字幕/弹幕/片头/片尾），片头尾汉字随槽一起显示')
 
 
+def apply_more_dialog():
+    """竖屏「更多」弹窗：复用被隐藏按钮自身监听（performClick），不重写业务逻辑。"""
+    vc = read_text(jp(VOD))
+    if 'mPlayerMoreBtn' in vc:
+        log('更多弹窗：已存在，跳过')
+        return
+
+    a = '    public TextView mPlayerTimeResetBtn;'
+    if a not in vc: fail('成员变量锚点丢失', 'apply_more_dialog')
+    vc = vc.replace(a, a + '\n    public TextView mPlayerMoreBtn;', 1)
+
+    b = '        mPlayerTimeResetBtn = findViewById(R.id.play_time_reset);'
+    if b not in vc: fail('findViewById 锚点丢失', 'apply_more_dialog')
+    vc = vc.replace(b, b +
+        '\n        mPlayerMoreBtn = findViewById(R.id.play_more);' +
+        '\n        if (mPlayerMoreBtn != null) mPlayerMoreBtn.setOnClickListener(new OnClickListener() {' +
+        '\n            @Override' +
+        '\n            public void onClick(View v) { tkShowMoreDialog(); }' +
+        '\n        });', 1)
+
+    method = (
+        '    // tk：竖屏「更多」弹窗：复用被隐藏按钮自身的点击监听（performClick），不重写业务逻辑\n'
+        '    private void tkShowMoreDialog() {\n'
+        '        try {\n'
+        '            final View[] targets = new View[]{mPlayrefresh, mPlayerBtn, mPlayerIJKBtn,\n'
+        '                    mPlayerTimeResetBtn, mAudioTrackBtn, mVideoTrackBtn};\n'
+        '            String[] items = {"重播", "默认播放器", "硬解/软解", "重置片头片尾", "音轨", "视轨"};\n'
+        '            new android.app.AlertDialog.Builder(getContext())\n'
+        '                    .setTitle("更多")\n'
+        '                    .setItems(items, new android.content.DialogInterface.OnClickListener() {\n'
+        '                        @Override\n'
+        '                        public void onClick(android.content.DialogInterface d, int which) {\n'
+        '                            d.dismiss();\n'
+        '                            View t = targets[which];\n'
+        '                            if (t != null) t.performClick();\n'
+        '                        }\n'
+        '                    })\n'
+        '                    .show();\n'
+        '        } catch (Throwable ignored) {\n'
+        '        }\n'
+        '    }\n'
+    )
+    anchor_m = '    // tk：片头/片尾的 00:00 槽和汉字必须一起显隐（竖屏只剩 00:00 就是这么来的）'
+    if anchor_m not in vc: fail('弹窗方法锚点丢失', 'apply_more_dialog')
+    vc = vc.replace(anchor_m, method + anchor_m, 1)
+
+    v_p = '            if (mLandscapePortraitBtn != null) mLandscapePortraitBtn.setVisibility(VISIBLE);'
+    if v_p in vc:
+        vc = vc.replace(v_p, v_p + '\n            mPlayerMoreBtn.setVisibility(VISIBLE);', 1)
+    h_p = '        if (mPlayerConfig != null) updatePlayerCfgView();'
+    if h_p in vc:
+        vc = vc.replace(h_p, '        mPlayerMoreBtn.setVisibility(GONE);\n' + h_p, 1)
+
+    write_text(jp(VOD), vc)
+    log('更多弹窗：竖屏入口，弹窗收纳 重播/默认播放器/硬解/重置/音轨/视轨')
+
+
+def apply_buffer_fix():
+    """EXO 缓冲微调：seek/卡顿恢复后更快出画面（after-rebuffer 3000→1500），水位取中间值。IJK 不动。"""
+    exo1 = jp('player/src/main/java/xyz/doikki/videoplayer/exo/ExoMediaPlayer.java')
+    t = read_text(exo1)
+    old1 = '.setBufferDurationsMs(15_000, 30_000, 1_000, 3_000)'
+    new1 = '.setBufferDurationsMs(10_000, 25_000, 1_000, 1_500)'
+    if new1 in t:
+        log('EXO(player) 缓冲已是新值，跳过')
+    elif old1 in t:
+        t = t.replace(old1, new1, 1); write_text(exo1, t)
+        log('EXO(player) 缓冲 15/30/1/3 → 10/25/1/1.5')
+    else:
+        fail('EXO(player) 缓冲锚点丢失', 'apply_buffer_fix')
+
+    exo2 = jp('app/src/main/java/com/github/tvbox/osc/player/ExoPlayer.java')
+    t2 = read_text(exo2)
+    new2 = '.setBufferDurationsMs(10_000, 25_000, 1_000, 1_500)'
+    if new2 in t2:
+        log('EXO(app) 缓冲已是新值，跳过')
+    elif 'DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS' in t2:
+        t2 = re.sub(r'\.setBufferDurationsMs\(\s*DefaultLoadControl\.DEFAULT_MIN_BUFFER_MS,\s*DefaultLoadControl\.DEFAULT_MAX_BUFFER_MS,\s*DefaultLoadControl\.DEFAULT_BUFFER_FOR_PLAYBACK_MS,\s*DefaultLoadControl\.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS\)',
+                    new2, t2)
+        write_text(exo2, t2)
+        log('EXO(app) 缓冲 DEFAULT 常量 → 10/25/1/1.5')
+    else:
+        fail('EXO(app) 缓冲锚点丢失', 'apply_buffer_fix')
+
 def _step(name, fn):
     """包一层：打印每步真实改动文件数/耗时；崩溃时把步名和堆栈写进 tk-step-fail.txt。"""
     t0 = time.time()
@@ -5186,8 +5644,11 @@ def main():
     _step('apply_version_code', apply_version_code)       # versionCode 日期化
     _step('apply_crash_guard', apply_crash_guard)         # 闪退留痕
     _step('apply_about_version', apply_about_version)     # 关于页显示版本 + 崩溃记录
+    if OPT_APP_UPDATE: _step('apply_update', apply_update)   # 关于页「检查更新」在线升级
     _step('apply_split_keepalive', apply_split_keepalive)  # 分屏不重建 + 失焦继续播
     _step('apply_portrait_bar', apply_portrait_bar)        # 竖屏 9 格 + 片头尾汉字修复
+    _step('apply_more_dialog', apply_more_dialog)            # 竖屏更多弹窗（重播/默认/硬解/重置/音轨/视轨）
+    _step('apply_buffer_fix', apply_buffer_fix)              # EXO 缓冲微调，seek 后更快出画面
     _step('apply_full_preview_fix', apply_full_preview_fix)
     _step('apply_search_source_fix', apply_search_source_fix)
     _step('apply_parse_hardening', apply_parse_hardening)
