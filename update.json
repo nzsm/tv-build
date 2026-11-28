@@ -1,0 +1,7 @@
+{
+  "versionCode": 1,
+  "versionName": "1.0.0",
+  "note": "更新说明：在这里写本版改了什么。",
+  "apkUrl": "https://raw.githubusercontent.com/nzsm/tv-build/main/apk/TVBox_release-python64_20261127-1717.apk",
+  "backupApkUrl": "https://nzsm.github.io/tv-build/apk/TVBox_release-python64_20261127-1717.apk"
+}

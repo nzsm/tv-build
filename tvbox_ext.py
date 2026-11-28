@@ -36,6 +36,7 @@ ICONS = {'htov': HTVO_XML, 'v_prev': '<vector android:height="26dp" android:tint
 import glob
 import os
 import re
+import shutil
 import sys
 import time
 import traceback
@@ -45,7 +46,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261127-U81'   # 每改一次脚本必须同步这里（云端日志/排障只认它）
+VER = 'VER-20261128-U84'   # 每改一次脚本必须同步这里（云端日志/排障只认它）
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -76,10 +77,12 @@ OPT_BTN_WHITELIST = True      # 09 底栏按钮白名单（只留 20 个我方�
 OPT_SPACING = True            # 行距/贴边：顶部两行 6dp、进度条→按钮 16dp、按钮行贴边 10dp
 OPT_BTN_GUARD = False         # 10 底栏层级守卫（已按要求撤回）
 OPT_PAUSE_KEEP = False        # 11 暂停保活 + 底栏直接置可见 + 清遗留消息（已按要求撤回上游）
-OPT_GRADIENT_BG = False       # 12 顶部/底部渐变背板（已按要求撤回，改用 OPT_SCRIM_BG 整块半透明）
-OPT_SCRIM_BG = True           # 12b 顶部/底部整块半透明底板（不渐变）
+OPT_GRADIENT_BG = False       # 12 顶部/底部渐变背板（旧三段渐变，已撤回，勿开）
+OPT_SCRIM_BG = True           # 12b 顶部/底部半透明底板总开关（False=两块都 @null 回上游）
+OPT_SCRIM_GRADIENT = True     # 12c 底板是否渐变：True=屏幕边最深→往中间两段渐透；False=均匀纯色 #8C000000
 OPT_SCREEN_ON = True          # 12c 屏显默认开：右上角网速/播放时间/系统时间默认显示
 OPT_DOWNLOAD = True           # 13 下载按钮 + 选集弹窗 + 串行队列
+OPT_DOWNLOAD_DIR = True       # 13b 设置页「下载位置」：影片/tvbox（默认）或 下载/tvbox，预设目录切换
 OPT_SEARCH_BOOST = True       # 14 搜索增强（新源并入/每批 10 源）
 OPT_DANMU_ALPHA = True        # 15 弹幕透明度下限 10% → 0%
 OPT_DANMU_DOUBLE = True       # 16 弹幕按钮双击=关闭，单击=设置
@@ -90,7 +93,10 @@ OPT_MERGE_SOURCE_ADS = True   # 21 合并源里的 ads 名单进过滤表（= �
 OPT_PUSH_BTN = False          # 20 播放页「投屏」保持上游原样（汉字「投屏」+ DLNA 设备列表，不改「推送」）
 OPT_RENDER_FIX = True         # 22 画面比例：修「填充」档拿 MeasureSpec 原值 + 补回像素宽高比（治拉扁）
 OPT_APP_UPDATE = True         # 23 关于页「检查更新」：在线检测新版本 APK 并引导安装（手动触发，不弹窗打扰）
-UPDATE_JSON_URL = ''          # 版本信息 json 地址；留空=按钮提示「更新地址未配置」，不联网。字段：versionCode/versionName/note/apkUrl
+UPDATE_JSON_URL = 'https://raw.githubusercontent.com/nzsm/tvbox-server/main/update.json'
+# 版本信息 json 地址。字段：versionCode(int) / versionName(String) / note(String) / apkUrl(String，可直链下载的 APK)。
+# 前置条件：仓库根目录需存在 update.json，且 apkUrl 指向可直链下载的 APK；两者未就位前点「检查更新」会提示网络异常。
+# 留空则按钮提示「更新地址未配置」、不联网。
 LAYOUT = 'app/src/main/res/layout/player_vod_control_view.xml'
 VOD = 'app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'
 PLAYER_HELPER = 'app/src/main/java/com/github/tvbox/osc/util/PlayerHelper.java'
@@ -143,6 +149,7 @@ import com.github.tvbox.osc.bean.VodInfo;
 import com.orhanobut.hawk.Hawk;
 
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -153,6 +160,8 @@ import java.util.List;
 public class TkUrlMemo {
 
     private static final String TAG = "tkum_";
+    private static final String ORDER_KEY = "tkum_order";
+    private static final int MEMO_MAX = 200;
 
     private static String md5(String s) {
         try {
@@ -184,14 +193,24 @@ public class TkUrlMemo {
         return TAG + md5(v.id + "|" + v.playFlag + "|" + epName(v, idx));
     }
 
-    /** 播放页拿到地址时调用：按当前集写一笔。 */
+    /** 播放页拿到地址时调用：按当前集写一笔；超过上限淘汰最旧，避免 Hawk 只增不涨。 */
     public static void remember(VodInfo v, String url) {
         try {
             if (v == null || url == null || url.length() < 10) return;
             if (!url.startsWith("http")) return;
             if (url.contains("127.0.0.1") || url.contains("localhost")) return;
             String k = key(v, v.playIndex);
-            if (k != null) Hawk.put(k, url);
+            if (k == null) return;
+            Hawk.put(k, url);
+            List<String> order = Hawk.get(ORDER_KEY, new ArrayList<String>());
+            if (order == null) order = new ArrayList<String>();
+            order.remove(k);
+            order.add(k);
+            while (order.size() > MEMO_MAX) {
+                String old = order.remove(0);
+                if (old != null) Hawk.delete(old);
+            }
+            Hawk.put(ORDER_KEY, order);
         } catch (Throwable ignored) {
         }
     }
@@ -330,6 +349,7 @@ import android.widget.TextView;
 /**
  * 详情页「下载」按钮的状态显示：没任务时是「下载」，一开始下载就变成「下载 3/10」，
  * 有失败的会在后面挂「失败N」。长按按钮弹出下载列表，能看到每集的排队/百分比/完成/失败原因。
+ * 轮询回调在控件脱离窗口时移除，避免页面销毁后仍空转、持有已销毁的 View/Context。
  */
 public class TkDownloadCenter {
 
@@ -366,7 +386,18 @@ public class TkDownloadCenter {
                 }
             }
         };
-        h.post(r[0]);
+        // 控件脱离窗口（详情页关闭）时停掉轮询；重新附着再恢复
+        tv.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View v) {
+                h.post(r[0]);
+            }
+            @Override
+            public void onViewDetachedFromWindow(View v) {
+                h.removeCallbacks(r[0]);
+            }
+        });
+        if (tv.isAttachedToWindow()) h.post(r[0]);
     }
 }
 '''
@@ -404,7 +435,7 @@ import okhttp3.Response;
 /**
  * 在线更新：关于页手动点「检查更新」→ 拉版本 json → 对比 versionCode → 弹窗确认 →
  * 后台下载 APK 到私有 cache → FileProvider 调系统安装器。任何异常只提示不崩。
- * 版本 json 字段：versionCode(int) / versionName(String) / note(String) / apkUrl(String)
+ * 版本 json 字段：versionCode(int) / versionName(String) / note(String) / apkUrl(String) / backupApkUrl(String，可选备用链路)
  */
 public class TkUpdater {
 
@@ -449,6 +480,7 @@ public class TkUpdater {
                 String newName = "";
                 String note = "";
                 String apkUrl = "";
+                String backupUrl = "";
                 try {
                     Request req = new Request.Builder().url(UPDATE_URL.trim()).get().build();
                     Response resp = CLIENT.newCall(req).execute();
@@ -462,6 +494,7 @@ public class TkUpdater {
                         newName = jo.optString("versionName", "");
                         note = jo.optString("note", "");
                         apkUrl = jo.optString("apkUrl", "");
+                        backupUrl = jo.optString("backupApkUrl", "");
                     }
                 } catch (Throwable t) {
                     err = "检查失败：" + (t.getMessage() == null ? "网络异常" : t.getMessage());
@@ -471,6 +504,7 @@ public class TkUpdater {
                 final String fName = newName;
                 final String fNote = note;
                 final String fUrl = apkUrl;
+                final String fBackup = backupUrl;
                 UI.post(new Runnable() {
                     @Override
                     public void run() {
@@ -483,7 +517,7 @@ public class TkUpdater {
                             Toast.makeText(app, "已是最新版本", Toast.LENGTH_SHORT).show();
                             return;
                         }
-                        showUpdateConfirm(app, fName, fNote, fUrl);
+                        showUpdateConfirm(app, fName, fNote, fUrl, fBackup);
                     }
                 });
             }
@@ -499,7 +533,7 @@ public class TkUpdater {
         }
     }
 
-    private static void showUpdateConfirm(final Context app, String name, String note, final String url) {
+    private static void showUpdateConfirm(final Context app, String name, String note, final String url, final String backupUrl) {
         String msg = TextUtils.isEmpty(note) ? ("新版本 " + name) : ("版本 " + name + "\n\n" + note);
         new AlertDialog.Builder(app)
                 .setTitle("发现新版本")
@@ -507,14 +541,19 @@ public class TkUpdater {
                 .setPositiveButton("立即更新", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int w) {
-                        startDownload(app, url);
+                        startDownload(app, url, backupUrl);
                     }
                 })
                 .setNegativeButton("取消", null)
                 .show();
     }
 
-    private static void startDownload(final Context app, String url) {
+    private static void startDownload(final Context app, String url, String backupUrl) {
+        // 重入拦截：已有更新在下载时，重复点击不再起第二个线程写同一个包
+        if (dlThread != null && dlThread.isAlive()) {
+            Toast.makeText(app, "已有更新正在下载，请稍候", Toast.LENGTH_SHORT).show();
+            return;
+        }
         // Android 8+：先确认是否有「安装未知应用」权限，没有就跳设置页引导。
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !app.getPackageManager().canRequestPackageInstalls()) {
             try {
@@ -563,40 +602,67 @@ public class TkUpdater {
             @Override
             public void run() {
                 File out = new File(app.getCacheDir(), "tk_update.apk");
-                InputStream in = null;
-                FileOutputStream fos = null;
-                try {
-                    Request req = new Request.Builder().url(url).get().build();
-                    Response resp = CLIENT.newCall(req).execute();
-                    if (resp == null || !resp.isSuccessful() || resp.body() == null) {
-                        throw new Exception("下载失败：网络异常");
-                    }
-                    final long total = resp.body().contentLength();
-                    in = resp.body().byteStream();
-                    fos = new FileOutputStream(out);
-                    byte[] buf = new byte[8192];
-                    long done = 0;
-                    int n;
-                    while ((n = in.read(buf)) != -1) {
-                        if (Thread.interrupted()) throw new Exception("已取消");
-                        fos.write(buf, 0, n);
-                        done += n;
-                        if (total > 0) {
-                            final int pct = (int) (done * 100 / total);
-                            UI.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (pg[0] != null) {
-                                        bar.setProgress(pct);
-                                        tip.setText("下载中 " + pct + "%");
+                java.util.List<String> urls = new java.util.ArrayList<String>();
+                if (!TextUtils.isEmpty(url)) urls.add(url);
+                if (!TextUtils.isEmpty(backupUrl)) urls.add(backupUrl);
+                String lastErr = null;
+                boolean ok = false;
+                for (int slot = 0; slot < urls.size(); slot++) {
+                    String u = urls.get(slot);
+                    InputStream in = null;
+                    FileOutputStream fos = null;
+                    Response resp = null;
+                    try {
+                        if (out.exists()) out.delete();
+                        Request req = new Request.Builder().url(u).get().build();
+                        resp = CLIENT.newCall(req).execute();
+                        if (resp == null || !resp.isSuccessful() || resp.body() == null) {
+                            throw new Exception("网络异常");
+                        }
+                        final long total = resp.body().contentLength();
+                        in = resp.body().byteStream();
+                        fos = new FileOutputStream(out);
+                        byte[] buf = new byte[8192];
+                        long done = 0;
+                        int n;
+                        final int fSlot = slot;
+                        while ((n = in.read(buf)) != -1) {
+                            if (Thread.interrupted()) throw new Exception("已取消");
+                            fos.write(buf, 0, n);
+                            done += n;
+                            if (total > 0) {
+                                final int pct = (int) (done * 100 / total);
+                                UI.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (pg[0] != null) {
+                                            bar.setProgress(pct);
+                                            tip.setText((fSlot == 0 ? "下载中 " : "备用下载中 ") + pct + "%");
+                                        }
                                     }
-                                }
-                            });
+                                });
+                            }
+                        }
+                        fos.flush();
+                        if (!out.exists() || out.length() < 1024) throw new Exception("安装包不完整");
+                        ok = true;
+                        break;
+                    } catch (final Throwable t) {
+                        lastErr = t.getMessage() == null ? "网络异常" : t.getMessage();
+                        try { if (out.exists()) out.delete(); } catch (Throwable ignored) {
+                        }
+                        // 用户主动取消不再切备用链路
+                        if ("已取消".equals(lastErr)) break;
+                    } finally {
+                        try { if (fos != null) fos.close(); } catch (Throwable ignored) {
+                        }
+                        try { if (in != null) in.close(); } catch (Throwable ignored) {
+                        }
+                        try { if (resp != null) resp.close(); } catch (Throwable ignored) {
                         }
                     }
-                    fos.flush();
-                    resp.close();
-                    if (!out.exists() || out.length() < 1024) throw new Exception("安装包不完整");
+                }
+                if (ok) {
                     UI.post(new Runnable() {
                         @Override
                         public void run() {
@@ -604,18 +670,15 @@ public class TkUpdater {
                             install(app, out);
                         }
                     });
-                } catch (final Throwable t) {
+                } else {
+                    final String fErr = lastErr;
                     UI.post(new Runnable() {
                         @Override
                         public void run() {
                             dismiss(pg[0]);
-                            String m = t.getMessage();
-                            Toast.makeText(app, TextUtils.isEmpty(m) ? "下载失败" : ("下载失败：" + m), Toast.LENGTH_LONG).show();
+                            Toast.makeText(app, TextUtils.isEmpty(fErr) ? "下载失败" : ("下载失败：" + fErr), Toast.LENGTH_LONG).show();
                         }
                     });
-                } finally {
-                    try { if (fos != null) fos.close(); } catch (Throwable ignored) {}
-                    try { if (in != null) in.close(); } catch (Throwable ignored) {}
                 }
             }
         }, "tk-update-dl");
@@ -681,6 +744,8 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
+import com.orhanobut.hawk.Hawk;
+
 /**
  * 极简下载：m3u8 把分片按顺序拼成单个 ts（fMP4 则拼成 mp4），mp4 直链交给系统下载器。
  * 全部在后台线程，任何异常只提示不崩；退出 App 即停止（没有前台服务）。
@@ -695,6 +760,29 @@ public class TkDownloader {
     private static int failCount = 0;
     private static final String CHANNEL = "tk_download";
     private static final int NOTI_ID = 9527;
+
+    // 下载位置档位：0=影片/Movies，1=下载/Download；子目录统一 tvbox。设置页切换后调 refreshBucket()。
+    private static volatile int dirBucket = 0;
+
+    /** 从配置重读下载档位（主线程调用；worker 只读静态字段，不在子线程碰 Hawk）。 */
+    public static void refreshBucket() {
+        try {
+            int v = Hawk.get(HawkConfig.DOWNLOAD_DIR, 0);
+            dirBucket = (v == 1) ? 1 : 0;
+        } catch (Throwable e) {
+            dirBucket = 0;
+        }
+    }
+
+    /** 当前档位对应的公共目录名（Environment.DIRECTORY_*）。 */
+    private static String bucketEnv() {
+        return dirBucket == 1 ? Environment.DIRECTORY_DOWNLOADS : Environment.DIRECTORY_MOVIES;
+    }
+
+    /** 提示/通知里展示的相对路径。 */
+    private static String relPath() {
+        return dirBucket == 1 ? "Download/tvbox" : "Movies/tvbox";
+    }
 
     private static final OkHttpClient CLIENT = new OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
@@ -738,6 +826,7 @@ public class TkDownloader {
         try {
             if (ctx == null) return;
             final Context app = ctx.getApplicationContext();
+            refreshBucket();
             String url = urlIn == null ? "" : urlIn.trim();
             if (url.isEmpty()) url = lastUrl;
             if (url.isEmpty()) {
@@ -866,7 +955,7 @@ public class TkDownloader {
 
     private static File outDir() {
         try {
-            File base = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
+            File base = Environment.getExternalStoragePublicDirectory(bucketEnv());
             File d = new File(base, "tvbox");
             if (!d.exists() && !d.mkdirs() && !d.exists()) return null;
             return d;
@@ -893,7 +982,7 @@ public class TkDownloader {
         DownloadManager dm = (DownloadManager) ctx.getSystemService(Context.DOWNLOAD_SERVICE);
         if (dm == null) throw new RuntimeException("系统下载服务不可用");
         DownloadManager.Request req = new DownloadManager.Request(Uri.parse(url));
-        req.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, "tvbox/" + name + ".mp4");
+        req.setDestinationInExternalPublicDir(bucketEnv(), "tvbox/" + name + ".mp4");
         req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
         req.setTitle(name);
         req.allowScanningByMediaScanner();
@@ -902,7 +991,7 @@ public class TkDownloader {
         } catch (Throwable ignored) {
         }
         dm.enqueue(req);
-        done(ctx, name, true, "已交给系统下载器：Movies/tvbox/" + name + ".mp4");
+        done(ctx, name, true, relPath() + "/" + name + ".mp4");
     }
 
     // ---------------------------------------------------------------- m3u8
@@ -1216,7 +1305,7 @@ public class TkDownloader {
                 NotificationCompat.Builder b = new NotificationCompat.Builder(ctx, CHANNEL)
                         .setSmallIcon(ok ? android.R.drawable.stat_sys_download_done : android.R.drawable.stat_notify_error)
                         .setContentTitle((ok ? "下载完成 " : "下载失败 ") + name)
-                        .setContentText(extra == null ? "Movies/tvbox" : extra)
+                        .setContentText(extra == null ? relPath() : extra)
                         .setAutoCancel(true);
                 nm.notify(NOTI_ID, b.build());
             }
@@ -1324,7 +1413,21 @@ def fail(msg, where=''):
     raise SystemExit(2)
 
 
+_BACKED = set()      # 本次运行内已备份过的文件，避免重复覆盖原始备份
+
+
 def write_text(path, text):
+    # 首次覆盖已有文件前，把原件备份到源码树外（.tk-backup），出问题可回滚；全新生成的文件不备份。
+    try:
+        if os.path.isfile(path) and path not in _BACKED:
+            rel = os.path.relpath(path, SRC)
+            bdir = os.path.join(os.path.dirname(SRC), '.tk-backup')
+            bpath = os.path.join(bdir, rel)
+            os.makedirs(os.path.dirname(bpath), exist_ok=True)
+            shutil.copy2(path, bpath)
+            _BACKED.add(path)
+    except Exception:
+        pass
     with open(path, 'w', encoding='utf-8') as f:
         f.write(text)
 
@@ -1924,14 +2027,19 @@ public class AdRuleUpdater {
                         if (new Gson().fromJson(txt, JsonObject.class) == null) return;
                         File dst = cacheFile();
                         File tmp = new File(dst.getAbsolutePath() + ".tmp");
-                        FileOutputStream fos = new FileOutputStream(tmp);
-                        fos.write(txt.getBytes("UTF-8"));
-                        fos.flush();
-                        fos.close();
-                        if (dst.exists()) dst.delete();
-                        tmp.renameTo(dst);
-                        lastApply = "";
-                        apply(txt);
+                        FileOutputStream fos = null;
+                        try {
+                            fos = new FileOutputStream(tmp);
+                            fos.write(txt.getBytes("UTF-8"));
+                            fos.flush();
+                            if (dst.exists()) dst.delete();
+                            tmp.renameTo(dst);
+                            lastApply = "";
+                            apply(txt);
+                        } finally {
+                            try { if (fos != null) fos.close(); } catch (Throwable ignored) {
+                            }
+                        }
                     } catch (Throwable ignored) {
                     }
                 }
@@ -2698,6 +2806,17 @@ def apply_download():
             fail('WAKE_LOCK 权限没写进 manifest')
         write_text(mf, m)
 
+    # 下载位置档位常量（0=影片 1=下载）；已存在则不重复加
+    hc = jp('app/src/main/java/com/github/tvbox/osc/util/HawkConfig.java')
+    hct = read_text(hc)
+    if 'DOWNLOAD_DIR' not in hct:
+        anchor = '    public static boolean hotVodDelete;'
+        if anchor not in hct:
+            fail('HawkConfig 锚点丢失：hotVodDelete', 'apply_download')
+        hct = hct.replace(anchor,
+                          '    public static final String DOWNLOAD_DIR = "download_dir";' + L + anchor, 1)
+        write_text(hc, hct)
+
     write_text(jp('app/src/main/java/com/github/tvbox/osc/util/TkDownloader.java'), TK_DL_JAVA)
 
     pf = jp('app/src/main/java/com/github/tvbox/osc/ui/fragment/PlayFragment.java')
@@ -2760,7 +2879,148 @@ def apply_download():
     for key in ('tkHost',):
         if key not in vcx:
             fail('VodController 缺 ' + key)
-    log('下载：点按钮弹选集框（可多选）→ 串行排队；m3u8 拼 ts / mp4 走系统下载器，存 Movies/tvbox，退出即停')
+    log('下载：点按钮弹选集框（可多选）→ 串行排队；m3u8 拼 ts / mp4 走系统下载器，目录在设置页可选（影片/下载），退出即停')
+
+
+def apply_download_dir():
+    """设置页加「下载位置」一行：预设目录切换（影片/tvbox 默认、下载/tvbox）。依附 OPT_DOWNLOAD。"""
+    L = chr(10)
+    ET.register_namespace('android', NS)
+
+    # ---- ① 布局：在「关于」所在行前面插一整行，内含一个条目 ----
+    xml = jp('app/src/main/res/layout/fragment_model.xml')
+    tree = ET.parse(xml)
+    root = tree.getroot()
+    if find_id(root, 'llDownloadDir') is None:
+        about = find_id(root, 'llAbout')
+        if about is None:
+            fail('设置页布局锚点丢失：llAbout', 'apply_download_dir')
+        pars = parents(root)
+        about_row = pars[about]          # 数据备份/关于 那个水平行
+        root_v = pars[about_row]         # 外层垂直容器
+
+        item = ET.Element('LinearLayout')
+        item.set(A + 'id', '@+id/llDownloadDir')
+        item.set(A + 'layout_width', '@dimen/vs_0')
+        item.set(A + 'layout_height', 'match_parent')
+        item.set(A + 'layout_weight', '1')
+        item.set(A + 'background', '@drawable/shape_setting_model_focus')
+        item.set(A + 'focusable', 'true')
+        item.set(A + 'gravity', 'center_vertical')
+        item.set(A + 'orientation', 'horizontal')
+        item.set(A + 'paddingLeft', '@dimen/vs_20')
+        item.set(A + 'paddingRight', '@dimen/vs_20')
+
+        title = ET.SubElement(item, 'TextView')
+        title.set(A + 'layout_width', 'wrap_content')
+        title.set(A + 'layout_height', 'wrap_content')
+        title.set(A + 'text', '下载位置')
+        title.set(A + 'textColor', '@android:color/white')
+        title.set(A + 'textSize', '@dimen/ts_24')
+
+        space = ET.SubElement(item, 'Space')
+        space.set(A + 'layout_width', '0dp')
+        space.set(A + 'layout_height', 'wrap_content')
+        space.set(A + 'layout_weight', '1')
+
+        val = ET.SubElement(item, 'TextView')
+        val.set(A + 'id', '@+id/tvDownloadDir')
+        val.set(A + 'layout_width', 'wrap_content')
+        val.set(A + 'layout_height', 'wrap_content')
+        val.set(A + 'textColor', '@android:color/white')
+        val.set(A + 'textSize', '@dimen/ts_24')
+
+        arrow = ET.SubElement(item, 'TextView')
+        arrow.set(A + 'layout_width', 'wrap_content')
+        arrow.set(A + 'layout_height', 'wrap_content')
+        arrow.set(A + 'layout_marginStart', '@dimen/vs_10')
+        arrow.set(A + 'layout_marginLeft', '@dimen/vs_10')
+        arrow.set(A + 'text', '>')
+        arrow.set(A + 'textColor', '@android:color/white')
+        arrow.set(A + 'textSize', '@dimen/ts_30')
+
+        row = ET.Element('LinearLayout')
+        row.set(A + 'layout_width', '@dimen/vs_0')
+        row.set(A + 'layout_height', '@dimen/vs_60')
+        row.set(A + 'layout_weight', '1')
+        row.set(A + 'layout_marginStart', '@dimen/vs_5')
+        row.set(A + 'layout_marginLeft', '@dimen/vs_5')
+        row.set(A + 'layout_marginBottom', '@dimen/vs_10')
+        row.set(A + 'focusable', 'false')
+        row.set(A + 'orientation', 'horizontal')
+        row.append(item)
+
+        idx = list(root_v).index(about_row)
+        root_v.insert(idx, row)
+        tree.write(xml, encoding='utf-8', xml_declaration=True)
+        log('设置页新增「下载位置」一行（影片 / 下载 预设切换）')
+
+    # ---- ② 绑定：字段、初始化文字、点击弹选择框 ----
+    mf = jp('app/src/main/java/com/github/tvbox/osc/ui/fragment/ModelSettingFragment.java')
+    t = read_text(mf)
+
+    if 'tvDownloadDir' not in t:
+        a = '    private TextView tvDns;'
+        if a not in t:
+            fail('设置页 Fragment 锚点丢失：tvDns 字段', 'apply_download_dir')
+        t = t.replace(a, a + L + '    private TextView tvDownloadDir;', 1)
+
+        a = '        tvDns = findViewById(R.id.tvDns);'
+        if a not in t:
+            fail('设置页 Fragment 锚点丢失：tvDns findViewById', 'apply_download_dir')
+        t = t.replace(a, a + L
+                       + '        tvDownloadDir = findViewById(R.id.tvDownloadDir);' + L
+                       + '        tvDownloadDir.setText((Hawk.get(HawkConfig.DOWNLOAD_DIR, 0) == 1) ? "下载 / tvbox" : "影片 / tvbox");', 1)
+
+        block = (
+            '        findViewById(R.id.llDownloadDir).setOnClickListener(new View.OnClickListener() {' + L +
+            '            @Override' + L +
+            '            public void onClick(View v) {' + L +
+            '                FastClickCheckUtil.check(v);' + L +
+            '                int dir = Hawk.get(HawkConfig.DOWNLOAD_DIR, 0);' + L +
+            '                final String[] dirs = new String[]{"影片 / tvbox", "下载 / tvbox"};' + L +
+            '                SelectDialog<String> dialog = new SelectDialog<>(mActivity);' + L +
+            '                dialog.setTip("请选择下载位置");' + L +
+            '                dialog.setAdapter(new SelectDialogAdapter.SelectDialogInterface<String>() {' + L +
+            '                    @Override' + L +
+            '                    public void click(String value, int pos) {' + L +
+            '                        tvDownloadDir.setText(dirs[pos]);' + L +
+            '                        Hawk.put(HawkConfig.DOWNLOAD_DIR, pos);' + L +
+            '                        com.github.tvbox.osc.util.TkDownloader.refreshBucket();' + L +
+            '                    }' + L +
+            '                    @Override' + L +
+            '                    public String getDisplay(String val) {' + L +
+            '                        return val;' + L +
+            '                    }' + L +
+            '                }, new DiffUtil.ItemCallback<String>() {' + L +
+            '                    @Override' + L +
+            '                    public boolean areItemsTheSame(@NonNull @NotNull String oldItem, @NonNull @NotNull String newItem) {' + L +
+            '                        return oldItem.equals(newItem);' + L +
+            '                    }' + L +
+            '                    @Override' + L +
+            '                    public boolean areContentsTheSame(@NonNull @NotNull String oldItem, @NonNull @NotNull String newItem) {' + L +
+            '                        return oldItem.equals(newItem);' + L +
+            '                    }' + L +
+            '                }, java.util.Arrays.asList(dirs), dir);' + L +
+            '                dialog.show();' + L +
+            '            }' + L +
+            '        });' + L)
+
+        a = '        findViewById(R.id.llApi).setOnClickListener(new View.OnClickListener() {'
+        if a not in t:
+            fail('设置页 Fragment 锚点丢失：llApi 点击块', 'apply_download_dir')
+        t = t.replace(a, block + a, 1)
+        write_text(mf, t)
+        log('下载位置：设置项已绑定（切换后即时生效，新任务落到所选目录）')
+
+    # ---- ③ 自检关键字 ----
+    hc = read_text(jp('app/src/main/java/com/github/tvbox/osc/util/HawkConfig.java'))
+    if 'DOWNLOAD_DIR' not in hc:
+        fail('HawkConfig 缺 DOWNLOAD_DIR 常量', 'apply_download_dir')
+    dl = read_text(jp('app/src/main/java/com/github/tvbox/osc/util/TkDownloader.java'))
+    for kw in ('refreshBucket()', 'bucketEnv()', 'relPath()', 'DIRECTORY_DOWNLOADS'):
+        if kw not in dl:
+            fail('TkDownloader 缺下载位置逻辑：' + kw, 'apply_download_dir')
 
 
 def apply_search_boost():
@@ -4431,60 +4691,74 @@ def apply_push_button():
 
 
 def apply_scrim_bg():
-    """顶部/底部改成整块半透明底板（不渐变）。
-
-    渐变那版是"贴屏幕边最深、往中间渐透"，实机看着还是一层灰雾、边界也不干净，
-    而且渐变 drawable 一旦被布局引用就关不掉。这里退回最朴素的做法：
-    通宽的半透明黑板，顶底各一条，透明度均匀，一块就是一块。
-    """
+    """顶部/底部底板。
+    OPT_SCRIM_GRADIENT=True：顶栏从上往下、底栏从下往上，两段线性渐变到全透（不带中间色，避免三段渐变中间发灰）；
+    False：退回整块均匀半透明 #8C000000。
+    只换背景，高度 / padding / 点击 / 自动隐藏动画一律不动。"""
     L = chr(10)
     lay = jp(LAYOUT)
     dr = jp('app/src/main/res/drawable')
     if not os.path.isdir(dr):
         os.makedirs(dr)
     t = read_text(lay)
-    # 幂等要按"两处都指向 tk_scrim"来判断：只查"出现过 tk_scrim"是不够的，
-    # apply_layout 每趟都会把 bottom_container 的底板清成 @null，只判出现就会漏掉底部。
-    if t.count('@drawable/tk_scrim') >= 2:
-        log('  = 半透明底板已存在，跳过')
-        return
-
-    write_text(os.path.join(dr, 'tk_scrim.xml'),
-               '<?xml version="1.0" encoding="utf-8"?>' + L +
-               '<shape xmlns:android="http://schemas.android.com/apk/res/android"' + L +
-               '    android:shape="rectangle">' + L +
-               '    <solid android:color="#8C000000" />' + L +
-               '</shape>')
 
     import re
 
-    def put_bg(tag):
+    def put_bg(tag, drawable):
         if 'android:background=' in tag:
             return re.sub('android:background="[^"]*"',
-                          'android:background="@drawable/tk_scrim"', tag, count=1)
-        return tag[:-1] + L + '        android:background="@drawable/tk_scrim">'
+                          'android:background="' + drawable + '"', tag, count=1)
+        return tag[:-1] + L + '        android:background="' + drawable + '">'
+
+    if OPT_SCRIM_GRADIENT:
+        def gshape(angle):
+            return ('<?xml version="1.0" encoding="utf-8"?>' + L +
+                    '<shape xmlns:android="http://schemas.android.com/apk/res/android"' + L +
+                    '    android:shape="rectangle">' + L +
+                    '    <gradient android:angle="' + str(angle) + '" android:type="linear"' + L +
+                    '        android:startColor="#B4000000" android:endColor="#00000000" />' + L +
+                    '</shape>')
+        # 270=从上往下：顶沿最深，往下渐透；90=从下往上：底沿最深，往上渐透
+        write_text(os.path.join(dr, 'tk_scrim_top.xml'), gshape(270))
+        write_text(os.path.join(dr, 'tk_scrim_bottom.xml'), gshape(90))
+        top_bg, bot_bg = '@drawable/tk_scrim_top', '@drawable/tk_scrim_bottom'
+    else:
+        write_text(os.path.join(dr, 'tk_scrim.xml'),
+                   '<?xml version="1.0" encoding="utf-8"?>' + L +
+                   '<shape xmlns:android="http://schemas.android.com/apk/res/android"' + L +
+                   '    android:shape="rectangle">' + L +
+                   '    <solid android:color="#8C000000" />' + L +
+                   '</shape>')
+        top_bg = bot_bg = '@drawable/tk_scrim'
 
     # 1) 底部菜单整条
     m = re.search(r'<LinearLayout[^>]*@\+id/bottom_container[^>]*>', t)
     if not m:
-        fail('半透明底板锚点丢失：bottom_container')
-    t = t[:m.start()] + put_bg(m.group(0)) + t[m.end():]
+        fail('底板锚点丢失：bottom_container')
+    t = t[:m.start()] + put_bg(m.group(0), bot_bg) + t[m.end():]
 
     # 2) 顶部整条（rootView 下第一个 LinearLayout，装片名/分辨率/时间/网速）
     i = t.find('@+id/rootView')
     if i < 0:
-        fail('半透明底板锚点丢失：rootView')
+        fail('底板锚点丢失：rootView')
     k = t.find('<LinearLayout', t.find('>', i) + 1)
     e = t.find('>', k) + 1
     if k < 0 or e <= k:
-        fail('半透明底板锚点丢失：顶部行容器')
-    nt = put_bg(t[k:e])
-    # 渐变那版为了让渐变带往下延伸加的 40dp 内边距，纯色不需要，去掉让高度回原样
-    nt = nt.replace(L + '        android:paddingBottom="40dp"', '')
+        fail('底板锚点丢失：顶部行容器')
+    nt = put_bg(t[k:e], top_bg)
+    if OPT_SCRIM_GRADIENT:
+        # 渐变带往下补 40dp 内边距自然延伸，避免渐变太短出硬边；纯色不需要
+        if 'android:paddingBottom="40dp"' not in nt:
+            nt = nt[:-1] + L + '        android:paddingBottom="40dp">'
+    else:
+        nt = nt.replace(L + '        android:paddingBottom="40dp"', '')
     t = t[:k] + nt + t[e:]
 
     write_text(lay, t)
-    log('顶部/底部底板：整块半透明 #8C000000（均匀，不渐变；顶部 40dp 延伸内边距已撤）')
+    if OPT_SCRIM_GRADIENT:
+        log('顶部/底部底板：两段线性渐变（屏幕边 #B4000000 → 全透），顶部延伸 40dp')
+    else:
+        log('顶部/底部底板：整块均匀半透明 #8C000000（纯色，不渐变）')
 
 
 def apply_screen_default():
@@ -4862,9 +5136,30 @@ def self_check():
             fails.append('TkDownloader.java 未生成')
         else:
             t = read_text(dlp)
-            for kw in ('public static void enqueue', 'downloadM3u8', 'AES/CBC', 'getBytesRetry', 'wlOn'):
+            for kw in ('public static void enqueue', 'downloadM3u8', 'AES/CBC', 'getBytesRetry', 'wlOn', 'refreshBucket()'):
                 if kw not in t:
                     fails.append('TkDownloader 缺 %s' % kw)
+        dc = jp('app/src/main/java/com/github/tvbox/osc/util/TkDownloadCenter.java')
+        if os.path.isfile(dc):
+            t2 = read_text(dc)
+            for kw in ('onViewDetachedFromWindow', 'removeCallbacks'):
+                if kw not in t2:
+                    fails.append('TkDownloadCenter 缺 %s（轮询未在页面关闭时停止，存在泄漏）' % kw)
+        memo = jp('app/src/main/java/com/github/tvbox/osc/util/TkUrlMemo.java')
+        if os.path.isfile(memo):
+            t3 = read_text(memo)
+            for kw in ('MEMO_MAX', 'Hawk.delete'):
+                if kw not in t3:
+                    fails.append('TkUrlMemo 缺 %s（记录只增不删，Hawk 会膨胀）' % kw)
+    if OPT_DOWNLOAD and OPT_DOWNLOAD_DIR:
+        msf = read_text(jp('app/src/main/res/layout/fragment_model.xml'))
+        for rid in ('llDownloadDir', 'tvDownloadDir'):
+            if ('@+id/%s"' % rid) not in msf:
+                fails.append('设置页缺下载位置条目 %s' % rid)
+        mfj = read_text(jp('app/src/main/java/com/github/tvbox/osc/ui/fragment/ModelSettingFragment.java'))
+        for kw in ('R.id.llDownloadDir', 'HawkConfig.DOWNLOAD_DIR', 'TkDownloader.refreshBucket()'):
+            if kw not in mfj:
+                fails.append('设置页 Fragment 缺下载位置绑定：%s' % kw)
     if OPT_APP_UPDATE:
         if 'android.permission.REQUEST_INSTALL_PACKAGES' not in man:
             fails.append('manifest 缺 REQUEST_INSTALL_PACKAGES（无法安装更新包）')
@@ -4873,7 +5168,7 @@ def self_check():
             fails.append('TkUpdater.java 未生成')
         else:
             t = read_text(up)
-            for kw in ('public static void check', 'startDownload', 'install(', 'FileProvider', 'ACTION_VIEW'):
+            for kw in ('public static void check', 'startDownload', 'install(', 'FileProvider', 'ACTION_VIEW', 'isAlive', 'backupApkUrl'):
                 if kw not in t:
                     fails.append('TkUpdater 缺 %s' % kw)
         ab = read_text(jp('app/src/main/res/layout/dialog_about.xml'))
@@ -5606,6 +5901,10 @@ def main():
     print('*** 脚本版本 %s ***' % VER)
     print('=== 底部菜单：图标 %s / 汉字 %s / 结构对齐 / 不动内核 ===' % (ICON_SIZE, TEXT_SIZE))
     print('源码：', SRC)
+    if not os.path.isdir(SRC):
+        fail('源码目录不存在或不是目录：%s' % SRC)
+    if not os.path.isfile(jp('app/src/main/AndroidManifest.xml')):
+        fail('没找到 app/src/main/AndroidManifest.xml，源码目录可能选错了：%s' % SRC)
     _step('write_icons', write_icons)
     _step('apply_layout', apply_layout)          # 底座：布局骨架，其余界面改动都挂在它生成的结构上
     _step('apply_top_width', apply_top_width)    # 顶部右栏加宽：修上游 1/4 宽导致的叠字
@@ -5637,6 +5936,7 @@ def main():
     if OPT_DNS_DEFAULT: _step('apply_dns_default', apply_dns_default)
     if OPT_TOP_TIME_FIX: _step('apply_top_time_fix', apply_top_time_fix)
     if OPT_DOWNLOAD: _step('apply_download', apply_download)
+    if OPT_DOWNLOAD and OPT_DOWNLOAD_DIR: _step('apply_download_dir', apply_download_dir)
     if OPT_SEARCH_BOOST: _step('apply_search_boost', apply_search_boost)
     if OPT_SPACING: _step('apply_spacing', apply_spacing)
     _step('apply_download_anywhere', apply_download_anywhere)
@@ -5667,6 +5967,8 @@ def main():
               (len(REPLACE_MISS), len(REPLACE_SUSPECT)))
         for x in REPLACE_SUSPECT[:12]:
             print('      ! 结构锚点没找到：' + x)
+        for x in REPLACE_MISS[:12]:
+            print('      · 普通锚点未命中：' + x)
         if REPLACE_SUSPECT:
             print('      ↑ 这些说明对应补丁这一次没生效（增量重跑时属正常，全新树出现即为异常）')
     print('=' * 46)
