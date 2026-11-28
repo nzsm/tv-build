@@ -250,8 +250,9 @@ jobs:
           mkdir -p apk
           BASE=$(ls apk-out/*.apk | head -1 | xargs basename)
           FN="${BASE%.apk}_${TAG:-manual}.apk"
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
           RAW="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/apk/${FN}"
-          PAGES="https://${GITHUB_REPOSITORY_OWNER}.github.io/tvbox-server/apk/${FN}"
+          PAGES="https://${GITHUB_REPOSITORY_OWNER}.github.io/${REPO_NAME}/apk/${FN}"
           printf '最新 APK（手机浏览器打开即下载）：\n%s\n备用链接：\n%s\n' "${RAW}" "${PAGES}" > apk/下载链接.txt
           rm -f apk/*.apk
           rm -f ci-error.log
