@@ -46,7 +46,7 @@ SRC = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 DEF_URL = sys.argv[2] if len(sys.argv) > 2 else ''
 APP_NAME = (sys.argv[3] if len(sys.argv) > 3 else '').strip() or 'NZ'
 
-VER = 'VER-20261128-U84'   # 每改一次脚本必须同步这里（云端日志/排障只认它）
+VER = 'VER-20261128-U86'   # 每改一次脚本必须同步这里（云端日志/排障只认它）
 
 # ============ 可裁剪开关 ============
 # 2026-11-23 拆分：把"只提速、不改播放结果"和"改播放行为"分开，不再一把全关。
@@ -93,10 +93,16 @@ OPT_MERGE_SOURCE_ADS = True   # 21 合并源里的 ads 名单进过滤表（= �
 OPT_PUSH_BTN = False          # 20 播放页「投屏」保持上游原样（汉字「投屏」+ DLNA 设备列表，不改「推送」）
 OPT_RENDER_FIX = True         # 22 画面比例：修「填充」档拿 MeasureSpec 原值 + 补回像素宽高比（治拉扁）
 OPT_APP_UPDATE = True         # 23 关于页「检查更新」：在线检测新版本 APK 并引导安装（手动触发，不弹窗打扰）
-UPDATE_JSON_URL = 'https://raw.githubusercontent.com/nzsm/tvbox-server/main/update.json'
-# 版本信息 json 地址。字段：versionCode(int) / versionName(String) / note(String) / apkUrl(String，可直链下载的 APK)。
-# 前置条件：仓库根目录需存在 update.json，且 apkUrl 指向可直链下载的 APK；两者未就位前点「检查更新」会提示网络异常。
-# 留空则按钮提示「更新地址未配置」、不联网。
+OPT_DEFAULT_CONFIG = True      # 24 首次启动把脚本第 2 参数(DEF_URL)写进 Hawk 默认订阅地址；已有配置不覆盖
+# 内置更新信息（直接打包进 APP，不再依赖外部 update.json 清单）：主链接 + 备用链接两条，主链失败自动切备用。
+# 发新版时改这几项即可：
+#   UPDATE_VERSION_CODE 必须大于手机上当前安装包的 versionCode，否则提示「已是最新版本」；
+#   UPDATE_APK_URL / UPDATE_BACKUP_URL 换成新包直链，两条文件名保持一致；备用链留空则只走主链。
+UPDATE_VERSION_CODE = 103
+UPDATE_VERSION_NAME = '1.0.3'
+UPDATE_NOTE = '更新说明：在这里写本版改了什么。'
+UPDATE_APK_URL = 'https://raw.githubusercontent.com/nzsm/tv-build/main/apk/TVBox_release-python64_20261128-0026.apk'
+UPDATE_BACKUP_URL = 'https://nzsm.github.io/tv-build/apk/TVBox_release-python64_20261128-0026.apk'
 LAYOUT = 'app/src/main/res/layout/player_vod_control_view.xml'
 VOD = 'app/src/main/java/com/github/tvbox/osc/player/controller/VodController.java'
 PLAYER_HELPER = 'app/src/main/java/com/github/tvbox/osc/util/PlayerHelper.java'
@@ -421,8 +427,6 @@ import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
 
-import org.json.JSONObject;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -433,14 +437,17 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 /**
- * 在线更新：关于页手动点「检查更新」→ 拉版本 json → 对比 versionCode → 弹窗确认 →
- * 后台下载 APK 到私有 cache → FileProvider 调系统安装器。任何异常只提示不崩。
- * 版本 json 字段：versionCode(int) / versionName(String) / note(String) / apkUrl(String) / backupApkUrl(String，可选备用链路)
+ * 在线更新：关于页手动点「检查更新」→ 内置版本号与本机对比 → 弹窗确认 →
+ * 后台下载 APK 到私有 cache → FileProvider 调系统安装器。主链接失败自动切备用链接。
+ * 版本信息与两条链路在编译期由脚本写入，任何异常只提示不崩。
  */
 public class TkUpdater {
 
-    // 版本信息地址：编译期由脚本写入；留空则不联网，按钮提示未配置。
-    private static final String UPDATE_URL = "%UPDATE_JSON_URL%";
+    private static final int NEW_CODE = %UPDATE_VERSION_CODE%;
+    private static final String NEW_NAME = "%UPDATE_VERSION_NAME%";
+    private static final String NEW_NOTE = "%UPDATE_NOTE%";
+    private static final String URL_MAIN = "%UPDATE_APK_URL%";
+    private static final String URL_BACKUP = "%UPDATE_BACKUP_URL%";
 
     private static final OkHttpClient CLIENT = new OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
@@ -454,74 +461,15 @@ public class TkUpdater {
     public static void check(final Context ctx) {
         if (ctx == null) return;
         final Context app = ctx.getApplicationContext();
-        if (TextUtils.isEmpty(UPDATE_URL) || UPDATE_URL.contains("%UPDATE_JSON_URL%")) {
+        if (TextUtils.isEmpty(URL_MAIN)) {
             Toast.makeText(app, "更新地址未配置", Toast.LENGTH_SHORT).show();
             return;
         }
-        final AlertDialog[] loading = new AlertDialog[1];
-        UI.post(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    loading[0] = new AlertDialog.Builder(app)
-                            .setTitle("检查更新")
-                            .setMessage("正在检查新版本…")
-                            .setCancelable(false)
-                            .show();
-                } catch (Throwable ignored) {
-                }
-            }
-        });
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                String err = null;
-                int newCode = 0;
-                String newName = "";
-                String note = "";
-                String apkUrl = "";
-                String backupUrl = "";
-                try {
-                    Request req = new Request.Builder().url(UPDATE_URL.trim()).get().build();
-                    Response resp = CLIENT.newCall(req).execute();
-                    if (resp == null || !resp.isSuccessful() || resp.body() == null) {
-                        err = "检查失败：网络异常";
-                    } else {
-                        String body = resp.body().string();
-                        resp.close();
-                        JSONObject jo = new JSONObject(body);
-                        newCode = jo.optInt("versionCode", 0);
-                        newName = jo.optString("versionName", "");
-                        note = jo.optString("note", "");
-                        apkUrl = jo.optString("apkUrl", "");
-                        backupUrl = jo.optString("backupApkUrl", "");
-                    }
-                } catch (Throwable t) {
-                    err = "检查失败：" + (t.getMessage() == null ? "网络异常" : t.getMessage());
-                }
-                final String fErr = err;
-                final int fCode = newCode;
-                final String fName = newName;
-                final String fNote = note;
-                final String fUrl = apkUrl;
-                final String fBackup = backupUrl;
-                UI.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        dismiss(loading[0]);
-                        if (fErr != null) {
-                            Toast.makeText(app, fErr, Toast.LENGTH_LONG).show();
-                            return;
-                        }
-                        if (fCode <= currentCode(app) || TextUtils.isEmpty(fUrl)) {
-                            Toast.makeText(app, "已是最新版本", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        showUpdateConfirm(app, fName, fNote, fUrl, fBackup);
-                    }
-                });
-            }
-        }, "tk-update-check").start();
+        if (NEW_CODE <= currentCode(app)) {
+            Toast.makeText(app, "已是最新版本", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        showUpdateConfirm(app, NEW_NAME, NEW_NOTE, URL_MAIN, URL_BACKUP);
     }
 
     private static int currentCode(Context c) {
@@ -5168,7 +5116,7 @@ def self_check():
             fails.append('TkUpdater.java 未生成')
         else:
             t = read_text(up)
-            for kw in ('public static void check', 'startDownload', 'install(', 'FileProvider', 'ACTION_VIEW', 'isAlive', 'backupApkUrl'):
+            for kw in ('public static void check', 'startDownload', 'install(', 'FileProvider', 'ACTION_VIEW', 'isAlive', 'URL_MAIN', 'URL_BACKUP', 'NEW_CODE'):
                 if kw not in t:
                     fails.append('TkUpdater 缺 %s' % kw)
         ab = read_text(jp('app/src/main/res/layout/dialog_about.xml'))
@@ -5177,6 +5125,10 @@ def self_check():
         ad = read_text(jp('app/src/main/java/com/github/tvbox/osc/ui/dialog/AboutDialog.java'))
         if 'tkBindUpdate' not in ad:
             fails.append('AboutDialog 缺 tkBindUpdate（更新点击没绑定）')
+    if OPT_DEFAULT_CONFIG and DEF_URL.strip():
+        ap = read_text(jp('app/src/main/java/com/github/tvbox/osc/base/App.java'))
+        if 'tkDefaultConfig' not in ap or 'HawkConfig.API_URL' not in ap:
+            fails.append('App 缺内置默认订阅地址写入（首启会拉取配置失败）')
     if fails:
         print('  !! 产物体检不通过 %d 项：' % len(fails))
         for f in fails[:20]:
@@ -5455,11 +5407,21 @@ def apply_about_version():
 
 
 def apply_update():
-    """23 在线更新：关于页加「检查更新」入口，生成 TkUpdater（检查→确认→下载→安装）。
-    手动触发，不做启动自动弹窗；版本地址留空时按钮只提示未配置，不联网。"""
+    """23 在线更新：关于页加「检查更新」入口，生成 TkUpdater（对比版本→确认→主备链路下载→安装）。
+    版本号与主/备两条 APK 链接在脚本头部内置，直接打包进 APP，不依赖外部清单。手动触发，不弹窗打扰。"""
     L = chr(10)
-    # 1) 版本地址写入 Java 常量（留空则占位符原样保留，运行时判空）
-    updater = TK_UPDATER_JAVA.replace('%UPDATE_JSON_URL%', UPDATE_JSON_URL.strip())
+
+    def _js(s):
+        # 注入 Java 字符串字面量：转义反斜杠、双引号、换行，避免链接/说明里的特殊字符破坏代码
+        return str(s).replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
+
+    code = str(UPDATE_VERSION_CODE).strip() or '0'
+    updater = (TK_UPDATER_JAVA
+               .replace('%UPDATE_VERSION_CODE%', code)
+               .replace('%UPDATE_VERSION_NAME%', _js(UPDATE_VERSION_NAME))
+               .replace('%UPDATE_NOTE%', _js(UPDATE_NOTE))
+               .replace('%UPDATE_APK_URL%', _js(UPDATE_APK_URL.strip()))
+               .replace('%UPDATE_BACKUP_URL%', _js(UPDATE_BACKUP_URL.strip())))
     write_text(jp('app/src/main/java/com/github/tvbox/osc/util/TkUpdater.java'), updater)
 
     # 2) 关于布局加一个入口 TextView
@@ -5523,6 +5485,32 @@ def apply_update():
         if key not in up:
             fail('TkUpdater 生成异常：缺 ' + key, 'apply_update')
     log('在线更新：关于页手动检查 → 对比版本号 → 确认后后台下载 APK → 调系统安装')
+
+
+def apply_default_config():
+    """首次启动把内置默认订阅地址(脚本第 2 参数 DEF_URL)写进 Hawk 默认值。
+    API_URL / LIVE_API_URL 已有值则不覆盖；DEF_URL 留空则跳过。修的是首启 API_URL 为空、
+    ApiConfig 直接 error("-1") 导致「拉取配置失败」。"""
+    if not DEF_URL.strip():
+        log('默认订阅地址为空，跳过内置订阅写入')
+        return
+    L = chr(10)
+    ap = jp('app/src/main/java/com/github/tvbox/osc/base/App.java')
+    t = read_text(ap)
+    if 'tkDefaultConfig' in t:
+        log('App 已写入默认订阅地址，跳过')
+        return
+    hawk_init = '        Hawk.init(this).build();'
+    if hawk_init not in t:
+        fail('App 锚点丢失：Hawk.init', 'apply_default_config')
+    url = DEF_URL.strip().replace('\\', '\\\\').replace('"', '\\"')
+    inject = (hawk_init + L
+              + '        // tkDefaultConfig：首次启动写入内置默认订阅地址，已有配置不覆盖' + L
+              + '        if (!Hawk.contains(HawkConfig.API_URL)) Hawk.put(HawkConfig.API_URL, "' + url + '");' + L
+              + '        if (!Hawk.contains(HawkConfig.LIVE_API_URL)) Hawk.put(HawkConfig.LIVE_API_URL, "' + url + '");')
+    t = t.replace(hawk_init, inject, 1)
+    write_text(ap, t)
+    log('内置默认订阅地址已写入首次启动 Hawk 默认值')
 
 
 def apply_crash_guard():
@@ -5942,6 +5930,7 @@ def main():
     _step('apply_download_anywhere', apply_download_anywhere)
     _step('apply_detail_btn_row', apply_detail_btn_row)   # 详情页按钮行等分，修下载粉底被裁
     _step('apply_version_code', apply_version_code)       # versionCode 日期化
+    if OPT_DEFAULT_CONFIG: _step('apply_default_config', apply_default_config)  # 首启写入内置默认订阅地址
     _step('apply_crash_guard', apply_crash_guard)         # 闪退留痕
     _step('apply_about_version', apply_about_version)     # 关于页显示版本 + 崩溃记录
     if OPT_APP_UPDATE: _step('apply_update', apply_update)   # 关于页「检查更新」在线升级
